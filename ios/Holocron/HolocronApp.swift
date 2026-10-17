@@ -92,7 +92,7 @@ struct CharacterScreen: View {
         .frame(maxWidth: .infinity, minHeight: 425, alignment: .leading)
         .background {
             GeometryReader { geometry in
-                Image("desert_orbit").resizable().scaledToFill()
+                Image(CatalogCategory.people.artwork).resizable().scaledToFill().accessibilityHidden(true)
                     .frame(width: geometry.size.width, height: geometry.size.height).clipped()
                     .overlay(LinearGradient(colors: [DesignTokens.Hero.background.opacity(0.4), DesignTokens.Hero.background.opacity(0.25), DesignTokens.Hero.background], startPoint: .top, endPoint: .bottom))
             }

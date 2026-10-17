@@ -28,6 +28,15 @@ val CatalogCategory.title: String get() = when (this) {
     CatalogCategory.STARSHIPS -> "Starships"; CatalogCategory.VEHICLES -> "Vehicles"
     CatalogCategory.SPECIES -> "Species"; CatalogCategory.FILMS -> "Films"
 }
+// Atmospheric category art, not a depiction of an individual SWAPI record.
+val CatalogCategory.artwork: Int get() = when (this) {
+    CatalogCategory.PEOPLE -> R.drawable.hero_people
+    CatalogCategory.PLANETS -> R.drawable.desert_orbit
+    CatalogCategory.STARSHIPS -> R.drawable.hero_starships
+    CatalogCategory.VEHICLES -> R.drawable.hero_vehicles
+    CatalogCategory.SPECIES -> R.drawable.hero_species
+    CatalogCategory.FILMS -> R.drawable.hero_films
+}
 val CatalogCategory.headline: String get() = when (this) {
     CatalogCategory.PEOPLE -> "A galaxy of\nstories."
     CatalogCategory.PLANETS -> "Worlds beyond\nthe horizon."
@@ -89,7 +98,7 @@ fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, on
             }
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 Box(Modifier.fillMaxWidth()) {
-                    Image(painterResource(R.drawable.desert_orbit), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+                    Image(painterResource(category.artwork), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(DesignTokens.Hero.background.copy(alpha = .5f), DesignTokens.Hero.background))))
                     Column(Modifier.padding(24.dp)) {
                         Spacer(Modifier.height(64.dp))

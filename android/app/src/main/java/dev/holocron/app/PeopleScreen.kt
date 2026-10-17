@@ -123,7 +123,7 @@ fun ArchiveScreen(category: CatalogCategory, records: List<ArchiveItem>, total: 
             contentPadding = PaddingValues(bottom = 36.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item(key = "hero") {
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = DesignTokens.Shape.hero.dp, bottomEnd = DesignTokens.Shape.hero.dp))) {
-                    Image(painterResource(R.drawable.desert_orbit), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+                    Image(painterResource(category.artwork), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(DesignTokens.Hero.background.copy(alpha = .4f), DesignTokens.Hero.background.copy(alpha = .6f), DesignTokens.Hero.background))))
                     Column(Modifier.statusBarsPadding().padding(24.dp)) {
                         Text("HOLOCRON  ✦", color = DesignTokens.Hero.accent, fontSize = 12.sp, letterSpacing = 2.sp)

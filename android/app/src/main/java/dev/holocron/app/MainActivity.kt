@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.holocron.core.Character
+import dev.holocron.core.CatalogCategory
 import dev.holocron.core.CharacterState
 import dev.holocron.core.FailureKind
 import dev.holocron.core.Measurement
@@ -76,7 +77,7 @@ fun CharacterScreen(state: CharacterState, onRetry: () -> Unit, onLoad: () -> Un
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()) {
                 Box(Modifier.fillMaxWidth().heightIn(min = 390.dp).clip(RoundedCornerShape(bottomStart = DesignTokens.Shape.hero.dp, bottomEnd = DesignTokens.Shape.hero.dp))) {
-                    Image(painterResource(R.drawable.desert_orbit), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+                    Image(painterResource(CatalogCategory.PEOPLE.artwork), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(DesignTokens.Hero.background.copy(alpha = 0.4f), Color.Transparent, DesignTokens.Hero.background))))
                     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(DesignTokens.Space.lg.dp)) {
                         Text("HOLOCRON  ✦", color = DesignTokens.Hero.text, fontSize = 13.sp, letterSpacing = 2.sp, fontWeight = FontWeight.SemiBold)

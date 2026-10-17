@@ -2,6 +2,17 @@ import SwiftUI
 
 extension CatalogCategory {
     static let all: [Self] = [.people, .planets, .starships, .vehicles, .species, .films]
+    // Atmospheric category art, not a depiction of an individual SWAPI record.
+    var artwork: String {
+        switch self {
+        case .people: return "hero_people"
+        case .planets: return "desert_orbit"
+        case .starships: return "hero_starships"
+        case .vehicles: return "hero_vehicles"
+        case .species: return "hero_species"
+        case .films: return "hero_films"
+        }
+    }
     var title: String {
         switch self {
         case .people: return "People"
@@ -170,7 +181,7 @@ struct CatalogDetailScreen: View {
                 }.padding(24).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(DesignTokens.Hero.text)
                     .background {
                         GeometryReader { geometry in
-                            Image("desert_orbit").resizable().scaledToFill().frame(width: geometry.size.width, height: geometry.size.height).clipped()
+                            Image(category.artwork).resizable().scaledToFill().frame(width: geometry.size.width, height: geometry.size.height).clipped().accessibilityHidden(true)
                                 .overlay(LinearGradient(colors: [DesignTokens.Hero.background.opacity(0.5), DesignTokens.Hero.background], startPoint: .top, endPoint: .bottom))
                         }
                     }

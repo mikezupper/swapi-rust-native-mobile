@@ -106,7 +106,7 @@ struct PeopleScreen: View {
         .foregroundStyle(DesignTokens.Hero.text)
         .background {
             GeometryReader { geometry in
-                Image("desert_orbit").resizable().scaledToFill().frame(width: geometry.size.width, height: geometry.size.height).clipped()
+                Image(CatalogCategory.people.artwork).resizable().scaledToFill().frame(width: geometry.size.width, height: geometry.size.height).clipped().accessibilityHidden(true)
                     .overlay(LinearGradient(colors: [DesignTokens.Hero.background.opacity(0.4), DesignTokens.Hero.background.opacity(0.6), DesignTokens.Hero.background], startPoint: .top, endPoint: .bottom))
             }
         }

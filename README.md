@@ -18,8 +18,10 @@ The normal app makes real HTTPS requests to `https://swapi.dev/api/`.
 
 These are native screenshots of the original People experience with live API
 data, captured on October 17, 2026. The archive now also has category selection.
-The orbital illustration is original atmospheric artwork; SWAPI does not supply
-character portraits. Holocron is a provisional project name.
+Each collection now has distinct cinematic [category artwork](design/artwork/README.md),
+with the original orbital illustration retained for Planets. The illustrations
+are atmospheric; SWAPI does not supply character portraits. Holocron is a
+provisional project name.
 
 Jump to [Android setup](#build-and-run-android), [iOS setup](#build-and-run-ios-on-a-mac),
 [configuration](#configuration-and-generation), or [verification](#testing-fixtures-and-artifacts).

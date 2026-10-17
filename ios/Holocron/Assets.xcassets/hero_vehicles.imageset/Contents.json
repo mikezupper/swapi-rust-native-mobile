@@ -1,0 +1,12 @@
+{
+  "images": [
+    {
+      "filename": "hero_vehicles.png",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

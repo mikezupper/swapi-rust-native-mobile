@@ -42,9 +42,12 @@ Swift/Kotlin palettes, spacing, shapes, typography roles and motion intent.
 Run it with `--check` to reject drift and verify semantic text colors meet
 4.5:1 contrast on their solid surfaces. Image overlays still require visual review.
 
-The first native character screens use the same original orbital artwork from
-the concept in Android resources and the iOS asset catalog. Their semantic
-colors use the generated palettes above.
+Each category has its own cinematic illustration, bundled identically in Android
+resources and the iOS asset catalog: a heroic crew, the original desert planet,
+a deep-space cruiser, a desert speeder, alien travelers, and a saga confrontation.
+The [artwork manifest and prompts](../design/artwork/README.md) record their
+provenance. Collection and detail screens select the art by category. Their
+semantic colors use the generated palettes above.
 Android large text stacks the three primary facts vertically. iOS uses an
 accessibility-size vertical layout. Native screenshots, rather than the HTML
 concept alone, guide subsequent refinement.
@@ -57,7 +60,7 @@ moves them beyond the viewport. Each collection has its own headline and subtitl
 use the shared accent. People cards use monograms, film counts and birth years.
 Other catalog cards use monograms and two identifying facts. Detail pages use
 stacked, wrapping fact labels/values so long manufacturers and large text fit.
-Films also show an opening crawl. The shared orbital art remains atmospheric
+Films also show an opening crawl. Category art remains atmospheric
 and does not imply a canonical image of the selected resource. Search has explicit
 empty and failure states; page failures keep the current list visible. Detail
 uses native navigation with the selected resource identity. Components remain
