@@ -59,11 +59,21 @@ fun HolocronTheme(content: @Composable () -> Unit) {
     val colors = if (isSystemInDarkTheme()) with(DesignTokens.Dark) {
         darkColorScheme(primary = accent, onPrimary = onAccent, background = background,
             onBackground = text, surface = background, onSurface = text,
-            surfaceContainer = surface, onSurfaceVariant = secondary, outlineVariant = outline)
+            primaryContainer = accent.copy(alpha = .12f), onPrimaryContainer = accent,
+            secondary = accent, onSecondary = onAccent, secondaryContainer = accent.copy(alpha = .12f), onSecondaryContainer = accent,
+            tertiary = warm, onTertiary = onAccent, tertiaryContainer = warm.copy(alpha = .12f), onTertiaryContainer = warm,
+            surfaceContainer = surface, surfaceContainerHigh = surface, surfaceContainerHighest = surface,
+            surfaceContainerLow = surface, surfaceContainerLowest = background, surfaceVariant = androidx.compose.ui.graphics.lerp(surface, background, .1f),
+            onSurfaceVariant = secondary, outline = secondary, outlineVariant = outline)
     } else with(DesignTokens.Light) {
         lightColorScheme(primary = accent, onPrimary = onAccent, background = background,
             onBackground = text, surface = background, onSurface = text,
-            surfaceContainer = surface, onSurfaceVariant = secondary, outlineVariant = outline)
+            primaryContainer = accent.copy(alpha = .12f), onPrimaryContainer = accent,
+            secondary = accent, onSecondary = onAccent, secondaryContainer = accent.copy(alpha = .12f), onSecondaryContainer = accent,
+            tertiary = warm, onTertiary = onAccent, tertiaryContainer = warm.copy(alpha = .12f), onTertiaryContainer = warm,
+            surfaceContainer = surface, surfaceContainerHigh = surface, surfaceContainerHighest = surface,
+            surfaceContainerLow = surface, surfaceContainerLowest = background, surfaceVariant = androidx.compose.ui.graphics.lerp(surface, background, .1f),
+            onSurfaceVariant = secondary, outline = secondary, outlineVariant = outline)
     }
     MaterialTheme(colorScheme = colors, content = content)
 }

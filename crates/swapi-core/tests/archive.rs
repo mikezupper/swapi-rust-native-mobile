@@ -270,3 +270,112 @@ async fn cancelling_download_preserves_partial_records_without_completeness() {
     assert!(stopped.collections.iter().all(|c| !c.complete));
     store.close();
 }
+
+#[tokio::test]
+async fn explicit_refresh_revalidates_a_fresh_response_and_preserves_favorite() {
+    let server = MockServer::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let (c, cache) = client(&server, &dir.path().join("archive.sqlite"));
+    page(&server, 1, true).await;
+    c.resources(ResourceKind::Planet, "", 1).await.unwrap();
+    cache.set_favorite(ResourceKind::Planet, 1, true).unwrap();
+    server.reset().await;
+    let mut updated = planet(1);
+    updated["name"] = json!("Updated planet");
+    Mock::given(path("/api/planets/"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"count":1,"next":null,"results":[updated]})),
+        )
+        .mount(&server)
+        .await;
+    let store = CatalogStore::catalog(
+        c,
+        ResourceKind::Planet,
+        None,
+        &tokio::runtime::Handle::current(),
+    );
+    let mut states = store.observe();
+    store.refresh();
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            if states.borrow().phase == PeoplePhase::Ready {
+                break;
+            }
+            states.changed().await.unwrap();
+        }
+    })
+    .await
+    .unwrap();
+    assert!(server.received_requests().await.unwrap().is_empty());
+    store.refresh();
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            if states
+                .borrow()
+                .items
+                .first()
+                .is_some_and(|r| r.name == "Updated planet")
+            {
+                break;
+            }
+            states.changed().await.unwrap();
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(server.received_requests().await.unwrap().len(), 1);
+    assert!(!states.borrow().cache.from_cache);
+    assert_eq!(
+        cache.records("", true).unwrap()[0].record.name,
+        "Updated planet"
+    );
+    store.close();
+}
+
+#[test]
+fn newer_schema_is_rejected_without_modifying_existing_data() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = dir.path().join("archive.sqlite");
+    let connection = rusqlite::Connection::open(&db).unwrap();
+    connection.execute_batch("PRAGMA user_version=99; CREATE TABLE future_data(value TEXT); INSERT INTO future_data VALUES('preserve me');").unwrap();
+    assert!(matches!(
+        ArchiveCache::open(&db, "https://swapi.dev/api/"),
+        Err(swapi_core::ApiError::Storage)
+    ));
+    let value: String = connection
+        .query_row("SELECT value FROM future_data", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(value, "preserve me");
+}
+
+#[tokio::test]
+async fn a_new_collection_response_replaces_an_older_cached_detail() {
+    let server = MockServer::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let (c, cache) = client(&server, &dir.path().join("archive.sqlite"));
+    Mock::given(path("/api/planets/1/"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(planet(1)))
+        .mount(&server)
+        .await;
+    assert_eq!(
+        c.resource(ResourceKind::Planet, 1).await.unwrap().name,
+        "Planet 1"
+    );
+    let mut updated = planet(1);
+    updated["name"] = json!("New name");
+    Mock::given(path("/api/planets/"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"count":1,"next":null,"results":[updated]})),
+        )
+        .mount(&server)
+        .await;
+    c.resources(ResourceKind::Planet, "", 1).await.unwrap();
+    cache.set_offline(true).unwrap();
+    assert_eq!(
+        c.resource(ResourceKind::Planet, 1).await.unwrap().name,
+        "New name"
+    );
+    assert_eq!(server.received_requests().await.unwrap().len(), 2);
+}

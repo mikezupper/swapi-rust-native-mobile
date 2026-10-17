@@ -39,7 +39,7 @@ val LocalOpenArchive = staticCompositionLocalOf<() -> Unit> { {} }
     val archive = LocalArchive.current ?: return
     val snapshot by archive.state.collectAsStateWithLifecycle()
     FilledTonalButton(onClick = LocalOpenArchive.current, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-        Text(if (snapshot.offline) "Offline mode · Open saved archive" else "Saved archive · ${snapshot.favorites.size} favorites")
+        Text(if (snapshot.offline) "Offline mode · Open saved archive" else "Saved archive · ${snapshot.favorites.size} ${if (snapshot.favorites.size == 1) "favorite" else "favorites"}")
     }
 }
 @Composable fun CacheNotice(cache: CacheStatus) {
@@ -79,7 +79,7 @@ val LocalOpenArchive = staticCompositionLocalOf<() -> Unit> { {} }
         text = { Text("Favorites and their records stay on this device. Other saved records and downloaded collections will be removed.") },
         confirmButton = { TextButton(onClick = { archive.clearCache(); confirmClear = false }) { Text("Clear cache") } },
         dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } })
-    Surface(Modifier.fillMaxSize()) {
+    Surface(Modifier.fillMaxSize()) { Box {
         LazyColumn(contentPadding = PaddingValues(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.imePadding()) {
             item {
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))) {
@@ -109,7 +109,7 @@ val LocalOpenArchive = staticCompositionLocalOf<() -> Unit> { {} }
                             Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(20.dp)) {
                                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Text(collection.category.title, fontSize = 18.sp)
-                                    Text(if (collection.complete) "Complete · ${collection.savedCount} records" else "${collection.savedCount} saved · ${collection.totalCount?.toString() ?: "?"} total · Partial", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(if (collection.complete) "Complete · ${collection.savedCount} ${if (collection.savedCount == 1u) "record" else "records"}" else "${collection.savedCount} saved · ${collection.totalCount?.toString() ?: "?"} total · Partial", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     if (running?.category == collection.category) {
                                         LinearProgressIndicator(Modifier.fillMaxWidth())
                                         Text("Downloading ${running.completed} of ${running.total} records", fontSize = 12.sp)
@@ -134,10 +134,10 @@ val LocalOpenArchive = staticCompositionLocalOf<() -> Unit> { {} }
                     snapshot.error?.let { Text(failureMessage(it), color = MaterialTheme.colorScheme.error) }
                     OutlinedTextField(query, { query = it; archive.search(it) }, label = { Text("Search saved records") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        FilterChip(!snapshot.favoritesOnly, { archive.favoritesOnly(false) }, { Text("All saved") })
-                        FilterChip(snapshot.favoritesOnly, { archive.favoritesOnly(true) }, { Text("Favorites") })
+                        FilterChip(!snapshot.favoritesOnly, { archive.favoritesOnly(false) }, { Text("All saved") }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primary, selectedLabelColor = MaterialTheme.colorScheme.onPrimary))
+                        FilterChip(snapshot.favoritesOnly, { archive.favoritesOnly(true) }, { Text("Favorites") }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primary, selectedLabelColor = MaterialTheme.colorScheme.onPrimary))
                     }
-                    Text("${snapshot.entries.size} saved records", fontSize = 22.sp, modifier = Modifier.semantics { heading() })
+                    Text("${snapshot.entries.size} saved ${if (snapshot.entries.size == 1) "record" else "records"}", fontSize = 22.sp, modifier = Modifier.semantics { heading() })
                     Text("Search covers saved records only. Download a collection to keep every story.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -155,5 +155,6 @@ val LocalOpenArchive = staticCompositionLocalOf<() -> Unit> { {} }
             }
             item { Spacer(Modifier.navigationBarsPadding()) }
         }
-    }
+        Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(DesignTokens.Hero.background.copy(alpha = .95f)))
+    } }
 }

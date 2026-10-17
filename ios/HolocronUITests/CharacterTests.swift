@@ -23,7 +23,7 @@ final class CharacterTests: XCTestCase {
         let planets = app.buttons["Download planets"]
         for _ in 0..<4 { if planets.isHittable { break }; app.swipeUp() }
         planets.tap()
-        XCTAssertTrue(app.staticTexts["Complete · 1 records"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Complete · 1 record"].waitForExistence(timeout: 15))
         for _ in 0..<5 { if app.buttons["Download collections"].isHittable { break }; app.swipeDown() }
         app.buttons["Download collections"].tap()
         app.switches["offline-mode"].tap()

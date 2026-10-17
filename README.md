@@ -10,7 +10,7 @@ The normal app makes real HTTPS requests to `https://swapi.dev/api/`.
 
 <table>
   <tr>
-    <td><img src="docs/images/ios-people.png" width="290" alt="Holocron People screen in the iOS simulator, with orbital artwork and live character records"></td>
+    <td><img src="docs/images/ios-people.png" width="290" alt="Holocron People screen in the iOS simulator, with cinematic crew artwork and fixture character records"></td>
     <td><img src="docs/images/android-people.png" width="290" alt="Holocron People screen in the Android emulator, using the same artwork and design tokens"></td>
   </tr>
   <tr><td>SwiftUI · iOS simulator</td><td>Jetpack Compose · Android emulator</td></tr>
@@ -104,6 +104,11 @@ and release/distribution setup remain outside the implemented scope.
 
 ### Offline browsing and favorites
 
+<table><tr>
+<td><img src="docs/images/android-offline-favorites.png" width="290" alt="Native Android saved archive with offline mode and a persistent favorite"></td>
+<td><img src="docs/images/android-offline-detail.png" width="290" alt="A planet detail opened entirely from saved collection data"></td>
+</tr><tr><td>Saved favorites · test fixture</td><td>Offline detail · test fixture</td></tr></table>
+
 1. Browse a category while connected. Valid responses and complete records are
    saved automatically; the UI shows their last successful update time.
 2. Open a record and choose **Add favorite**. Favorites survive app restarts and
@@ -150,6 +155,7 @@ flowchart TD
     KB <--> F
     F <--> C[swapi-core: state actors, validation, HTTP]
     C <-- HTTPS --> API[swapi.dev/api]
+    C <--> DB[(SQLite: saved records, cache, favorites)]
     T[design/tokens.json] --> SG[Generated Swift constants]
     T --> KG[Generated Kotlin constants]
     SG --> S
@@ -158,7 +164,7 @@ flowchart TD
 
 | Layer | Responsibility |
 | --- | --- |
-| `crates/swapi-core` | reqwest/Rustls HTTP, parsing, validated records, query/debounce, pagination, refresh and cancellation |
+| `crates/swapi-core` | reqwest/Rustls HTTP, parsing, validated records, query/debounce, pagination, refresh, cancellation, SQLite caching and favorites |
 | `crates/swapi-ffi` | UniFFI records/enums, command methods, callback subscriptions and lifetime boundary |
 | `bindings/` | Generated Swift/Kotlin sources, Swift C header and module map |
 | `ios/Holocron` | Swift main-actor models, SwiftUI screens and NavigationStack |

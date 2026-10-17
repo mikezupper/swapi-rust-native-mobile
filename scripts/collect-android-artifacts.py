@@ -17,7 +17,8 @@ with tarfile.open(output) as archive:
     expected = {'screenshots/scroll-gfxinfo.txt', 'screenshots/display.txt',
                 'screenshots/recreated-query-fixture.png', 'screenshots/scroll-fixture.png',
                 'screenshots/people-fixture.png', 'screenshots/detail-fixture.png',
-                'screenshots/page-failure-fixture.png', 'screenshots/empty-fixture.png'}
+                'screenshots/page-failure-fixture.png', 'screenshots/empty-fixture.png',
+                'screenshots/offline-favorites.png', 'screenshots/offline-planet-detail.png'}
     expected |= {f'screenshots/catalog-{category}{suffix}.png'
                  for category in ('planets', 'starships', 'vehicles', 'species', 'films')
                  for suffix in ('', '-detail')}

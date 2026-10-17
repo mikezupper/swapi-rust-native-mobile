@@ -81,6 +81,19 @@ loading feedback, and selective haptics. Tie motion to user actions and state
 changes. Rendering and animation execute natively. Honor reduced motion and
 transparency settings, and avoid effects that impair reading or scrolling.
 
+The saved archive uses the same cinematic art and surfaces. A compact entry below
+the category picker opens local search, favorites and an expandable collection
+download section. Partial and complete collections are labeled separately;
+record details show a timestamp and saved/live/failure status. Native confirmation
+protects cache clearing, which preserves favorite records.
+
+SwiftUI uses matched-source zoom navigation into records and a category fade;
+Reduce Motion removes the custom zoom and symbol transition. Compose uses
+native fade/scale navigation and an animated favorite star; its animation clock
+honors the system duration scale. Both platforms provide native haptic feedback
+on favorite selection. Physical-device frame timing and haptic feel remain
+separate from emulator/simulator rendering evidence.
+
 ## Assets
 
 SWAPI's documented data does not include character image URLs. Decide the art

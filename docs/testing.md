@@ -221,6 +221,8 @@ The Rust archive suite checks database reopening, favorite preservation after
 cache clearing, namespace and query isolation, fresh cache hits, stale-content
 publication before refresh, malformed refresh fallback, two-page download
 failure/retry/completeness, cancellation and switching offline during HTTP.
+Additional cases verify forced refresh, schema-version protection, and a newer
+collection response replacing an older cached detail.
 Native tests exercise favorite actions, downloads, local browsing and reopening
 the same database. Screenshot names include `offline-favorites` and
 `offline-planet-detail` on Android and `Offline favorites` /

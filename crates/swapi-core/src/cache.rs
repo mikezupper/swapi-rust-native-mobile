@@ -166,13 +166,14 @@ impl ArchiveCache {
             .map_err(storage)?;
         // Collection results contain complete records, so details work offline
         // even when the user has never opened that record's detail screen.
-        if raw.is_none() && url.query().is_none() {
+        // The normalized record is authoritative after a newer collection refresh.
+        if url.query().is_none() {
             let parts: Vec<_> = url.path().trim_matches('/').split('/').collect();
             if let ["api", category, id] = parts.as_slice()
                 && let Ok(id) = id.parse::<u32>()
             {
                 raw = connection.query_row("SELECT body,saved_at FROM records WHERE namespace=?1 AND category=?2 AND id=?3",
-                        params![self.namespace, category, id], |r| Ok((r.get(0)?, r.get(1)?))).optional().map_err(storage)?;
+                        params![self.namespace, category, id], |r| Ok((r.get(0)?, r.get(1)?))).optional().map_err(storage)?.or(raw);
             }
         }
         raw.map(|(body, saved_at)| {

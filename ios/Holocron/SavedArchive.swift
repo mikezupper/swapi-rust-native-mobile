@@ -74,7 +74,7 @@ struct ArchiveShortcut: View {
     var body: some View {
         if archive.session != nil {
             Button { showArchive = true } label: {
-                Label(archive.snapshot.offline ? "Offline mode · Open saved archive" : "Saved archive · \(archive.snapshot.favorites.count) favorites", systemImage: "square.stack.3d.up")
+                Label(archive.snapshot.offline ? "Offline mode · Open saved archive" : "Saved archive · \(archive.snapshot.favorites.count) \(archive.snapshot.favorites.count == 1 ? "favorite" : "favorites")", systemImage: "square.stack.3d.up")
                     .font(.subheadline).frame(maxWidth: .infinity, minHeight: 36)
             }.buttonStyle(.bordered).padding(.horizontal, 24).accessibilityIdentifier("open-saved")
                 .sheet(isPresented: $showArchive) { SavedArchiveScreen(archive: archive) }
@@ -148,7 +148,7 @@ struct SavedArchiveScreen: View {
                                 .overlay(LinearGradient(colors: [DesignTokens.Hero.background.opacity(0.5), DesignTokens.Hero.background], startPoint: .top, endPoint: .bottom))
                         } }
                     VStack(alignment: .leading, spacing: 18) {
-                        Toggle(isOn: Binding(get: { archive.snapshot.offline }, set: archive.offline)) {
+                        Toggle(isOn: Binding(get: { archive.snapshot.offline }, set: { value in archive.offline(value) })) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Offline mode").font(.headline)
                                 Text("Browse saved records without a connection").font(.caption).foregroundStyle(.secondary)
@@ -164,11 +164,11 @@ struct SavedArchiveScreen: View {
                         if archive.snapshot.error != nil { Text("The archive could not save this change. Check available storage and try again.").font(.caption) }
                         TextField("Search saved records", text: $query).textFieldStyle(.roundedBorder).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("saved-search")
                             .onChange(of: query) { _, value in archive.search(value) }
-                        Picker("Saved records", selection: Binding(get: { archive.snapshot.favoritesOnly }, set: archive.favoritesOnly)) {
+                        Picker("Saved records", selection: Binding(get: { archive.snapshot.favoritesOnly }, set: { value in archive.favoritesOnly(value) })) {
                             Text("All saved").tag(false)
                             Text("Favorites").tag(true)
                         }.pickerStyle(.segmented)
-                        Text("\(archive.snapshot.entries.count) saved records").font(.title2).accessibilityAddTraits(.isHeader)
+                        Text("\(archive.snapshot.entries.count) saved \(archive.snapshot.entries.count == 1 ? "record" : "records")").font(.title2).accessibilityAddTraits(.isHeader)
                         Text("Search covers saved records only. Download a collection to keep every story.").font(.caption).foregroundStyle(.secondary)
                         if archive.snapshot.entries.isEmpty { Text("No saved signals yet. Explore a collection or download it for your next journey.").foregroundStyle(.secondary) }
                         ForEach(archive.snapshot.entries, id: \.identity) { saved in
@@ -191,7 +191,7 @@ struct SavedArchiveScreen: View {
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
                 .onAppear { query = archive.snapshot.query }
                 .alert("Clear saved cache?", isPresented: $confirmClear) {
-                    Button("Clear cache", role: .destructive, action: archive.clearCache)
+                    Button("Clear cache", role: .destructive) { archive.clearCache() }
                     Button("Cancel", role: .cancel) {}
                 } message: { Text("Favorites and their records stay on this device. Other saved records and downloaded collections will be removed.") }
         }.tint(accent)
@@ -199,11 +199,11 @@ struct SavedArchiveScreen: View {
     private func downloadRow(_ collection: SavedCollection) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(collection.category.title).font(.headline)
-            Text(collection.complete ? "Complete · \(collection.savedCount) records" : "\(collection.savedCount) saved · \(collection.totalCount.map(String.init) ?? "?") total · Partial").font(.caption).foregroundStyle(.secondary)
+            Text(collection.complete ? "Complete · \(collection.savedCount) \(collection.savedCount == 1 ? "record" : "records")" : "\(collection.savedCount) saved · \(collection.totalCount.map(String.init) ?? "?") total · Partial").font(.caption).foregroundStyle(.secondary)
             if case .downloading(let category, let completed, let total) = archive.snapshot.download, category == collection.category {
                 ProgressView().accessibilityLabel("Downloading \(completed) of \(total) records")
                 Text("Downloading \(completed) of \(total) records").font(.caption)
-                Button("Cancel download", action: archive.cancelDownload).buttonStyle(.bordered)
+                Button("Cancel download") { archive.cancelDownload() }.buttonStyle(.bordered)
             } else {
                 Button((collection.complete ? "Update " : "Download ") + collection.category.title.lowercased()) { archive.download(collection.category) }
                     .buttonStyle(.bordered).disabled(archive.snapshot.offline || running != nil)
