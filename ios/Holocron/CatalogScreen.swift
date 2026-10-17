@@ -21,7 +21,7 @@ struct CatalogScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 16) {
+                VStack(spacing: 16) {
                     hero
                     CategoryPicker(selected: category, onSelect: onCategory)
                     VStack(spacing: 20) {

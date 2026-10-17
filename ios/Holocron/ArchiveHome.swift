@@ -67,7 +67,7 @@ struct CategoryPicker: View {
     private var surface: Color { appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface }
     var body: some View {
         let columns = typeSize.isAccessibilitySize ? 1 : (typeSize > .large ? 2 : 3)
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
+        CategoryGridLayout(columns: columns) {
             ForEach(CatalogCategory.all, id: \.self) { category in
                 Button { if selected != category { onSelect(category) } } label: {
                     Text(category.title).font(.subheadline.weight(.medium))
@@ -80,6 +80,44 @@ struct CategoryPicker: View {
                     .accessibilityIdentifier("category-\(category.title.lowercased())")
             }
         }.padding(.horizontal, DesignTokens.Space.lg)
+    }
+}
+
+// All six controls stay in the hierarchy as Dynamic Type changes their columns.
+// A lazy grid can stop updating the buttons pushed beyond the visible viewport.
+private struct CategoryGridLayout: Layout {
+    let columns: Int
+    private let spacing: CGFloat = 8
+
+    private func cellWidth(_ width: CGFloat) -> CGFloat {
+        max(0, (width - CGFloat(columns - 1) * spacing) / CGFloat(columns))
+    }
+    private func rowHeights(width: CGFloat, subviews: Subviews) -> [CGFloat] {
+        let proposal = ProposedViewSize(width: cellWidth(width), height: nil)
+        return stride(from: 0, to: subviews.count, by: columns).map { start in
+            (start..<min(start + columns, subviews.count))
+                .map { subviews[$0].sizeThatFits(proposal).height }.max() ?? 0
+        }
+    }
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
+        let ideal = (subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0)
+            * CGFloat(columns) + CGFloat(columns - 1) * spacing
+        let width = proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? ideal
+        let heights = rowHeights(width: width, subviews: subviews)
+        return CGSize(width: width, height: heights.reduce(0, +) + CGFloat(max(0, heights.count - 1)) * spacing)
+    }
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
+        let width = cellWidth(bounds.width)
+        var y = bounds.minY
+        for (row, height) in rowHeights(width: bounds.width, subviews: subviews).enumerated() {
+            for column in 0..<columns {
+                let index = row * columns + column
+                guard index < subviews.count else { break }
+                subviews[index].place(at: CGPoint(x: bounds.minX + CGFloat(column) * (width + spacing), y: y),
+                                      anchor: .topLeading, proposal: ProposedViewSize(width: width, height: height))
+            }
+            y += height + spacing
+        }
     }
 }
 

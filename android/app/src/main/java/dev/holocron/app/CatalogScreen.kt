@@ -81,7 +81,8 @@ fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, on
     val record = snapshot.items.firstOrNull()
     val busy = snapshot.phase == CatalogPhase.Loading || snapshot.phase == CatalogPhase.Refreshing
     Surface(Modifier.fillMaxSize()) {
-        Column(Modifier.statusBarsPadding().navigationBarsPadding()) {
+        Column(Modifier.navigationBarsPadding()) {
+            Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(DesignTokens.Hero.background))
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp)) {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back to ${category.title.lowercase()}") }
                 Text(category.title, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
@@ -97,7 +98,7 @@ fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, on
                             color = DesignTokens.Hero.text, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 12.dp).semantics { heading() })
                     }
                 }
-                Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                     if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
                     val failure = snapshot.phase as? CatalogPhase.Failed
                     if (failure != null) {
@@ -107,7 +108,7 @@ fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, on
                     }
                     if (record != null) {
                         Text("The details", fontSize = 24.sp, modifier = Modifier.semantics { heading() })
-                        Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(24.dp)) {
+                        Surface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(24.dp)) {
                             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                                 record.facts.forEach { fact ->
                                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {

@@ -26,7 +26,7 @@ struct PeopleScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 16) {
+                VStack(spacing: 16) {
                     hero
                     CategoryPicker(selected: .people, onSelect: onCategory)
                     VStack(spacing: 20) {
