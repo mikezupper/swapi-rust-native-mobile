@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "swapi",
+  "project_id": "e45e66c0-bcee-4079-b57e-736e0def5f31"
+}
