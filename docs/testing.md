@@ -113,8 +113,10 @@ and the Gradle wrapper; the same commands are intended for CI.
 checks, including token and binding drift. Android requires `ANDROID_SERIAL`;
 iOS requires `HOLOCRON_SIMULATOR`. Missing platforms are not silently skipped.
 The [CI workflow](../.github/workflows/verify.yml) runs these commands and retains
-artifacts on GitHub once a source remote is connected; hosted execution has
-not yet been observed. `scripts/ci-android.sh` creates and disposes a fresh AVD.
+artifacts on GitHub for pushes and pull requests. See the
+[Actions runs](https://github.com/mikezupper/swapi-rust-native-mobile/actions)
+for hosted results; the recorded results above are local verification.
+`scripts/ci-android.sh` creates and disposes a fresh AVD.
 
 `scripts/mac.sh pull` retrieves Xcode bundles, screenshots and verification logs
 without copying DerivedData. Android reports stay under `android/app/build`;

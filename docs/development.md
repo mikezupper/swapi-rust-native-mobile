@@ -189,8 +189,9 @@ The installed Beads CLI uses an embedded Dolt database. Run `bd prime` and use
 the project-local skill from [AGENTS.md](../AGENTS.md). The integration relies
 on AGENTS.md instructions; Codex lifecycle hooks have not been installed.
 
-Source and task synchronization are separate. A plain git clone does not
-fetch the issue database. Once a remote is selected, configure and verify the
+The source remote is [mikezupper/swapi-rust-native-mobile](https://github.com/mikezupper/swapi-rust-native-mobile).
+Source and task synchronization are separate: a plain git clone does not
+fetch the issue database. Once a Dolt remote is selected, configure and verify the
 supported Dolt remote workflow and use `bd bootstrap` on fresh clones.
 Do not treat `.beads/issues.jsonl` as the live database. Use supported local
 backups and Dolt remotes for cross-machine issue synchronization:

@@ -130,9 +130,12 @@ results do not establish physical-device performance or minimum-OS compatibility
 
 ## Get the source and check the core
 
-From a checkout of this repository:
+Clone the [GitHub repository](https://github.com/mikezupper/swapi-rust-native-mobile),
+then check the core from its root directory:
 
 ```sh
+git clone https://github.com/mikezupper/swapi-rust-native-mobile.git
+cd swapi-rust-native-mobile
 rustup toolchain install 1.97.1 --profile minimal --component rustfmt --component clippy
 python3 scripts/doctor.py
 python3 scripts/verify.py core
@@ -332,9 +335,10 @@ reports, screenshots/test bundles and the debug APK even when a test fails. Depe
 are pinned in project manifests; SDK package indexes and hosted runner images
 can still change.
 
-There is currently no Git remote. The workflow has been prepared locally;
-hosted job execution and artifact upload require connecting the repository to
-GitHub and enabling Actions. A local passing run is not a hosted-CI result.
+Pushes and pull requests trigger the workflow on GitHub; it can also be started
+manually. Check [Actions](https://github.com/mikezupper/swapi-rust-native-mobile/actions)
+for the current hosted results and downloadable artifacts. The recorded local
+verification results are separate from hosted-CI results.
 
 ## Work tracking and contributing
 
@@ -356,7 +360,8 @@ It does not claim physical Dolt storage integrity.
 Beads uses a local Dolt database excluded from Git. Cloning source does not
 clone its issue database. Use supported `bd backup` / Dolt remote operations
 for backup and synchronization; JSON exports are not the live database.
-No source or issue remote is configured automatically.
+The source repository is hosted on GitHub. A Beads/Dolt remote has not been
+configured; the issue database and its backup remain local.
 
 Keep behavior in Rust, UI interaction in native code, and generated artifacts
 reproducible. Add regression tests for request races and lifecycle changes;
