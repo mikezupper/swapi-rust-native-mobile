@@ -27,7 +27,8 @@ struct CatalogScreen: View {
                         HStack(spacing: 12) {
                             Image(systemName: "magnifyingglass").foregroundStyle(accent)
                             TextField("Search \(category.title.lowercased())", text: $query, prompt: Text("Search \(category.title.lowercased())").foregroundStyle(secondary), axis: .vertical).focused($searching)
-                                .lineLimit(1...3).textInputAutocapitalization(.never).autocorrectionDisabled()
+                                .lineLimit(1...3).fixedSize(horizontal: false, vertical: true)
+                                .textInputAutocapitalization(.never).autocorrectionDisabled()
                                 .submitLabel(.search).onSubmit { searching = false }
                                 .accessibilityIdentifier("catalog-search")
                             if !query.isEmpty {
@@ -109,9 +110,7 @@ struct CatalogScreen: View {
     private func personRow(_ person: CatalogEntry) -> some View {
         HStack(spacing: 16) {
             if !typeSize.isAccessibilitySize {
-                Text(person.name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined())
-                    .font(.headline.weight(.semibold)).foregroundStyle(foreground).frame(width: 48, height: 48)
-                    .background(background, in: RoundedRectangle(cornerRadius: 16)).accessibilityHidden(true)
+                ArchiveMonogram(name: person.name)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(person.name).font(.headline.weight(.medium)).fixedSize(horizontal: false, vertical: true)

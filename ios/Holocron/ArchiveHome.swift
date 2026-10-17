@@ -57,6 +57,21 @@ struct CatalogCollection: View {
     var body: some View { CatalogScreen(model: model, onCategory: onCategory, category: category) }
 }
 
+struct ArchiveMonogram: View {
+    let name: String
+    @Environment(\.colorScheme) private var appearance
+    private var background: Color { appearance == .dark ? DesignTokens.Dark.background : DesignTokens.Light.background }
+    private var foreground: Color { appearance == .dark ? DesignTokens.Dark.text : DesignTokens.Light.text }
+    var body: some View {
+        // Keep the text's intrinsic bounds separate from the decorated tile.
+        ZStack {
+            RoundedRectangle(cornerRadius: 16).fill(background)
+            Text(name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined())
+                .font(.headline.weight(.semibold)).foregroundStyle(foreground)
+        }.frame(width: 48, height: 48).accessibilityHidden(true)
+    }
+}
+
 struct CategoryPicker: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let selected: CatalogCategory
