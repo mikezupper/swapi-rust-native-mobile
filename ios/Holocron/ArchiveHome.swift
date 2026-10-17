@@ -58,6 +58,7 @@ struct CatalogCollection: View {
 }
 
 struct CategoryPicker: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let selected: CatalogCategory
     let onSelect: (CatalogCategory) -> Void
     @Environment(\.colorScheme) private var appearance
@@ -65,7 +66,8 @@ struct CategoryPicker: View {
     private var onAccent: Color { appearance == .dark ? DesignTokens.Dark.onAccent : DesignTokens.Light.onAccent }
     private var surface: Color { appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface }
     var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+        let columns = typeSize.isAccessibilitySize ? 1 : (typeSize > .large ? 2 : 3)
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
             ForEach(CatalogCategory.all, id: \.self) { category in
                 Button { if selected != category { onSelect(category) } } label: {
                     Text(category.title).font(.subheadline.weight(.medium))

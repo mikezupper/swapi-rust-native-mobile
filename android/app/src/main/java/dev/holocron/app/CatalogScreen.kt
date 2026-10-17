@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -46,8 +47,10 @@ val CatalogCategory.subtitle: String get() = when (this) {
 
 @Composable
 fun CategoryPicker(selected: CatalogCategory, onSelect: (CatalogCategory) -> Unit) {
+    val scale = LocalDensity.current.fontScale
+    val columns = if (scale > 1.8f) 1 else if (scale > 1.3f) 2 else 3
     Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        CatalogCategory.entries.chunked(3).forEach { categories ->
+        CatalogCategory.entries.chunked(columns).forEach { categories ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 categories.forEach { category ->
                     FilterChip(selected = selected == category, onClick = { if (selected != category) onSelect(category) },

@@ -68,6 +68,14 @@ non-People collection starts a fresh session and cancels the previous one;
 People remains the home collection. Relationship counts are informational;
 links between individual related records are not yet navigable.
 
+<table>
+  <tr>
+    <td><img src="docs/images/android-planets.png" width="290" alt="Native Android Planets catalog with category controls and live SWAPI records"></td>
+    <td><img src="docs/images/android-films.png" width="290" alt="Native Android Films catalog with live titles and release dates"></td>
+  </tr>
+  <tr><td>Planets · live API</td><td>Films · live API</td></tr>
+</table>
+
 Rust debounces queries for 300 ms and cancels obsolete requests. Refresh and
 pagination retain useful content; page failures can retry the failed page.
 Duplicate requests and duplicate records are handled centrally. Unknown and
