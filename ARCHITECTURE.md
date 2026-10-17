@@ -15,8 +15,9 @@ packages the library for each target.
 | SwiftUI / Compose | Rendering, navigation stacks, focus, accessibility, localization, gestures, animations and haptics |
 | `design/` | Shared visual tokens and component/motion specifications |
 
-All four code layers exist for People browsing and character detail. Add abstractions only
-when they solve a concrete boundary or testing problem.
+All four layers support People, Planets, Starships, Vehicles, Species, and Films.
+The native apps retain the original character detail presentation and use
+a common catalog presentation for the other resources.
 
 ## Data and state contract
 
@@ -56,7 +57,9 @@ ViewModel and explicitly destroys generated handles; Swift uses weak listener
 ownership and shuts down on model deinitialization. `shutdown` avoids colliding
 with UniFFI's generated Kotlin `AutoCloseable.close`.
 
-`PeopleStore` owns the query, a 300 ms cancellable debounce, loaded people,
+`PagedStore<T>` owns the shared paging state machine. `PeopleStore` specializes
+it for `Person`; `CatalogStore` specializes it for validated `CatalogRecord`.
+The store owns the query, a 300 ms cancellable debounce, loaded people,
 total count, next page and a typed loading/failure phase. Query replacement
 drops the old future and clears results belonging to the old query. Refresh
 and page loading retain current records; failed operations retain their exact
@@ -70,6 +73,27 @@ sessions. SwiftUI NavigationStack and Compose NavHost own routes; each detail
 destination owns a session with the selected ID. Android saves the search draft
 in SavedStateHandle, while native scroll state survives navigating back.
 Native fields own editing/focus only; Rust interprets and executes searches.
+Android uses a native `TextFieldState` and observes draft changes with
+`snapshotFlow`, then persists the query in SavedStateHandle and sends it to Rust.
+This avoids feeding an old String back through an asynchronous StateFlow while
+the keyboard is establishing its input connection. Selection/composition remain
+native; the core still owns the 300 ms debounce. See the
+[Compose text input guidance](https://developer.android.com/develop/ui/compose/text/user-input).
+
+`CatalogSession(category, recordId)` fixes the resource kind for its lifetime.
+A nil ID browses that collection; an ID loads one detail through the same
+serialized state, retry, and cancellation mechanism. Native routes include both
+category and ID. Disposing a category view releases its subscription and session,
+so equal IDs in different collections cannot overwrite each other's state.
+Android preserves a destination's query through SavedStateHandle; Swift retains
+it while the collection view is alive. Returning from detail preserves pages.
+
+Catalog transport validates the collection in record identities, relationship
+URLs and next-page URLs. It reconstructs requests from typed categories and page
+numbers rather than following arbitrary response URLs. Film titles and numeric
+episode IDs are parsed separately; a species may have a null homeworld. Fact
+labels are shared English display metadata; values preserve SWAPI sentinels and
+units are identified in labels. Native apps never parse response JSON.
 
 ## API boundary
 

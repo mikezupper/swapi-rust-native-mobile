@@ -4,6 +4,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/android-env.sh
 export ANDROID_SERIAL=emulator-5554
+# Hosted runners may set Android user/SDK homes differently. Both tools must
+# resolve the same explicit location for this disposable AVD.
+export ANDROID_AVD_HOME="$HOME/.local/share/holocron/ci-avd"
+mkdir -p "$ANDROID_AVD_HOME"
 printf 'no\n' | avdmanager create avd --force -n holocron-ci -k 'system-images;android-36;google_apis;x86_64' -d pixel_7
 mkdir -p .artifacts/android
 emulator -avd holocron-ci -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader -memory 2048 -cores 2 -port 5554 > .artifacts/android/emulator.log 2>&1 &

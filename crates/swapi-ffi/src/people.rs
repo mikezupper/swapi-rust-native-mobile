@@ -24,7 +24,7 @@ impl From<swapi_core::PeopleSnapshot> for PeopleSnapshot {
         Self {
             revision: value.revision,
             query: value.query,
-            people: value.people.into_iter().map(Into::into).collect(),
+            people: value.items.into_iter().map(Into::into).collect(),
             total: value.total,
             has_more: value.next_page.is_some(),
             phase: match value.phase {

@@ -605,6 +605,395 @@ fileprivate struct FfiConverterString: FfiConverter {
 
 
 
+public protocol CatalogListener: AnyObject, Sendable {
+    
+    func onState(snapshot: CatalogSnapshot) throws 
+    
+}
+open class CatalogListenerImpl: CatalogListener, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_swapi_ffi_fn_clone_cataloglistener(self.handle, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_swapi_ffi_fn_free_cataloglistener(handle, $0) }
+    }
+
+    
+
+    
+open func onState(snapshot: CatalogSnapshot)throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_cataloglistener_on_state(
+            self.uniffiCloneHandle(),
+        FfiConverterTypeCatalogSnapshot_lower(snapshot),uniffiCallStatus
+    )
+}
+}
+    
+
+    
+}
+
+
+
+// Put the implementation in a struct so we don't pollute the top-level namespace
+fileprivate struct UniffiCallbackInterfaceCatalogListener {
+
+    // Create the VTable using a series of closures.
+    // Swift automatically converts these into C callback functions.
+    //
+    // Store the vtable directly.
+    static let vtable: UniffiVTableCallbackInterfaceCatalogListener = UniffiVTableCallbackInterfaceCatalogListener(
+        uniffiFree: { (uniffiHandle: UInt64) -> () in
+            do {
+                try FfiConverterTypeCatalogListener.handleMap.remove(handle: uniffiHandle)
+            } catch {
+                print("Uniffi callback interface CatalogListener: handle missing in uniffiFree")
+            }
+        },
+        uniffiClone: { (uniffiHandle: UInt64) -> UInt64 in
+            do {
+                return try FfiConverterTypeCatalogListener.handleMap.clone(handle: uniffiHandle)
+            } catch {
+                fatalError("Uniffi callback interface CatalogListener: handle missing in uniffiClone")
+            }
+        },
+        onState: { (
+            uniffiHandle: UInt64,
+            snapshot: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeCatalogListener.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.onState(
+                     snapshot: try FfiConverterTypeCatalogSnapshot_lift(snapshot)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeBridgeError_lower
+            )
+        }
+    )
+
+    // Rust stores this pointer for future callback invocations, so it must live
+    // for the process lifetime (not just for the init function call).
+    //
+    // `nonisolated(unsafe)` is needed under Swift 6 strict concurrency.
+    // This is safe because the pointee is initialized once during static init
+    // and never mutated by either side of the FFI.  Its fields are C function pointers.
+    nonisolated(unsafe) static let vtablePtr: UnsafePointer<UniffiVTableCallbackInterfaceCatalogListener> = {
+        let ptr = UnsafeMutablePointer<UniffiVTableCallbackInterfaceCatalogListener>.allocate(capacity: 1)
+        ptr.initialize(to: vtable)
+        return UnsafePointer(ptr)
+    }()
+}
+
+private func uniffiCallbackInitCatalogListener() {
+    uniffi_swapi_ffi_fn_init_callback_vtable_cataloglistener(UniffiCallbackInterfaceCatalogListener.vtablePtr)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCatalogListener: FfiConverter {
+    fileprivate static let handleMap = UniffiHandleMap<CatalogListener>()
+
+    typealias FfiType = UInt64
+    typealias SwiftType = CatalogListener
+
+    public static func lift(_ handle: UInt64) throws -> CatalogListener {
+        if ((handle & 1) == 0) {
+            // Rust-generated handle, construct a new class that uses the handle to implement the
+            // interface
+            return CatalogListenerImpl(unsafeFromHandle: handle)
+        } else {
+            // Swift-generated handle, get the object from the handle map
+            return try handleMap.remove(handle: handle)
+        }
+    }
+
+    public static func lower(_ value: CatalogListener) -> UInt64 {
+         if let rustImpl = value as? CatalogListenerImpl {
+             // Rust-implemented object.  Clone the handle and return it
+            return rustImpl.uniffiCloneHandle()
+         } else {
+            // Swift object, generate a new vtable handle and return that.
+            return handleMap.insert(obj: value)
+         }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CatalogListener {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: CatalogListener, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogListener_lift(_ handle: UInt64) throws -> CatalogListener {
+    return try FfiConverterTypeCatalogListener.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogListener_lower(_ value: CatalogListener) -> UInt64 {
+    return FfiConverterTypeCatalogListener.lower(value)
+}
+
+
+
+
+
+
+public protocol CatalogSessionProtocol: AnyObject, Sendable {
+    
+    func loadMore() throws 
+    
+    func refresh() throws 
+    
+    func retry() throws 
+    
+    func search(query: String) throws 
+    
+    func shutdown() 
+    
+    func subscribe(listener: CatalogListener) throws  -> Subscription
+    
+}
+open class CatalogSession: CatalogSessionProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_swapi_ffi_fn_clone_catalogsession(self.handle, $0) }
+    }
+public convenience init(category: CatalogCategory, recordId: UInt32?)throws  {
+    let handle =
+        try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_constructor_catalogsession_new(
+        FfiConverterTypeCatalogCategory_lower(category),
+        FfiConverterOptionUInt32.lower(recordId),uniffiCallStatus
+    )
+}
+    self.init(unsafeFromHandle: handle)
+}
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_swapi_ffi_fn_free_catalogsession(handle, $0) }
+    }
+
+    
+public static func withEndpoint(baseUrl: String, category: CatalogCategory, recordId: UInt32?)throws  -> CatalogSession  {
+    return try  FfiConverterTypeCatalogSession_lift(try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_constructor_catalogsession_with_endpoint(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterTypeCatalogCategory_lower(category),
+        FfiConverterOptionUInt32.lower(recordId),uniffiCallStatus
+    )
+})
+}
+    
+
+    
+open func loadMore()throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_catalogsession_load_more(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+}
+}
+    
+open func refresh()throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_catalogsession_refresh(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+}
+}
+    
+open func retry()throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_catalogsession_retry(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+}
+}
+    
+open func search(query: String)throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_catalogsession_search(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(query),uniffiCallStatus
+    )
+}
+}
+    
+open func shutdown()  {try! rustCall() {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_catalogsession_shutdown(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+}
+}
+    
+open func subscribe(listener: CatalogListener)throws  -> Subscription  {
+    return try  FfiConverterTypeSubscription_lift(try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_catalogsession_subscribe(
+            self.uniffiCloneHandle(),
+        FfiConverterTypeCatalogListener_lower(listener),uniffiCallStatus
+    )
+})
+}
+    
+
+    
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCatalogSession: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = CatalogSession
+
+    public static func lift(_ handle: UInt64) throws -> CatalogSession {
+        return CatalogSession(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: CatalogSession) -> UInt64 {
+        return value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CatalogSession {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: CatalogSession, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogSession_lift(_ handle: UInt64) throws -> CatalogSession {
+    return try FfiConverterTypeCatalogSession.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogSession_lower(_ value: CatalogSession) -> UInt64 {
+    return FfiConverterTypeCatalogSession.lower(value)
+}
+
+
+
+
+
+
 public protocol CharacterListener: AnyObject, Sendable {
     
     func onState(snapshot: CharacterSnapshot) throws 
@@ -1491,6 +1880,192 @@ public func FfiConverterTypeSubscription_lower(_ value: Subscription) -> UInt64 
 
 
 
+public struct CatalogEntry: Equatable, Hashable {
+    public var id: UInt32
+    public var name: String
+    public var facts: [CatalogFact]
+    public var description: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: UInt32, name: String, facts: [CatalogFact], description: String?) {
+        self.id = id
+        self.name = name
+        self.facts = facts
+        self.description = description
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension CatalogEntry: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCatalogEntry: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CatalogEntry {
+        return
+            try CatalogEntry(
+                id: FfiConverterUInt32.read(from: &buf), 
+                name: FfiConverterString.read(from: &buf), 
+                facts: FfiConverterSequenceTypeCatalogFact.read(from: &buf), 
+                description: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CatalogEntry, into buf: inout [UInt8]) {
+        FfiConverterUInt32.write(value.id, into: &buf)
+        FfiConverterString.write(value.name, into: &buf)
+        FfiConverterSequenceTypeCatalogFact.write(value.facts, into: &buf)
+        FfiConverterOptionString.write(value.description, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogEntry_lift(_ buf: RustBuffer) throws -> CatalogEntry {
+    return try FfiConverterTypeCatalogEntry.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogEntry_lower(_ value: CatalogEntry) -> RustBuffer {
+    return FfiConverterTypeCatalogEntry.lower(value)
+}
+
+
+public struct CatalogFact: Equatable, Hashable {
+    public var label: String
+    public var value: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(label: String, value: String) {
+        self.label = label
+        self.value = value
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension CatalogFact: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCatalogFact: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CatalogFact {
+        return
+            try CatalogFact(
+                label: FfiConverterString.read(from: &buf), 
+                value: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CatalogFact, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.label, into: &buf)
+        FfiConverterString.write(value.value, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogFact_lift(_ buf: RustBuffer) throws -> CatalogFact {
+    return try FfiConverterTypeCatalogFact.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogFact_lower(_ value: CatalogFact) -> RustBuffer {
+    return FfiConverterTypeCatalogFact.lower(value)
+}
+
+
+public struct CatalogSnapshot: Equatable, Hashable {
+    public var revision: UInt64
+    public var query: String
+    public var items: [CatalogEntry]
+    public var total: UInt32
+    public var hasMore: Bool
+    public var phase: CatalogPhase
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(revision: UInt64, query: String, items: [CatalogEntry], total: UInt32, hasMore: Bool, phase: CatalogPhase) {
+        self.revision = revision
+        self.query = query
+        self.items = items
+        self.total = total
+        self.hasMore = hasMore
+        self.phase = phase
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension CatalogSnapshot: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCatalogSnapshot: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CatalogSnapshot {
+        return
+            try CatalogSnapshot(
+                revision: FfiConverterUInt64.read(from: &buf), 
+                query: FfiConverterString.read(from: &buf), 
+                items: FfiConverterSequenceTypeCatalogEntry.read(from: &buf), 
+                total: FfiConverterUInt32.read(from: &buf), 
+                hasMore: FfiConverterBool.read(from: &buf), 
+                phase: FfiConverterTypeCatalogPhase.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CatalogSnapshot, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.revision, into: &buf)
+        FfiConverterString.write(value.query, into: &buf)
+        FfiConverterSequenceTypeCatalogEntry.write(value.items, into: &buf)
+        FfiConverterUInt32.write(value.total, into: &buf)
+        FfiConverterBool.write(value.hasMore, into: &buf)
+        FfiConverterTypeCatalogPhase.write(value.phase, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogSnapshot_lift(_ buf: RustBuffer) throws -> CatalogSnapshot {
+    return try FfiConverterTypeCatalogSnapshot.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogSnapshot_lower(_ value: CatalogSnapshot) -> RustBuffer {
+    return FfiConverterTypeCatalogSnapshot.lower(value)
+}
+
+
 public struct Character: Equatable, Hashable {
     public var id: UInt32
     public var name: String
@@ -1774,6 +2349,198 @@ public func FfiConverterTypeBridgeError_lift(_ buf: RustBuffer) throws -> Bridge
 public func FfiConverterTypeBridgeError_lower(_ value: BridgeError) -> RustBuffer {
     return FfiConverterTypeBridgeError.lower(value)
 }
+
+
+
+public enum CatalogCategory: Equatable, Hashable {
+    
+    case people
+    case planets
+    case starships
+    case vehicles
+    case species
+    case films
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension CatalogCategory: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCatalogCategory: FfiConverterRustBuffer {
+    typealias SwiftType = CatalogCategory
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CatalogCategory {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .people
+        
+        case 2: return .planets
+        
+        case 3: return .starships
+        
+        case 4: return .vehicles
+        
+        case 5: return .species
+        
+        case 6: return .films
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: CatalogCategory, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .people:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .planets:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .starships:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .vehicles:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .species:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .films:
+            writeInt(&buf, Int32(6))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogCategory_lift(_ buf: RustBuffer) throws -> CatalogCategory {
+    return try FfiConverterTypeCatalogCategory.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogCategory_lower(_ value: CatalogCategory) -> RustBuffer {
+    return FfiConverterTypeCatalogCategory.lower(value)
+}
+
+
+
+
+public enum CatalogPhase: Equatable, Hashable {
+    
+    case idle
+    case loading
+    case ready
+    case refreshing
+    case loadingMore
+    case failed(kind: FailureKind, retryable: Bool
+    )
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension CatalogPhase: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCatalogPhase: FfiConverterRustBuffer {
+    typealias SwiftType = CatalogPhase
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CatalogPhase {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .idle
+        
+        case 2: return .loading
+        
+        case 3: return .ready
+        
+        case 4: return .refreshing
+        
+        case 5: return .loadingMore
+        
+        case 6: return .failed(kind: try FfiConverterTypeFailureKind.read(from: &buf), retryable: try FfiConverterBool.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: CatalogPhase, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .idle:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .loading:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .ready:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .refreshing:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .loadingMore:
+            writeInt(&buf, Int32(5))
+        
+        
+        case let .failed(kind,retryable):
+            writeInt(&buf, Int32(6))
+            FfiConverterTypeFailureKind.write(kind, into: &buf)
+            FfiConverterBool.write(retryable, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogPhase_lift(_ buf: RustBuffer) throws -> CatalogPhase {
+    return try FfiConverterTypeCatalogPhase.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogPhase_lower(_ value: CatalogPhase) -> RustBuffer {
+    return FfiConverterTypeCatalogPhase.lower(value)
+}
+
 
 
 
@@ -2133,6 +2900,104 @@ public func FfiConverterTypePeoplePhase_lower(_ value: PeoplePhase) -> RustBuffe
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionUInt32: FfiConverterRustBuffer {
+    typealias SwiftType = UInt32?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterUInt32.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterUInt32.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionString: FfiConverterRustBuffer {
+    typealias SwiftType = String?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterString.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterString.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeCatalogEntry: FfiConverterRustBuffer {
+    typealias SwiftType = [CatalogEntry]
+
+    public static func write(_ value: [CatalogEntry], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeCatalogEntry.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [CatalogEntry] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [CatalogEntry]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeCatalogEntry.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeCatalogFact: FfiConverterRustBuffer {
+    typealias SwiftType = [CatalogFact]
+
+    public static func write(_ value: [CatalogFact], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeCatalogFact.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [CatalogFact] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [CatalogFact]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeCatalogFact.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeCharacter: FfiConverterRustBuffer {
     typealias SwiftType = [Character]
 
@@ -2191,6 +3056,27 @@ private let initializationResult: InitializationResult = {
     if (uniffi_swapi_ffi_checksum_method_subscription_cancel() != 10199) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_swapi_ffi_checksum_method_cataloglistener_on_state() != 14781) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_method_catalogsession_load_more() != 54811) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_method_catalogsession_refresh() != 140) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_method_catalogsession_retry() != 26305) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_method_catalogsession_search() != 14841) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_method_catalogsession_shutdown() != 48446) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_method_catalogsession_subscribe() != 56363) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_swapi_ffi_checksum_method_peoplelistener_on_state() != 59559) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -2218,6 +3104,12 @@ private let initializationResult: InitializationResult = {
     if (uniffi_swapi_ffi_checksum_constructor_charactersession_with_endpoint() != 37581) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_swapi_ffi_checksum_constructor_catalogsession_new() != 22772) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_constructor_catalogsession_with_endpoint() != 21401) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_swapi_ffi_checksum_constructor_peoplesession_new() != 39022) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -2225,6 +3117,7 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
 
+    uniffiCallbackInitCatalogListener()
     uniffiCallbackInitCharacterListener()
     uniffiCallbackInitPeopleListener()
     return InitializationResult.ok

@@ -1,7 +1,7 @@
 # Product brief
 
 Create a visually distinctive Star Wars explorer that makes browsing
-characters and their connections enjoyable on iOS and Android.
+people, worlds, vessels, species and films enjoyable on iOS and Android.
 
 ## Confirmed requirements
 
@@ -15,16 +15,16 @@ Use the supplied harness engineering approach and Beads for work tracking.
 Try OSX-KVM for the iOS build environment first. The user has a Mac available
 as a fallback and wants assistance enabling SSH and remote build/test commands.
 
-## Proposed first release
+## Current scope
 
-Holocron is a working title. The initial experience focuses on People:
-browse, search, paginate, open character details, and recover from failures.
-Start with one end-to-end slice that displays Luke Skywalker through the real
-Rust core in both native apps, with loading, failure, and retry behavior.
+Holocron is a working title. Following the initial People slice, the user
+requested the remaining SWAPI categories. Both native apps expose People,
+Planets, Starships, Vehicles, Species and Films with collection search, pagination,
+details, refresh and retry through the Rust core.
 
 Explore, search results, and character detail are the first design surfaces.
-Linked planets and films, favorites, and persistent offline caching are later
-scope decisions. A full backend, authentication, and social features have no
+Navigation between related records, favorites, and persistent offline caching
+remain later scope decisions. A full backend, authentication, and social features have no
 current product requirement.
 
 ## Experience expectations

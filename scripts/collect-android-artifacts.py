@@ -18,6 +18,9 @@ with tarfile.open(output) as archive:
                 'screenshots/recreated-query-fixture.png', 'screenshots/scroll-fixture.png',
                 'screenshots/people-fixture.png', 'screenshots/detail-fixture.png',
                 'screenshots/page-failure-fixture.png', 'screenshots/empty-fixture.png'}
+    expected |= {f'screenshots/catalog-{category}{suffix}.png'
+                 for category in ('planets', 'starships', 'vehicles', 'species', 'films')
+                 for suffix in ('', '-detail')}
     if missing := expected - names:
         raise SystemExit(f'Missing native test artifacts: {sorted(missing)}')
     for name in expected:

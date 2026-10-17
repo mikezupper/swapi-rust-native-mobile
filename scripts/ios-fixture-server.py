@@ -11,6 +11,7 @@ import threading
 LUKE = json.loads((Path(__file__).resolve().parents[1] / 'crates/swapi-core/tests/fixtures/luke.json').read_text())
 DROID = dict(LUKE, name='C-3PO', height='167', url='https://swapi.dev/api/people/2/')
 LEIA = dict(LUKE, name='Leia Organa', height='150', url='https://swapi.dev/api/people/5/')
+CATALOG = json.loads((Path(__file__).resolve().parents[1] / 'crates/swapi-core/tests/fixtures/catalog.json').read_text())
 RELEASE = threading.Event()
 
 
@@ -41,6 +42,16 @@ class Handler(BaseHTTPRequestHandler):
         if url.path == '/release':
             RELEASE.set()
             return self.respond(200)
+        for category, record in CATALOG.items():
+            if category == 'people':
+                continue
+            if url.path == f'/api/{category}/':
+                query = params.get('search', [''])[0].casefold()
+                name = record.get('name', record.get('title', ''))
+                results = [record] if query in name.casefold() else []
+                return self.respond(200, dict(count=len(results), next=None, results=results))
+            if url.path == urlparse(record['url']).path:
+                return self.respond(200, record)
         if url.path == '/api/people/':
             query = params.get('search', [''])[0].casefold()
             page = int(params.get('page', ['1'])[0])

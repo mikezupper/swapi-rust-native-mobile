@@ -8,3 +8,7 @@ pub use client::SwapiClient;
 pub use model::{ApiError, Measurement, PeoplePage, Person, ResourceKind, ResourceRef};
 pub use people::{PeopleOperation, PeoplePhase, PeopleSnapshot, PeopleStore};
 pub use state::{CharacterSnapshot, CharacterState, CharacterStore};
+
+mod catalog;
+pub use catalog::{CatalogRecord, CatalogSnapshot, CatalogStore, ResourceFact};
+pub use people::Page;

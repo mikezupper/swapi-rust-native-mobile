@@ -29,20 +29,20 @@ pub enum PeoplePhase {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct PeopleSnapshot {
+pub struct PageSnapshot<T> {
     pub revision: u64,
     pub query: String,
-    pub people: Vec<Person>,
+    pub items: Vec<T>,
     pub total: u32,
     pub next_page: Option<u32>,
     pub phase: PeoplePhase,
 }
-impl Default for PeopleSnapshot {
+impl<T> Default for PageSnapshot<T> {
     fn default() -> Self {
         Self {
             revision: 0,
             query: String::new(),
-            people: vec![],
+            items: vec![],
             total: 0,
             next_page: None,
             phase: PeoplePhase::Idle,
@@ -56,31 +56,58 @@ enum Command {
     More,
     Retry,
 }
-type Request = Pin<Box<dyn Future<Output = Result<PeoplePage, ApiError>> + Send>>;
-type Loader = Arc<dyn Fn(String, u32) -> Request + Send + Sync>;
+#[derive(Clone, Debug, PartialEq)]
+pub struct Page<T> {
+    pub total: u32,
+    pub next_page: Option<u32>,
+    pub items: Vec<T>,
+}
 
-pub struct PeopleStore {
+pub trait Record: Clone + Send + Sync + 'static {
+    fn id(&self) -> u32;
+}
+impl Record for Person {
+    fn id(&self) -> u32 {
+        self.id
+    }
+}
+impl From<PeoplePage> for Page<Person> {
+    fn from(page: PeoplePage) -> Self {
+        Self {
+            total: page.total,
+            next_page: page.next_page,
+            items: page.people,
+        }
+    }
+}
+pub type PeopleSnapshot = PageSnapshot<Person>;
+pub type PeopleStore = PagedStore<Person>;
+type Request<T> = Pin<Box<dyn Future<Output = Result<Page<T>, ApiError>> + Send>>;
+type Loader<T> = Arc<dyn Fn(String, u32) -> Request<T> + Send + Sync>;
+
+pub struct PagedStore<T> {
     commands: mpsc::UnboundedSender<Command>,
-    states: watch::Receiver<PeopleSnapshot>,
+    states: watch::Receiver<PageSnapshot<T>>,
     actor: AbortHandle,
 }
-impl PeopleStore {
+impl PagedStore<Person> {
     pub fn new(client: SwapiClient, runtime: &Handle) -> Self {
         Self::start(
             Arc::new(move |query, page| {
                 let client = client.clone();
-                Box::pin(async move { client.people(&query, page).await })
+                Box::pin(async move { client.people(&query, page).await.map(Into::into) })
             }),
             runtime,
         )
     }
-
-    fn start(load: Loader, runtime: &Handle) -> Self {
+}
+impl<T: Record> PagedStore<T> {
+    pub(crate) fn start(load: Loader<T>, runtime: &Handle) -> Self {
         let (commands, mut inbox) = mpsc::unbounded_channel();
-        let (publisher, states) = watch::channel(PeopleSnapshot::default());
+        let (publisher, states) = watch::channel(PageSnapshot::default());
         let actor = runtime.spawn(async move {
-            let mut snapshot = PeopleSnapshot::default();
-            let mut pending: Option<(PeopleOperation, Request)> = None;
+            let mut snapshot: PageSnapshot<T> = PageSnapshot::default();
+            let mut pending: Option<(PeopleOperation, Request<T>)> = None;
             loop {
                 tokio::select! {
                     biased;
@@ -90,10 +117,10 @@ impl PeopleStore {
                                 let query = query.trim().to_owned();
                                 if query == snapshot.query && snapshot.phase != PeoplePhase::Idle { continue; }
                                 drop(pending.take());
-                                snapshot = PeopleSnapshot { revision: snapshot.revision, query, ..Default::default() };
+                                snapshot = PageSnapshot { revision: snapshot.revision, query, ..Default::default() };
                                 (PeopleOperation::Initial, true)
                             }
-                            Some(Command::Refresh) if pending.is_none() => (if snapshot.people.is_empty() { PeopleOperation::Initial } else { PeopleOperation::Refresh }, false),
+                            Some(Command::Refresh) if pending.is_none() => (if snapshot.items.is_empty() { PeopleOperation::Initial } else { PeopleOperation::Refresh }, false),
                             Some(Command::More) if snapshot.phase == PeoplePhase::Ready && snapshot.next_page.is_some() => (PeopleOperation::More, false),
                             Some(Command::Retry) => match &snapshot.phase {
                                 PeoplePhase::Failed { operation, error } if error.is_retryable() => (*operation, false),
@@ -119,9 +146,9 @@ impl PeopleStore {
                         let operation = pending.take().expect("completed request").0;
                         match result {
                             Ok(page) => {
-                                if operation != PeopleOperation::More { snapshot.people.clear(); }
-                                let mut seen: std::collections::HashSet<_> = snapshot.people.iter().map(|p| p.id).collect();
-                                snapshot.people.extend(page.people.into_iter().filter(|p| seen.insert(p.id)));
+                                if operation != PeopleOperation::More { snapshot.items.clear(); }
+                                let mut seen: std::collections::HashSet<_> = snapshot.items.iter().map(|p| p.id()).collect();
+                                snapshot.items.extend(page.items.into_iter().filter(|p| seen.insert(p.id())));
                                 snapshot.total = page.total;
                                 snapshot.next_page = page.next_page;
                                 snapshot.phase = PeoplePhase::Ready;
@@ -140,7 +167,7 @@ impl PeopleStore {
             actor,
         }
     }
-    pub fn observe(&self) -> watch::Receiver<PeopleSnapshot> {
+    pub fn observe(&self) -> watch::Receiver<PageSnapshot<T>> {
         self.states.clone()
     }
     pub fn search(&self, query: String) {
@@ -159,9 +186,9 @@ impl PeopleStore {
         self.actor.abort();
     }
 }
-impl Drop for PeopleStore {
+impl<T> Drop for PagedStore<T> {
     fn drop(&mut self) {
-        self.close();
+        self.actor.abort();
     }
 }
 

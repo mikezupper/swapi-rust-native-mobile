@@ -17,9 +17,9 @@ struct HolocronApp: App {
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("--detail") {
                 CharacterDestination(id: 1)
-            } else { PeopleScreen(model: model) }
+            } else { ArchiveHome(people: model) }
             #else
-            PeopleScreen(model: model)
+            ArchiveHome(people: model)
             #endif
         }
     }

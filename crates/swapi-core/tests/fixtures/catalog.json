@@ -1,0 +1,97 @@
+{
+  "people": {
+    "name": "Luke Skywalker",
+    "height": "172",
+    "mass": "77",
+    "hair_color": "blond",
+    "eye_color": "blue",
+    "birth_year": "19BBY",
+    "homeworld": "https://swapi.dev/api/planets/1/",
+    "films": [
+      "https://swapi.dev/api/films/1/",
+      "https://swapi.dev/api/films/2/",
+      "https://swapi.dev/api/films/3/",
+      "https://swapi.dev/api/films/6/"
+    ],
+    "url": "https://swapi.dev/api/people/1/"
+  },
+  "planets": {
+    "name": "Tatooine",
+    "url": "https://swapi.dev/api/planets/1/",
+    "climate": "arid",
+    "terrain": "desert",
+    "population": "200000",
+    "diameter": "10465",
+    "gravity": "1 standard",
+    "rotation_period": "23",
+    "orbital_period": "304",
+    "surface_water": "1",
+    "residents": [
+      "https://swapi.dev/api/people/1/"
+    ],
+    "films": []
+  },
+  "starships": {
+    "name": "Death Star",
+    "url": "https://swapi.dev/api/starships/9/",
+    "model": "DS-1 Orbital Battle Station",
+    "starship_class": "Deep Space Mobile Battlestation",
+    "manufacturer": "Imperial Department of Military Research",
+    "hyperdrive_rating": "4.0",
+    "MGLT": "10",
+    "crew": "342953",
+    "passengers": "843342",
+    "length": "120000",
+    "cost_in_credits": "1000000000000",
+    "cargo_capacity": "1000000000000",
+    "max_atmosphering_speed": "n/a",
+    "consumables": "3 years",
+    "films": [],
+    "pilots": []
+  },
+  "vehicles": {
+    "name": "Sand Crawler",
+    "url": "https://swapi.dev/api/vehicles/4/",
+    "model": "Digger Crawler",
+    "manufacturer": "Corellia Mining Corporation",
+    "crew": "342953",
+    "passengers": "843342",
+    "length": "120000",
+    "cost_in_credits": "1000000000000",
+    "cargo_capacity": "1000000000000",
+    "max_atmosphering_speed": "n/a",
+    "consumables": "3 years",
+    "films": [],
+    "pilots": [],
+    "vehicle_class": "wheeled"
+  },
+  "species": {
+    "name": "Wookiee",
+    "url": "https://swapi.dev/api/species/3/",
+    "classification": "mammal",
+    "designation": "sentient",
+    "language": "Shyriiwook",
+    "average_height": "210",
+    "average_lifespan": "400",
+    "skin_colors": "gray",
+    "hair_colors": "brown",
+    "eye_colors": "blue",
+    "homeworld": null,
+    "people": [],
+    "films": []
+  },
+  "films": {
+    "title": "A New Hope",
+    "url": "https://swapi.dev/api/films/1/",
+    "episode_id": 4,
+    "release_date": "1977-05-25",
+    "director": "George Lucas",
+    "producer": "Gary Kurtz",
+    "opening_crawl": "A synthetic crawl for deterministic interface tests.\r\nThe archive awaits.",
+    "characters": [],
+    "planets": [],
+    "starships": [],
+    "vehicles": [],
+    "species": []
+  }
+}

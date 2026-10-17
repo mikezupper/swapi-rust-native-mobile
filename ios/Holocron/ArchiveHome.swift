@@ -1,0 +1,150 @@
+import SwiftUI
+
+extension CatalogCategory {
+    static let all: [Self] = [.people, .planets, .starships, .vehicles, .species, .films]
+    var title: String {
+        switch self {
+        case .people: return "People"
+        case .planets: return "Planets"
+        case .starships: return "Starships"
+        case .vehicles: return "Vehicles"
+        case .species: return "Species"
+        case .films: return "Films"
+        }
+    }
+    var headline: String {
+        switch self {
+        case .people: return "A galaxy of\nstories."
+        case .planets: return "Worlds beyond\nthe horizon."
+        case .starships: return "Built for\nthe stars."
+        case .vehicles: return "Adventure\nin motion."
+        case .species: return "Life across\nthe galaxy."
+        case .films: return "The stories\nthat started it."
+        }
+    }
+    var subtitle: String {
+        switch self {
+        case .people: return "Discover the people behind the legends."
+        case .planets: return "Desert suns. Ocean worlds. Distant homes."
+        case .starships: return "Explore the vessels that cross the galaxy."
+        case .vehicles: return "From desert crawlers to soaring speeders."
+        case .species: return "Discover the galaxy’s many forms of life."
+        case .films: return "Explore the saga, one episode at a time."
+        }
+    }
+}
+
+struct ArchiveHome: View {
+    @ObservedObject var people: PeopleModel
+    @State private var selected: CatalogCategory = .people
+    var body: some View {
+        if selected == .people {
+            PeopleScreen(model: people, onCategory: { selected = $0 })
+        } else {
+            CatalogCollection(category: selected, onCategory: { selected = $0 }).id(selected)
+        }
+    }
+}
+
+struct CatalogCollection: View {
+    @StateObject private var model: CatalogModel
+    let category: CatalogCategory
+    let onCategory: (CatalogCategory) -> Void
+    init(category: CatalogCategory, onCategory: @escaping (CatalogCategory) -> Void) {
+        self.category = category; self.onCategory = onCategory
+        _model = StateObject(wrappedValue: CatalogModel(category: category))
+    }
+    var body: some View { CatalogScreen(model: model, onCategory: onCategory, category: category) }
+}
+
+struct CategoryPicker: View {
+    let selected: CatalogCategory
+    let onSelect: (CatalogCategory) -> Void
+    @Environment(\.colorScheme) private var appearance
+    private var accent: Color { appearance == .dark ? DesignTokens.Dark.accent : DesignTokens.Light.accent }
+    private var onAccent: Color { appearance == .dark ? DesignTokens.Dark.onAccent : DesignTokens.Light.onAccent }
+    private var surface: Color { appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface }
+    var body: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+            ForEach(CatalogCategory.all, id: \.self) { category in
+                Button { if selected != category { onSelect(category) } } label: {
+                    Text(category.title).font(.subheadline.weight(.medium))
+                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
+                        .padding(.horizontal, 4)
+                        .foregroundStyle(selected == category ? onAccent : accent)
+                        .background(selected == category ? accent : surface, in: RoundedRectangle(cornerRadius: 14))
+                }.buttonStyle(.plain)
+                    .accessibilityAddTraits(selected == category ? .isSelected : [])
+                    .accessibilityIdentifier("category-\(category.title.lowercased())")
+            }
+        }.padding(.horizontal, DesignTokens.Space.lg)
+    }
+}
+
+struct CatalogDestination: View {
+    @StateObject private var model: CatalogModel
+    let category: CatalogCategory
+    init(category: CatalogCategory, id: UInt32) {
+        self.category = category
+        _model = StateObject(wrappedValue: CatalogModel(category: category, recordId: id))
+    }
+    var body: some View { CatalogDetailScreen(model: model, category: category).toolbar(.visible, for: .navigationBar) }
+}
+
+struct CatalogDetailScreen: View {
+    @ObservedObject var model: CatalogModel
+    let category: CatalogCategory
+    @Environment(\.colorScheme) private var appearance
+    @ScaledMetric(relativeTo: .largeTitle) private var heroSize = DesignTokens.Typography.hero
+    private var background: Color { appearance == .dark ? DesignTokens.Dark.background : DesignTokens.Light.background }
+    private var surface: Color { appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface }
+    private var foreground: Color { appearance == .dark ? DesignTokens.Dark.text : DesignTokens.Light.text }
+    private var secondary: Color { appearance == .dark ? DesignTokens.Dark.secondary : DesignTokens.Light.secondary }
+    private var accent: Color { appearance == .dark ? DesignTokens.Dark.accent : DesignTokens.Light.accent }
+    private var record: CatalogEntry? { model.snapshot.items.first }
+    private var busy: Bool { model.snapshot.phase == .loading || model.snapshot.phase == .refreshing }
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Spacer(minLength: 64)
+                    Text(category.title.uppercased() + (record.map { String(format: " / %03d", $0.id) } ?? ""))
+                        .font(.caption).tracking(2).foregroundStyle(DesignTokens.Hero.accent)
+                    Text(record?.name ?? "Reading the stars").font(.system(size: heroSize, weight: .medium))
+                        .fixedSize(horizontal: false, vertical: true).accessibilityAddTraits(.isHeader)
+                }.padding(24).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(DesignTokens.Hero.text)
+                    .background {
+                        GeometryReader { geometry in
+                            Image("desert_orbit").resizable().scaledToFill().frame(width: geometry.size.width, height: geometry.size.height).clipped()
+                                .overlay(LinearGradient(colors: [DesignTokens.Hero.background.opacity(0.5), DesignTokens.Hero.background], startPoint: .top, endPoint: .bottom))
+                        }
+                    }
+                VStack(alignment: .leading, spacing: 22) {
+                    if busy { ProgressView().accessibilityLabel("Loading record") }
+                    if case .failed(_, let retryable) = model.snapshot.phase {
+                        Text("Signal interrupted").font(.title2)
+                        Text("The archive could not load this record. Please try again.").foregroundStyle(secondary)
+                        if retryable { Button("Try again", action: model.retry).buttonStyle(.borderedProminent) }
+                    }
+                    if let record {
+                        Text("The details").font(.title2).accessibilityAddTraits(.isHeader)
+                        VStack(alignment: .leading, spacing: 20) {
+                            ForEach(record.facts, id: \.label) { fact in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(fact.label).font(.caption).foregroundStyle(secondary)
+                                    Text(fact.value).font(.headline.weight(.medium)).fixedSize(horizontal: false, vertical: true)
+                                }.frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }.padding(20).background(surface, in: RoundedRectangle(cornerRadius: 24))
+                        if let crawl = record.description {
+                            Text("Opening crawl").font(.title2).accessibilityAddTraits(.isHeader)
+                            Text(crawl).font(.body).lineSpacing(6).foregroundStyle(secondary).textSelection(.enabled)
+                        }
+                        Text("Record from the Star Wars API.").font(.caption).foregroundStyle(secondary)
+                    }
+                    Button("Refresh record", action: model.refresh).buttonStyle(.bordered).disabled(busy)
+                }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }.background(background).foregroundStyle(foreground).tint(accent).navigationTitle(category.title).navigationBarTitleDisplayMode(.inline)
+    }
+}

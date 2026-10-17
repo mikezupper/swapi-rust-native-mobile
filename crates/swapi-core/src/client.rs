@@ -9,7 +9,7 @@ const MAX_BODY: usize = 1024 * 1024;
 #[derive(Clone)]
 pub struct SwapiClient {
     http: reqwest::Client,
-    base: Url,
+    pub(crate) base: Url,
 }
 
 impl SwapiClient {
@@ -89,7 +89,7 @@ impl SwapiClient {
         let next_page = dto
             .next
             .as_deref()
-            .map(|s| self.next_page(s, search, page))
+            .map(|s| self.next_page(s, crate::ResourceKind::Person, search, page))
             .transpose()?;
         let people = dto
             .results
@@ -106,11 +106,17 @@ impl SwapiClient {
         })
     }
 
-    fn next_page(&self, value: &str, search: &str, current: u32) -> Result<u32, ApiError> {
+    pub(crate) fn next_page(
+        &self,
+        value: &str,
+        kind: crate::ResourceKind,
+        search: &str,
+        current: u32,
+    ) -> Result<u32, ApiError> {
         let url = Url::parse(value).map_err(|_| ApiError::InvalidData)?;
         let production = Url::parse(PRODUCTION).expect("constant URL");
         if (url.origin() != self.base.origin() && url.origin() != production.origin())
-            || url.path() != "/api/people/"
+            || url.path() != format!("/api/{}/", kind.path())
             || !url.username().is_empty()
             || url.password().is_some()
             || url.fragment().is_some()
@@ -137,7 +143,7 @@ impl SwapiClient {
         Ok(page)
     }
 
-    async fn get<T: DeserializeOwned>(&self, url: Url) -> Result<T, ApiError> {
+    pub(crate) async fn get<T: DeserializeOwned>(&self, url: Url) -> Result<T, ApiError> {
         let mut response = self.http.get(url).send().await.map_err(network_error)?;
         if !response.status().is_success() {
             return Err(ApiError::Http {

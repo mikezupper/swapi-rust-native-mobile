@@ -259,3 +259,6 @@ mod tests;
 
 mod people;
 pub use people::*;
+
+mod catalog;
+pub use catalog::*;

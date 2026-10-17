@@ -49,7 +49,13 @@ Android large text stacks the three primary facts vertically. iOS uses an
 accessibility-size vertical layout. Native screenshots, rather than the HTML
 concept alone, guide subsequent refinement.
 
-People cards use monograms, film counts and birth years. Search has explicit
+A six-button, two-row category picker sits below the archive hero on both
+platforms. Each collection has its own headline and subtitle; selected categories
+use the shared accent. People cards use monograms, film counts and birth years.
+Other catalog cards use monograms and two identifying facts. Detail pages use
+stacked, wrapping fact labels/values so long manufacturers and large text fit.
+Films also show an opening crawl. The shared orbital art remains atmospheric
+and does not imply a canonical image of the selected resource. Search has explicit
 empty and failure states; page failures keep the current list visible. Detail
 uses native navigation with the selected resource identity. Components remain
 platform-native; shared tokens establish visual continuity.

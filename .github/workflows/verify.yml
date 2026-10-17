@@ -58,12 +58,16 @@ jobs:
           HOLOCRON_SIMULATOR="$(python3 scripts/select-ios-simulator.py)"
           export HOLOCRON_SIMULATOR
           HOLOCRON_RECORD=1 python3 scripts/verify.py ios
+      - name: Export native screenshots
+        if: always()
+        run: python3 scripts/collect-ios-artifacts.py
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: ios-verification
           path: |
             .artifacts/verification/ios
+            .artifacts/ios/attachments
             .artifacts/ios/*.xcresult
             .artifacts/ios/*.mp4
             .artifacts/ios/*.log

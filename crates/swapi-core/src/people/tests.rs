@@ -1,7 +1,7 @@
 use super::*;
 use tokio::sync::oneshot;
 
-type Completion = oneshot::Sender<Result<PeoplePage, ApiError>>;
+type Completion = oneshot::Sender<Result<Page<Person>, ApiError>>;
 fn controlled() -> (
     PeopleStore,
     mpsc::UnboundedReceiver<(String, u32, Completion)>,
@@ -20,11 +20,11 @@ fn controlled() -> (
     );
     (store, rx)
 }
-fn page(ids: &[u32], next_page: Option<u32>) -> PeoplePage {
-    PeoplePage {
+fn page(ids: &[u32], next_page: Option<u32>) -> Page<Person> {
+    Page {
         total: 82,
         next_page,
-        people: ids
+        items: ids
             .iter()
             .map(|id| {
                 let mut value: serde_json::Value =
@@ -73,7 +73,7 @@ async fn rapid_queries_debounce_and_inflight_replacement_cannot_publish_stale_re
     assert_eq!(query, "Leia");
     complete.send(Ok(page(&[5], None))).unwrap();
     let ready = until(&mut states, |s| s.phase == PeoplePhase::Ready).await;
-    assert_eq!(ready.people[0].id, 5);
+    assert_eq!(ready.items[0].id, 5);
     assert_eq!(ready.query, "Leia");
 }
 
@@ -100,32 +100,32 @@ async fn paging_retains_content_retries_exact_page_deduplicates_and_ignores_dupl
     store.search("".into());
     tokio::task::yield_now().await;
     assert!(requests.try_recv().is_err());
-    assert_eq!(states.borrow().people.len(), 2);
+    assert_eq!(states.borrow().items.len(), 2);
     complete.send(Err(ApiError::Http { code: 503 })).unwrap();
     let failed = until(&mut states, |s| {
         matches!(s.phase, PeoplePhase::Failed { .. })
     })
     .await;
-    assert_eq!(failed.people.len(), 2);
+    assert_eq!(failed.items.len(), 2);
     store.retry();
     let (_, number, complete) = requests.recv().await.unwrap();
     assert_eq!(number, 2);
     complete.send(Ok(page(&[2, 3], None))).unwrap();
     let ready = until(&mut states, |s| s.phase == PeoplePhase::Ready).await;
     assert_eq!(
-        ready.people.iter().map(|p| p.id).collect::<Vec<_>>(),
+        ready.items.iter().map(|p| p.id).collect::<Vec<_>>(),
         vec![1, 2, 3]
     );
     store.load_more();
     store.refresh();
     let (_, number, complete) = requests.recv().await.unwrap();
     assert_eq!(number, 1);
-    assert_eq!(states.borrow().people.len(), 3);
+    assert_eq!(states.borrow().items.len(), 3);
     complete.send(Ok(page(&[5], None))).unwrap();
     assert_eq!(
         until(&mut states, |s| s.phase == PeoplePhase::Ready)
             .await
-            .people[0]
+            .items[0]
             .id,
         5
     );
@@ -146,16 +146,16 @@ async fn empty_results_clear_old_content_and_shutdown_cancels_pending_work() {
     until(&mut states, |s| s.phase == PeoplePhase::Ready).await;
     store.search("nothing".into());
     let (_, _, complete) = requests.recv().await.unwrap();
-    assert!(states.borrow().people.is_empty());
+    assert!(states.borrow().items.is_empty());
     complete
-        .send(Ok(PeoplePage {
+        .send(Ok(Page {
             total: 0,
             next_page: None,
-            people: vec![],
+            items: vec![],
         }))
         .unwrap();
     let ready = until(&mut states, |s| s.phase == PeoplePhase::Ready).await;
-    assert!(ready.people.is_empty());
+    assert!(ready.items.is_empty());
     assert_eq!(ready.total, 0);
     store.refresh();
     let (_, _, mut complete) = requests.recv().await.unwrap();
@@ -197,7 +197,7 @@ async fn refresh_failure_keeps_content_and_nonretryable_failure_is_not_retried()
         )
     })
     .await;
-    assert_eq!(failed.people.len(), 1);
+    assert_eq!(failed.items.len(), 1);
     store.retry();
     tokio::task::yield_now().await;
     assert!(requests.try_recv().is_err());

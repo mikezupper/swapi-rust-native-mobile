@@ -85,9 +85,11 @@ internal class FixtureServer : AutoCloseable {
                 socket.accept().use { client ->
                     client.soTimeout = 5_000
                     val reader = client.getInputStream().bufferedReader()
-                    requests.add(reader.readLine())
+                    val request = reader.readLine()
+                    android.util.Log.d("FixtureServer", "${socket.localPort}: $request")
+                    requests.add(request)
                     while (!reader.readLine().isNullOrEmpty()) { /* consume headers */ }
-                    val reply = responses.poll(5, TimeUnit.SECONDS) ?: error("No fixture response")
+                    val reply = responses.poll(5, TimeUnit.SECONDS) ?: error("No fixture response for $request on ${socket.localPort}")
                     check(reply.release.await(5, TimeUnit.SECONDS))
                     val body = reply.body.toByteArray()
                     val headers = "HTTP/1.1 ${reply.status} Fixture\r\nContent-Type: application/json\r\nContent-Length: ${body.size}\r\nConnection: close\r\n\r\n"

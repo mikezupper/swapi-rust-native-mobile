@@ -7,7 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -39,20 +40,42 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import dev.holocron.core.CatalogCategory
+import dev.holocron.core.FailureKind
 import dev.holocron.core.PeoplePhase
 import dev.holocron.core.PeopleSnapshot
 
 @Composable
 fun HolocronNavigation(endpoint: String? = null) {
     val navigation = rememberNavController()
+    fun select(category: CatalogCategory) {
+        val route = if (category == CatalogCategory.PEOPLE) "people" else "catalog/${category.name}"
+        navigation.navigate(route) { popUpTo("people"); launchSingleTop = true }
+    }
     NavHost(navigation, startDestination = "people") {
         composable("people") {
             val model: PeopleViewModel = viewModel(factory = viewModelFactory { initializer { PeopleViewModel(createSavedStateHandle(), endpoint) } })
             val snapshot by model.controller.state.collectAsStateWithLifecycle()
             val query by model.query.collectAsStateWithLifecycle()
-            PeopleScreen(snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry) {
+            PeopleScreen(snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry, onCategory = ::select) {
                 navigation.navigate("person/$it") { launchSingleTop = true }
             }
+        }
+        composable("catalog/{category}") { entry ->
+            val category = CatalogCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
+            val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, null, endpoint) } })
+            val snapshot by model.controller.state.collectAsStateWithLifecycle()
+            val query by model.query.collectAsStateWithLifecycle()
+            CatalogScreen(category, snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry, ::select) {
+                navigation.navigate("record/${category.name}/$it") { launchSingleTop = true }
+            }
+        }
+        composable("record/{category}/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) { entry ->
+            val category = CatalogCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
+            val id = requireNotNull(entry.arguments).getInt("id").toUInt()
+            val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, id, endpoint) } })
+            val snapshot by model.controller.state.collectAsStateWithLifecycle()
+            CatalogDetailScreen(category, snapshot, model.controller::refresh, model.controller::retry) { navigation.popBackStack() }
         }
         composable("person/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) { entry ->
             val id = requireNotNull(entry.arguments).getInt("id").toUInt()
@@ -70,11 +93,31 @@ fun HolocronNavigation(endpoint: String? = null) {
 
 @Composable
 fun PeopleScreen(snapshot: PeopleSnapshot, query: String, onSearch: (String) -> Unit, onRefresh: () -> Unit,
-                 onMore: () -> Unit, onRetry: () -> Unit, onPerson: (UInt) -> Unit) {
+                 onMore: () -> Unit, onRetry: () -> Unit, onCategory: (CatalogCategory) -> Unit = {}, onPerson: (UInt) -> Unit) {
+    val failure = snapshot.phase as? PeoplePhase.Failed
+    ArchiveScreen(CatalogCategory.PEOPLE, snapshot.people.map { ArchiveItem(it.id, it.name, "${it.filmCount} films · Born ${it.birthYear}") },
+        snapshot.total, snapshot.hasMore, snapshot.phase == PeoplePhase.Ready,
+        snapshot.phase == PeoplePhase.Loading || snapshot.phase == PeoplePhase.Refreshing || snapshot.phase == PeoplePhase.LoadingMore,
+        failure?.kind, failure?.retryable == true, query, onSearch, onRefresh, onMore, onRetry, onCategory, onPerson)
+}
+
+data class ArchiveItem(val id: UInt, val name: String, val summary: String)
+
+@Composable
+fun ArchiveScreen(category: CatalogCategory, records: List<ArchiveItem>, total: UInt, hasMore: Boolean, ready: Boolean,
+                  busy: Boolean, failure: FailureKind?, retryable: Boolean, query: String,
+                  onSearch: (String) -> Unit, onRefresh: () -> Unit, onMore: () -> Unit, onRetry: () -> Unit,
+                  onCategory: (CatalogCategory) -> Unit, onPerson: (UInt) -> Unit) {
+    // Keep selection, composing text and IME updates in one synchronous native
+    // state holder. Feeding edits back through StateFlow can replay stale text
+    // when the keyboard connects. Rust observes the draft; it still debounces.
+    val draft = rememberTextFieldState(initialText = query)
+    val sendQuery by rememberUpdatedState(onSearch)
+    LaunchedEffect(draft) { snapshotFlow { draft.text.toString() }.collect { sendQuery(it) } }
+    val draftText = draft.text.toString()
     val keyboard = LocalSoftwareKeyboardController.current
     val largeText = LocalDensity.current.fontScale > 1.3f
     val list = rememberLazyListState()
-    val busy = snapshot.phase == PeoplePhase.Loading || snapshot.phase == PeoplePhase.Refreshing || snapshot.phase == PeoplePhase.LoadingMore
     Surface(Modifier.fillMaxSize()) { Box {
         LazyColumn(state = list, modifier = Modifier.fillMaxSize().imePadding(),
             contentPadding = PaddingValues(bottom = 36.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -84,32 +127,33 @@ fun PeopleScreen(snapshot: PeopleSnapshot, query: String, onSearch: (String) -> 
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(DesignTokens.Hero.background.copy(alpha = .4f), DesignTokens.Hero.background.copy(alpha = .6f), DesignTokens.Hero.background))))
                     Column(Modifier.statusBarsPadding().padding(24.dp)) {
                         Text("HOLOCRON  ✦", color = DesignTokens.Hero.accent, fontSize = 12.sp, letterSpacing = 2.sp)
-                        Spacer(Modifier.height(if (query.isEmpty()) 60.dp else 12.dp))
-                        Text(if (query.isEmpty()) "A galaxy of\nstories." else "Find your story.", color = DesignTokens.Hero.text,
-                            fontSize = if (query.isEmpty()) DesignTokens.Typography.hero.sp else 30.sp, lineHeight = 46.sp,
+                        Spacer(Modifier.height(if (draftText.isEmpty()) 60.dp else 12.dp))
+                        Text(if (draftText.isEmpty()) category.headline else "Find your story.", color = DesignTokens.Hero.text,
+                            fontSize = if (draftText.isEmpty()) DesignTokens.Typography.hero.sp else 30.sp, lineHeight = 46.sp,
                             fontWeight = FontWeight.Medium, modifier = Modifier.semantics { heading() })
-                        if (query.isEmpty()) Text("Discover the people behind the legends.", color = DesignTokens.Hero.secondary, fontSize = 14.sp, modifier = Modifier.padding(top = 10.dp))
+                        if (draftText.isEmpty()) Text(category.subtitle, color = DesignTokens.Hero.secondary, fontSize = 14.sp, modifier = Modifier.padding(top = 10.dp))
                     }
                 }
             }
+            item(key = "categories") { CategoryPicker(category, onCategory) }
             item(key = "search") {
-                OutlinedTextField(query, onSearch, singleLine = true, label = { Text("Search people") },
+                OutlinedTextField(state = draft, lineLimits = TextFieldLineLimits.SingleLine, label = { Text("Search ${category.title.lowercase()}") },
                     leadingIcon = { Icon(Icons.Outlined.Search, null) },
-                    trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { onSearch("") }) { Icon(Icons.Outlined.Close, "Clear search") } },
+                    trailingIcon = { if (draftText.isNotEmpty()) IconButton(onClick = { draft.edit { replace(0, length, "") } }) { Icon(Icons.Outlined.Close, "Clear search") } },
                     shape = RoundedCornerShape(DesignTokens.Shape.control.dp), modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }))
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, autoCorrectEnabled = false), onKeyboardAction = { keyboard?.hide() })
             }
             item(key = "heading") {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(if (query.isEmpty()) "People of the galaxy" else "Search results", fontSize = DesignTokens.Typography.section.sp, modifier = Modifier.semantics { heading() })
-                        Text(if (busy && snapshot.people.isEmpty()) "Searching the archive…" else "${snapshot.people.size} of ${snapshot.total} records", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                        Text(if (draftText.isEmpty()) "${category.title} of the galaxy" else "Search results", fontSize = DesignTokens.Typography.section.sp, modifier = Modifier.semantics { heading() })
+                        Text(if (busy && records.isEmpty()) "Searching the archive…" else "${records.size} of ${total} records", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                     }
-                    IconButton(onClick = onRefresh, enabled = !busy) { Icon(Icons.Outlined.Refresh, "Refresh people") }
+                    IconButton(onClick = onRefresh, enabled = !busy) { Icon(Icons.Outlined.Refresh, "Refresh ${category.title.lowercase()}") }
                 }
             }
             if (busy) item(key = "progress") { LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) }
-            items(snapshot.people, key = { it.id.toString() }) { person ->
+            items(records, key = { it.id.toString() }) { person ->
                 Surface(onClick = { keyboard?.hide(); onPerson(person.id) }, color = MaterialTheme.colorScheme.surfaceContainer,
                     shape = RoundedCornerShape(DesignTokens.Shape.card.dp), modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
                     Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -118,29 +162,28 @@ fun PeopleScreen(snapshot: PeopleSnapshot, query: String, onSearch: (String) -> 
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(person.name, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                            Text("${person.filmCount} films · Born ${person.birthYear}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(person.summary, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
-            if (snapshot.phase == PeoplePhase.Ready && snapshot.people.isEmpty()) item(key = "empty") {
+            if (ready && records.isEmpty()) item(key = "empty") {
                 Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("No signals found", fontSize = 24.sp)
                     Text("Try another name. Even a few letters can lead to a story.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    OutlinedButton(onClick = { onSearch("") }) { Text("Explore all people") }
+                    OutlinedButton(onClick = { draft.edit { replace(0, length, "") } }) { Text("Explore all ${category.title.lowercase()}") }
                 }
             }
-            val failure = snapshot.phase as? PeoplePhase.Failed
             if (failure != null) item(key = "failure") {
                 Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(if (snapshot.people.isEmpty()) "Signal interrupted" else "Couldn’t update the archive", fontSize = 22.sp)
-                    Text(failureMessage(failure.kind), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (failure.retryable) FilledTonalButton(onClick = onRetry) { Text("Try again") }
+                    Text(if (records.isEmpty()) "Signal interrupted" else "Couldn’t update the archive", fontSize = 22.sp)
+                    Text(failureMessage(failure), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (retryable) FilledTonalButton(onClick = onRetry) { Text("Try again") }
                 }
             }
-            if (snapshot.phase == PeoplePhase.Ready && snapshot.hasMore) item(key = "more") {
-                OutlinedButton(onClick = onMore, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text("Load more people") }
+            if (ready && hasMore) item(key = "more") {
+                OutlinedButton(onClick = onMore, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text("Load more ${category.title.lowercase()}") }
             }
             item { Spacer(Modifier.navigationBarsPadding()) }
         }

@@ -2,6 +2,36 @@ import XCTest
 
 final class CharacterTests: XCTestCase {
     @MainActor
+    func testEveryCatalogCategoryAndDetail() async throws {
+        _ = try await URLSession.shared.data(from: URL(string: "http://127.0.0.1:18765/reset?scenario=people")!)
+        let app = XCUIApplication()
+        app.launchArguments = ["--endpoint", "http://127.0.0.1:18765/api/"]
+        app.launch()
+        XCTAssertTrue(app.buttons["category-planets"].waitForExistence(timeout: 15))
+        let cases = [("planets", "1", "Tatooine", "Climate"), ("starships", "9", "Death Star", "Model"),
+                     ("vehicles", "4", "Sand Crawler", "Model"), ("species", "3", "Wookiee", "Classification"),
+                     ("films", "1", "A New Hope", "Episode")]
+        for (category, id, name, fact) in cases {
+            let picker = app.buttons["category-\(category)"]
+            if !picker.isHittable { app.swipeDown() }
+            picker.tap()
+            let record = app.buttons["record-\(id)"]
+            XCTAssertTrue(record.waitForExistence(timeout: 15))
+            if !record.isHittable { app.swipeUp() }
+            if category == "planets" { try app.performAccessibilityAudit() }
+            capture(app, "Catalog \(category)")
+            record.tap()
+            XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 15))
+            XCTAssertTrue(app.staticTexts[fact].exists)
+            if category == "planets" { try app.performAccessibilityAudit() }
+            capture(app, "Catalog detail \(category)")
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+        }
+        app.buttons["category-people"].tap()
+        XCTAssertTrue(app.buttons["person-1"].waitForExistence(timeout: 15))
+    }
+
+    @MainActor
     func testAccessibilityAndBackgroundRestoration() async throws {
         _ = try await URLSession.shared.data(from: URL(string: "http://127.0.0.1:18765/reset?scenario=people")!)
         let app = XCUIApplication()

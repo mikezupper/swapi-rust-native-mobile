@@ -8,6 +8,7 @@ struct CharacterDestination: View {
 
 struct PeopleScreen: View {
     @ObservedObject var model: PeopleModel
+    var onCategory: (CatalogCategory) -> Void = { _ in }
     @State private var query = ""
     @FocusState private var searching: Bool
     @Environment(\.colorScheme) private var appearance
@@ -17,6 +18,7 @@ struct PeopleScreen: View {
     private var foreground: Color { appearance == .dark ? DesignTokens.Dark.text : DesignTokens.Light.text }
     private var secondary: Color { appearance == .dark ? DesignTokens.Dark.secondary : DesignTokens.Light.secondary }
     private var surface: Color { appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface }
+    private var onAccent: Color { appearance == .dark ? DesignTokens.Dark.onAccent : DesignTokens.Light.onAccent }
     private var accent: Color { appearance == .dark ? DesignTokens.Dark.accent : DesignTokens.Light.accent }
     private var busy: Bool {
         switch model.snapshot.phase { case .loading, .refreshing, .loadingMore: return true; default: return false }
@@ -26,6 +28,7 @@ struct PeopleScreen: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     hero
+                    CategoryPicker(selected: .people, onSelect: onCategory)
                     VStack(spacing: 20) {
                         HStack(spacing: 12) {
                             Image(systemName: "magnifyingglass").foregroundStyle(accent)
@@ -44,7 +47,7 @@ struct PeopleScreen: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(query.isEmpty ? "People of the galaxy" : "Search results").font(.title2).accessibilityAddTraits(.isHeader)
                                 Text(busy && model.snapshot.people.isEmpty ? "Searching the archive…" : "\(model.snapshot.people.count) of \(model.snapshot.total) records")
-                                    .font(.caption).foregroundStyle(secondary)
+                                    .font(.subheadline).foregroundStyle(foreground)
                             }.frame(maxWidth: .infinity, alignment: .leading)
                             Button(action: model.refresh) { Image(systemName: "arrow.clockwise").frame(width: 44, height: 44) }
                                 .accessibilityLabel("Refresh people").disabled(busy)
@@ -76,6 +79,7 @@ struct PeopleScreen: View {
             }
             .background(background).foregroundStyle(foreground)
             .scrollDismissesKeyboard(.interactively)
+            .onAppear { query = model.snapshot.query }
             .onChange(of: query) { _, value in
                 // A vertically growing field keeps large text legible. Treat its
                 // return key as Search instead of retaining a newline in the draft.
@@ -112,8 +116,8 @@ struct PeopleScreen: View {
         HStack(spacing: 16) {
             if !typeSize.isAccessibilitySize {
                 Text(person.name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined())
-                    .font(.headline).foregroundStyle(accent).frame(width: 48, height: 48)
-                    .background(accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 16)).accessibilityHidden(true)
+                    .font(.headline.weight(.semibold)).foregroundStyle(onAccent).frame(width: 48, height: 48)
+                    .background(accent, in: RoundedRectangle(cornerRadius: 16)).accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(person.name).font(.headline.weight(.medium)).fixedSize(horizontal: false, vertical: true)

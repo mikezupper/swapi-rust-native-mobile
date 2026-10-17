@@ -142,3 +142,41 @@ For each completed bead, record the commands, results, and artifact locations.
 Use `.artifacts/` for local generated reports, screenshots, and logs. CI should
 retain equivalent artifacts. Record an unavailable check explicitly; never
 substitute a plan or mockup for observed native execution.
+
+## Six-collection catalog expansion
+
+The catalog fixtures in `crates/swapi-core/tests/fixtures/catalog.json` cover
+People, Planets, Starships, Vehicles, Species and Films. They are deterministic
+samples, with a synthetic film crawl. They are never bundled as production data.
+The Rust suite now has 24 tests. Catalog checks exercise collection/detail
+routing, encoded searches, category-bound pagination, malformed identities and
+relationships, nullable species homeworlds, film episode/crawl parsing, and
+retrying the exact detail identity. The original paging tests now exercise the
+shared generic paging actor used by both People and catalog sessions.
+
+An existing Android lifecycle assertion exposed a search race during keyboard
+connection: a stale empty String could replace `Leia` before debounce completed.
+The shared search field now uses native TextFieldState with observed draft
+updates. The original request and restoration assertions remain intact; fixture
+failures now include the unexpected request for diagnosis.
+
+Android has eight instrumentation tests, including browsing all five added
+categories through Rust and a planet paging/failure/retry/search/back flow.
+Artifact collection requires a list and detail screenshot for each new category,
+as well as the existing navigation, failure, accessibility and performance
+artifacts. Inspect screenshots for system dialogs as well as app layout; a passing
+Compose assertion alone does not establish that the desktop display was clear.
+
+The iOS suite adds a catalog adapter lifetime/revision test and a UI tour of
+all five added collections, including accessibility audits of the planet list
+and detail. The initial hosted run exposed contrast issues in the original
+People count/monograms; the count now uses larger primary text and monograms
+use opaque accent surfaces with the matching on-accent color. No accessibility
+checks are suppressed. These updates require a fresh hosted iOS run; older Mac
+verification above applies to the original People-only revision.
+
+`cargo run --locked -p swapi-core --example catalog` is an explicit live check.
+On October 17, 2026 it successfully fetched each collection and its first detail:
+82 people, 60 planets, 36 starships, 39 vehicles, 37 species and 6 films.
+The user's Mac checkout, project caches and simulator installations were removed
+at their request. Hosted CI can validate iOS without restoring files to that Mac.

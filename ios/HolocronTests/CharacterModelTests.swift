@@ -4,6 +4,23 @@ import XCTest
 
 final class CharacterModelTests: XCTestCase {
     @MainActor
+    func testCatalogAdapterRejectsStaleDeliveryAndReleasesSession() throws {
+        let core = try CatalogSession(category: .planets, recordId: nil)
+        var model: CatalogModel? = CatalogModel(category: .planets, core: core, autoload: false)
+        weak var weakModel = model
+        let current = CatalogSnapshot(revision: 7, query: "Tatooine", items: [], total: 0, hasMore: false, phase: .loading)
+        model?.receive(current)
+        model?.receive(CatalogSnapshot(revision: 6, query: "old", items: [], total: 0, hasMore: false, phase: .ready))
+        XCTAssertEqual(model?.snapshot, current)
+        model?.stop()
+        model?.receive(CatalogSnapshot(revision: 8, query: "late", items: [], total: 0, hasMore: false, phase: .ready))
+        XCTAssertEqual(model?.snapshot, current)
+        model = nil
+        XCTAssertNil(weakModel)
+        XCTAssertThrowsError(try core.refresh())
+    }
+
+    @MainActor
     func testPeopleAdapterRejectsStaleDeliveryAndReleasesSession() throws {
         let core = try PeopleSession()
         var model: PeopleModel? = PeopleModel(core: core, autoload: false)

@@ -250,6 +250,13 @@ typedef void (*UniffiCallbackInterfaceCharacterListenerMethod0)(uint64_t, RustBu
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_CATALOG_LISTENER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_CATALOG_LISTENER_METHOD0
+typedef void (*UniffiCallbackInterfaceCatalogListenerMethod0)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_PEOPLE_LISTENER_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_PEOPLE_LISTENER_METHOD0
 typedef void (*UniffiCallbackInterfacePeopleListenerMethod0)(uint64_t, RustBuffer, void* _Nonnull, 
@@ -264,6 +271,15 @@ typedef struct UniffiVTableCallbackInterfaceCharacterListener {
     UniffiCallbackInterfaceClone _Nonnull uniffiClone;
     UniffiCallbackInterfaceCharacterListenerMethod0 _Nonnull onState;
 } UniffiVTableCallbackInterfaceCharacterListener;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_CATALOG_LISTENER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_CATALOG_LISTENER
+typedef struct UniffiVTableCallbackInterfaceCatalogListener {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceCatalogListenerMethod0 _Nonnull onState;
+} UniffiVTableCallbackInterfaceCatalogListener;
 
 #endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_PEOPLE_LISTENER
@@ -354,6 +370,76 @@ void uniffi_swapi_ffi_fn_free_subscription(uint64_t handle, RustCallStatus *_Non
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_SUBSCRIPTION_CANCEL
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_SUBSCRIPTION_CANCEL
 void uniffi_swapi_ffi_fn_method_subscription_cancel(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_CATALOGLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_CATALOGLISTENER
+uint64_t uniffi_swapi_ffi_fn_clone_cataloglistener(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FREE_CATALOGLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FREE_CATALOGLISTENER
+void uniffi_swapi_ffi_fn_free_cataloglistener(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_INIT_CALLBACK_VTABLE_CATALOGLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_INIT_CALLBACK_VTABLE_CATALOGLISTENER
+void uniffi_swapi_ffi_fn_init_callback_vtable_cataloglistener(const UniffiVTableCallbackInterfaceCatalogListener* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGLISTENER_ON_STATE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGLISTENER_ON_STATE
+void uniffi_swapi_ffi_fn_method_cataloglistener_on_state(uint64_t ptr, RustBuffer snapshot, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_CATALOGSESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_CATALOGSESSION
+uint64_t uniffi_swapi_ffi_fn_clone_catalogsession(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FREE_CATALOGSESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FREE_CATALOGSESSION
+void uniffi_swapi_ffi_fn_free_catalogsession(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_NEW
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_NEW
+uint64_t uniffi_swapi_ffi_fn_constructor_catalogsession_new(RustBuffer category, RustBuffer record_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_WITH_ENDPOINT
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_WITH_ENDPOINT
+uint64_t uniffi_swapi_ffi_fn_constructor_catalogsession_with_endpoint(RustBuffer base_url, RustBuffer category, RustBuffer record_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_LOAD_MORE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_LOAD_MORE
+void uniffi_swapi_ffi_fn_method_catalogsession_load_more(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_REFRESH
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_REFRESH
+void uniffi_swapi_ffi_fn_method_catalogsession_refresh(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_RETRY
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_RETRY
+void uniffi_swapi_ffi_fn_method_catalogsession_retry(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_SEARCH
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_SEARCH
+void uniffi_swapi_ffi_fn_method_catalogsession_search(uint64_t ptr, RustBuffer query, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_SHUTDOWN
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_SHUTDOWN
+void uniffi_swapi_ffi_fn_method_catalogsession_shutdown(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_SUBSCRIBE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_CATALOGSESSION_SUBSCRIBE
+uint64_t uniffi_swapi_ffi_fn_method_catalogsession_subscribe(uint64_t ptr, uint64_t listener, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_PEOPLELISTENER
@@ -729,6 +815,48 @@ uint16_t uniffi_swapi_ffi_checksum_method_subscription_cancel(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGLISTENER_ON_STATE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGLISTENER_ON_STATE
+uint16_t uniffi_swapi_ffi_checksum_method_cataloglistener_on_state(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_LOAD_MORE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_LOAD_MORE
+uint16_t uniffi_swapi_ffi_checksum_method_catalogsession_load_more(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_REFRESH
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_REFRESH
+uint16_t uniffi_swapi_ffi_checksum_method_catalogsession_refresh(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_RETRY
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_RETRY
+uint16_t uniffi_swapi_ffi_checksum_method_catalogsession_retry(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_SEARCH
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_SEARCH
+uint16_t uniffi_swapi_ffi_checksum_method_catalogsession_search(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_SHUTDOWN
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_SHUTDOWN
+uint16_t uniffi_swapi_ffi_checksum_method_catalogsession_shutdown(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_SUBSCRIBE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGSESSION_SUBSCRIBE
+uint16_t uniffi_swapi_ffi_checksum_method_catalogsession_subscribe(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_PEOPLELISTENER_ON_STATE
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_PEOPLELISTENER_ON_STATE
 uint16_t uniffi_swapi_ffi_checksum_method_peoplelistener_on_state(void
@@ -780,6 +908,18 @@ uint16_t uniffi_swapi_ffi_checksum_constructor_charactersession_new(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CHARACTERSESSION_WITH_ENDPOINT
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CHARACTERSESSION_WITH_ENDPOINT
 uint16_t uniffi_swapi_ffi_checksum_constructor_charactersession_with_endpoint(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CATALOGSESSION_NEW
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CATALOGSESSION_NEW
+uint16_t uniffi_swapi_ffi_checksum_constructor_catalogsession_new(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CATALOGSESSION_WITH_ENDPOINT
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CATALOGSESSION_WITH_ENDPOINT
+uint16_t uniffi_swapi_ffi_checksum_constructor_catalogsession_with_endpoint(void
     
 );
 #endif

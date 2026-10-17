@@ -84,6 +84,19 @@ pub enum ResourceKind {
     Vehicle,
 }
 
+impl ResourceKind {
+    pub fn path(self) -> &'static str {
+        match self {
+            Self::Person => "people",
+            Self::Planet => "planets",
+            Self::Film => "films",
+            Self::Species => "species",
+            Self::Starship => "starships",
+            Self::Vehicle => "vehicles",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResourceRef {
     pub kind: ResourceKind,

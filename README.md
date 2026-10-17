@@ -2,7 +2,8 @@
 
 **A cinematic Star Wars field guide, built with two native UIs and one Rust core.**
 
-Holocron explores the people in [SWAPI](https://swapi.dev/). Its iOS app uses
+Holocron explores People, Planets, Starships, Vehicles, Species, and Films from
+[SWAPI](https://swapi.dev/). Its iOS app uses
 SwiftUI and its Android app uses Jetpack Compose. Both call the same Rust
 library through [Mozilla UniFFI](https://mozilla.github.io/uniffi-rs/latest/).
 The normal app makes real HTTPS requests to `https://swapi.dev/api/`.
@@ -15,7 +16,8 @@ The normal app makes real HTTPS requests to `https://swapi.dev/api/`.
   <tr><td>SwiftUI · iOS simulator</td><td>Jetpack Compose · Android emulator</td></tr>
 </table>
 
-These are native screenshots with live API data, captured on October 17, 2026.
+These are native screenshots of the original People experience with live API
+data, captured on October 17, 2026. The archive now also has category selection.
 The orbital illustration is original atmospheric artwork; SWAPI does not supply
 character portraits. Holocron is a provisional project name.
 
@@ -46,9 +48,25 @@ The development approach adapts the supplied harness-engineering guide. See
 
 ## What works
 
-Browse People, search by name, load additional pages, open a character, and
-return to the list. Character detail shows height, mass, birth year, eye and
-hair color, and film count. Refresh and retry are available where appropriate.
+Choose a collection from the six category buttons, search, load additional pages,
+open a record, and return to the list. Requests go to the selected SWAPI
+collection; Films search by title and Starships/Vehicles also support model
+search according to [the API contract](https://swapi.dev/documentation).
+
+| Collection | Detail highlights |
+| --- | --- |
+| People | Height, mass, birth year, eye/hair color, film count |
+| Planets | Climate, terrain, population, diameter, rotation and orbit |
+| Starships | Model, class, manufacturer, hyperdrive, crew and cargo |
+| Vehicles | Model, class, manufacturer, capacity, speed and supplies |
+| Species | Classification, language, lifespan and physical traits |
+| Films | Episode, release, director, producers, opening crawl and related-record counts |
+
+Refresh and retry are available where appropriate. Navigation back from detail
+retains the collection's query and loaded pages. Switching to a different
+non-People collection starts a fresh session and cancels the previous one;
+People remains the home collection. Relationship counts are informational;
+links between individual related records are not yet navigable.
 
 Rust debounces queries for 300 ms and cancels obsolete requests. Refresh and
 pagination retain useful content; page failures can retry the failed page.
@@ -100,7 +118,9 @@ keyboard event loop crosses FFI.
 The Rust runtime has two worker threads. HTTP uses a bundled trust store,
 15-second timeout and 1 MiB response limit. Redirects and automatic retries are
 disabled. The core validates resource and pagination URLs, and classifies which
-failures can be retried. Native code formats user-facing messages and values.
+failures can be retried. Native code formats error messages and character measurements. Catalog facts
+carry shared English labels and preserve API values such as `unknown` and `n/a`;
+the native layers own their layout and typography. Full localization is future work.
 
 Read [ARCHITECTURE.md](ARCHITECTURE.md) for the complete boundary and lifecycle
 contract, and [the design system](docs/design-system.md) for visual intent.
@@ -150,6 +170,8 @@ For an explicit live API smoke test:
 
 ```sh
 cargo run --locked -p swapi-core --example luke
+# Browse one page and fetch one detail from each of the six collections:
+cargo run --locked -p swapi-core --example catalog
 ```
 
 Live API availability is deliberately separate from the deterministic test suite.
