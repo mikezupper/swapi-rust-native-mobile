@@ -10,6 +10,7 @@ struct PeopleScreen: View {
     @ObservedObject var model: PeopleModel
     var onCategory: (CatalogCategory) -> Void = { _ in }
     @State private var query = ""
+    @Namespace private var transition
     @FocusState private var searching: Bool
     @Environment(\.colorScheme) private var appearance
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -28,6 +29,7 @@ struct PeopleScreen: View {
                 VStack(spacing: 16) {
                     hero
                     CategoryPicker(selected: .people, onSelect: onCategory)
+                    ArchiveShortcut()
                     VStack(spacing: 20) {
                         HStack(spacing: 12) {
                             Image(systemName: "magnifyingglass").foregroundStyle(accent)
@@ -52,10 +54,11 @@ struct PeopleScreen: View {
                             Button(action: model.refresh) { Image(systemName: "arrow.clockwise").frame(width: 44, height: 44) }
                                 .accessibilityLabel("Refresh people").disabled(busy)
                         }
+                        CacheNotice(cache: model.snapshot.cache)
                         if busy { ProgressView().frame(maxWidth: .infinity).accessibilityLabel("Loading people") }
                         ForEach(model.snapshot.people, id: \.id) { person in
                             NavigationLink(value: person.id) { personRow(person) }
-                                .buttonStyle(.plain).accessibilityIdentifier("person-\(person.id)")
+                                .buttonStyle(.plain).matchedTransitionSource(id: person.id, in: transition).accessibilityIdentifier("person-\(person.id)")
                         }
                         if model.snapshot.phase == .ready && model.snapshot.people.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
@@ -88,7 +91,7 @@ struct PeopleScreen: View {
                     searching = false
                 } else { model.search(value) }
             }
-            .navigationDestination(for: UInt32.self) { id in CharacterDestination(id: id) }
+            .navigationDestination(for: UInt32.self) { id in CharacterDestination(id: id).modifier(ArchiveZoom(id: id, namespace: transition)) }
             .toolbar(.hidden, for: .navigationBar)
         }.tint(accent)
     }
@@ -126,6 +129,7 @@ struct PeopleScreen: View {
     }
     private func message(_ kind: FailureKind) -> String {
         switch kind {
+        case .storage: return "The archive could not be saved. Check available device storage."
         case .network: return "The archive is out of reach. Check your connection and try again."
         case .timeout: return "The archive took too long to respond. Try again in a moment."
         case .http: return "The archive is temporarily unavailable."

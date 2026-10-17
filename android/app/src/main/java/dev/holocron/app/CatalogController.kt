@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class CatalogController(private val session: CatalogSession) : AutoCloseable {
-    private val mutableState = MutableStateFlow(CatalogSnapshot(0uL, "", emptyList(), 0u, false, CatalogPhase.Idle))
+    private val mutableState = MutableStateFlow(CatalogSnapshot(0uL, "", emptyList(), 0u, false, CatalogPhase.Idle, emptyCache()))
     val state = mutableState.asStateFlow()
     private var closed = false
     private val subscription = run {
@@ -41,9 +41,9 @@ class CatalogController(private val session: CatalogSession) : AutoCloseable {
     }
 }
 
-class CatalogViewModel(private val saved: SavedStateHandle, category: CatalogCategory, recordId: UInt? = null, endpoint: String? = null) : ViewModel() {
+class CatalogViewModel(private val saved: SavedStateHandle, category: CatalogCategory, recordId: UInt? = null, endpoint: String? = null, archive: ArchiveSession? = null) : ViewModel() {
     val query = saved.getStateFlow("query", "")
-    val controller = CatalogController(endpoint?.let { CatalogSession.withEndpoint(it, category, recordId) } ?: CatalogSession(category, recordId)).also {
+    val controller = CatalogController(archive?.catalogSession(category, recordId) ?: endpoint?.let { CatalogSession.withEndpoint(it, category, recordId) } ?: CatalogSession(category, recordId)).also {
         if (query.value.isEmpty()) it.refresh() else it.search(query.value)
     }
     fun search(value: String) { saved["query"] = value; controller.search(value) }

@@ -5,6 +5,7 @@ struct CatalogScreen: View {
     var onCategory: (CatalogCategory) -> Void = { _ in }
     let category: CatalogCategory
     @State private var query = ""
+    @Namespace private var transition
     @FocusState private var searching: Bool
     @Environment(\.colorScheme) private var appearance
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -23,6 +24,7 @@ struct CatalogScreen: View {
                 VStack(spacing: 16) {
                     hero
                     CategoryPicker(selected: category, onSelect: onCategory)
+                    ArchiveShortcut()
                     VStack(spacing: 20) {
                         HStack(spacing: 12) {
                             Image(systemName: "magnifyingglass").foregroundStyle(accent)
@@ -47,10 +49,11 @@ struct CatalogScreen: View {
                             Button(action: model.refresh) { Image(systemName: "arrow.clockwise").frame(width: 44, height: 44) }
                                 .accessibilityLabel("Refresh \(category.title.lowercased())").disabled(busy)
                         }
+                        CacheNotice(cache: model.snapshot.cache)
                         if busy { ProgressView().frame(maxWidth: .infinity).accessibilityLabel("Loading \(category.title.lowercased())") }
                         ForEach(model.snapshot.items, id: \.id) { person in
                             NavigationLink(value: person.id) { personRow(person) }
-                                .buttonStyle(.plain).accessibilityIdentifier("record-\(person.id)")
+                                .buttonStyle(.plain).matchedTransitionSource(id: person.id, in: transition).accessibilityIdentifier("record-\(person.id)")
                         }
                         if model.snapshot.phase == .ready && model.snapshot.items.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
@@ -83,7 +86,7 @@ struct CatalogScreen: View {
                     searching = false
                 } else { model.search(value) }
             }
-            .navigationDestination(for: UInt32.self) { id in CatalogDestination(category: category, id: id) }
+            .navigationDestination(for: UInt32.self) { id in CatalogDestination(category: category, id: id).modifier(ArchiveZoom(id: id, namespace: transition)) }
             .toolbar(.hidden, for: .navigationBar)
         }.tint(accent)
     }
@@ -121,6 +124,7 @@ struct CatalogScreen: View {
     }
     private func message(_ kind: FailureKind) -> String {
         switch kind {
+        case .storage: return "The archive could not be saved. Check available device storage."
         case .network: return "The archive is out of reach. Check your connection and try again."
         case .timeout: return "The archive took too long to respond. Try again in a moment."
         case .http: return "The archive is temporarily unavailable."

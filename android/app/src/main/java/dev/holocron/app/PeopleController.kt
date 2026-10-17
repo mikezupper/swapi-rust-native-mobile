@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class PeopleController(private val session: PeopleSession = PeopleSession()) : AutoCloseable {
-    private val mutableState = MutableStateFlow(PeopleSnapshot(0uL, "", emptyList(), 0u, false, PeoplePhase.Idle))
+    private val mutableState = MutableStateFlow(PeopleSnapshot(0uL, "", emptyList(), 0u, false, PeoplePhase.Idle, emptyCache()))
     val state = mutableState.asStateFlow()
     private var closed = false
     private val subscription = run {
@@ -41,9 +41,9 @@ class PeopleController(private val session: PeopleSession = PeopleSession()) : A
     }
 }
 
-class PeopleViewModel(private val saved: SavedStateHandle, endpoint: String? = null) : ViewModel() {
+class PeopleViewModel(private val saved: SavedStateHandle, endpoint: String? = null, archive: ArchiveSession? = null) : ViewModel() {
     val query = saved.getStateFlow("query", "")
-    val controller = PeopleController(endpoint?.let { PeopleSession.withEndpoint(it) } ?: PeopleSession()).also {
+    val controller = PeopleController(archive?.peopleSession() ?: endpoint?.let { PeopleSession.withEndpoint(it) } ?: PeopleSession()).also {
         if (query.value.isEmpty()) it.refresh() else it.search(query.value)
     }
     fun search(value: String) { saved["query"] = value; controller.search(value) }

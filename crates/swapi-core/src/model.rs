@@ -13,6 +13,8 @@ pub enum ApiError {
     InvalidData,
     #[error("invalid request")]
     InvalidRequest,
+    #[error("local archive unavailable")]
+    Storage,
 }
 
 impl ApiError {
@@ -85,6 +87,20 @@ pub enum ResourceKind {
 }
 
 impl ResourceKind {
+    pub const ALL: [Self; 6] = [
+        Self::Person,
+        Self::Planet,
+        Self::Starship,
+        Self::Vehicle,
+        Self::Species,
+        Self::Film,
+    ];
+    pub fn from_path(path: &str) -> Result<Self, ApiError> {
+        Self::ALL
+            .into_iter()
+            .find(|kind| kind.path() == path)
+            .ok_or(ApiError::InvalidData)
+    }
     pub fn path(self) -> &'static str {
         match self {
             Self::Person => "people",

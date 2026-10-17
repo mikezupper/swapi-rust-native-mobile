@@ -13,7 +13,7 @@ final class CharacterModel: ObservableObject {
         self.personId = personId
         do {
             var core: CharacterSession
-            if let injectedCore { core = injectedCore } else {
+            if let injectedCore { core = injectedCore } else if let archive = ArchiveModel.shared.session { core = try archive.characterSession() } else {
             #if DEBUG
             let args = ProcessInfo.processInfo.arguments
             if let index = args.firstIndex(of: "--endpoint"), args.count > index + 1 {

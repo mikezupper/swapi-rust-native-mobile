@@ -70,6 +70,7 @@ pub enum FailureKind {
     Http { status: u16 },
     InvalidData,
     InvalidRequest,
+    Storage,
 }
 impl From<ApiError> for FailureKind {
     fn from(error: ApiError) -> Self {
@@ -79,6 +80,7 @@ impl From<ApiError> for FailureKind {
             ApiError::Http { code } => Self::Http { status: code },
             ApiError::InvalidData => Self::InvalidData,
             ApiError::InvalidRequest => Self::InvalidRequest,
+            ApiError::Storage => Self::Storage,
         }
     }
 }
@@ -103,6 +105,7 @@ pub enum CharacterState {
 pub struct CharacterSnapshot {
     pub revision: u64,
     pub state: CharacterState,
+    pub cache: CacheStatus,
 }
 
 impl From<swapi_core::CharacterSnapshot> for CharacterSnapshot {
@@ -123,6 +126,7 @@ impl From<swapi_core::CharacterSnapshot> for CharacterSnapshot {
         Self {
             revision: snapshot.revision,
             state,
+            cache: snapshot.cache.into(),
         }
     }
 }
@@ -135,6 +139,8 @@ pub enum BridgeError {
     Closed,
     #[error("state listener failed")]
     Listener,
+    #[error("could not open the local archive")]
+    Storage,
 }
 
 impl From<uniffi::UnexpectedUniFFICallbackError> for BridgeError {
@@ -262,3 +268,5 @@ pub use people::*;
 
 mod catalog;
 pub use catalog::*;
+mod archive;
+pub use archive::*;

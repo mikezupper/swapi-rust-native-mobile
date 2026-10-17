@@ -250,6 +250,13 @@ typedef void (*UniffiCallbackInterfaceCharacterListenerMethod0)(uint64_t, RustBu
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_ARCHIVE_LISTENER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_ARCHIVE_LISTENER_METHOD0
+typedef void (*UniffiCallbackInterfaceArchiveListenerMethod0)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_CATALOG_LISTENER_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_CATALOG_LISTENER_METHOD0
 typedef void (*UniffiCallbackInterfaceCatalogListenerMethod0)(uint64_t, RustBuffer, void* _Nonnull, 
@@ -271,6 +278,15 @@ typedef struct UniffiVTableCallbackInterfaceCharacterListener {
     UniffiCallbackInterfaceClone _Nonnull uniffiClone;
     UniffiCallbackInterfaceCharacterListenerMethod0 _Nonnull onState;
 } UniffiVTableCallbackInterfaceCharacterListener;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_ARCHIVE_LISTENER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_ARCHIVE_LISTENER
+typedef struct UniffiVTableCallbackInterfaceArchiveListener {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceArchiveListenerMethod0 _Nonnull onState;
+} UniffiVTableCallbackInterfaceArchiveListener;
 
 #endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_CATALOG_LISTENER
@@ -370,6 +386,106 @@ void uniffi_swapi_ffi_fn_free_subscription(uint64_t handle, RustCallStatus *_Non
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_SUBSCRIPTION_CANCEL
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_SUBSCRIPTION_CANCEL
 void uniffi_swapi_ffi_fn_method_subscription_cancel(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_ARCHIVELISTENER
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_ARCHIVELISTENER
+uint64_t uniffi_swapi_ffi_fn_clone_archivelistener(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FREE_ARCHIVELISTENER
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FREE_ARCHIVELISTENER
+void uniffi_swapi_ffi_fn_free_archivelistener(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_INIT_CALLBACK_VTABLE_ARCHIVELISTENER
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_INIT_CALLBACK_VTABLE_ARCHIVELISTENER
+void uniffi_swapi_ffi_fn_init_callback_vtable_archivelistener(const UniffiVTableCallbackInterfaceArchiveListener* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVELISTENER_ON_STATE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVELISTENER_ON_STATE
+void uniffi_swapi_ffi_fn_method_archivelistener_on_state(uint64_t ptr, RustBuffer snapshot, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_ARCHIVESESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_ARCHIVESESSION
+uint64_t uniffi_swapi_ffi_fn_clone_archivesession(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FREE_ARCHIVESESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FREE_ARCHIVESESSION
+void uniffi_swapi_ffi_fn_free_archivesession(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_ARCHIVESESSION_NEW
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_ARCHIVESESSION_NEW
+uint64_t uniffi_swapi_ffi_fn_constructor_archivesession_new(RustBuffer storage_path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_ARCHIVESESSION_WITH_ENDPOINT
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_ARCHIVESESSION_WITH_ENDPOINT
+uint64_t uniffi_swapi_ffi_fn_constructor_archivesession_with_endpoint(RustBuffer storage_path, RustBuffer base_url, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_CANCEL_DOWNLOAD
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_CANCEL_DOWNLOAD
+void uniffi_swapi_ffi_fn_method_archivesession_cancel_download(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_CATALOG_SESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_CATALOG_SESSION
+uint64_t uniffi_swapi_ffi_fn_method_archivesession_catalog_session(uint64_t ptr, RustBuffer category, RustBuffer record_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_CHARACTER_SESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_CHARACTER_SESSION
+uint64_t uniffi_swapi_ffi_fn_method_archivesession_character_session(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_CLEAR_CACHE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_CLEAR_CACHE
+void uniffi_swapi_ffi_fn_method_archivesession_clear_cache(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_DOWNLOAD
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_DOWNLOAD
+void uniffi_swapi_ffi_fn_method_archivesession_download(uint64_t ptr, RustBuffer category, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_PEOPLE_SESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_PEOPLE_SESSION
+uint64_t uniffi_swapi_ffi_fn_method_archivesession_people_session(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SEARCH
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SEARCH
+void uniffi_swapi_ffi_fn_method_archivesession_search(uint64_t ptr, RustBuffer query, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SET_FAVORITE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SET_FAVORITE
+void uniffi_swapi_ffi_fn_method_archivesession_set_favorite(uint64_t ptr, RustBuffer category, uint32_t id, int8_t value, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SET_FAVORITES_ONLY
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SET_FAVORITES_ONLY
+void uniffi_swapi_ffi_fn_method_archivesession_set_favorites_only(uint64_t ptr, int8_t value, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SET_OFFLINE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SET_OFFLINE
+void uniffi_swapi_ffi_fn_method_archivesession_set_offline(uint64_t ptr, int8_t value, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SHUTDOWN
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SHUTDOWN
+void uniffi_swapi_ffi_fn_method_archivesession_shutdown(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SUBSCRIBE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SUBSCRIBE
+uint64_t uniffi_swapi_ffi_fn_method_archivesession_subscribe(uint64_t ptr, uint64_t listener, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CLONE_CATALOGLISTENER
@@ -815,6 +931,84 @@ uint16_t uniffi_swapi_ffi_checksum_method_subscription_cancel(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVELISTENER_ON_STATE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVELISTENER_ON_STATE
+uint16_t uniffi_swapi_ffi_checksum_method_archivelistener_on_state(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_CANCEL_DOWNLOAD
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_CANCEL_DOWNLOAD
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_cancel_download(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_CATALOG_SESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_CATALOG_SESSION
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_catalog_session(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_CHARACTER_SESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_CHARACTER_SESSION
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_character_session(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_CLEAR_CACHE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_CLEAR_CACHE
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_clear_cache(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_DOWNLOAD
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_DOWNLOAD
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_download(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_PEOPLE_SESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_PEOPLE_SESSION
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_people_session(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SEARCH
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SEARCH
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_search(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SET_FAVORITE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SET_FAVORITE
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_set_favorite(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SET_FAVORITES_ONLY
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SET_FAVORITES_ONLY
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_set_favorites_only(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SET_OFFLINE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SET_OFFLINE
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_set_offline(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SHUTDOWN
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SHUTDOWN
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_shutdown(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SUBSCRIBE
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SUBSCRIBE
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_subscribe(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGLISTENER_ON_STATE
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CATALOGLISTENER_ON_STATE
 uint16_t uniffi_swapi_ffi_checksum_method_cataloglistener_on_state(void
@@ -908,6 +1102,18 @@ uint16_t uniffi_swapi_ffi_checksum_constructor_charactersession_new(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CHARACTERSESSION_WITH_ENDPOINT
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CHARACTERSESSION_WITH_ENDPOINT
 uint16_t uniffi_swapi_ffi_checksum_constructor_charactersession_with_endpoint(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_ARCHIVESESSION_NEW
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_ARCHIVESESSION_NEW
+uint16_t uniffi_swapi_ffi_checksum_constructor_archivesession_new(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_ARCHIVESESSION_WITH_ENDPOINT
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_ARCHIVESESSION_WITH_ENDPOINT
+uint16_t uniffi_swapi_ffi_checksum_constructor_archivesession_with_endpoint(void
     
 );
 #endif

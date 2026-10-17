@@ -1,5 +1,7 @@
 package dev.holocron.app
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -46,15 +48,23 @@ import dev.holocron.core.PeoplePhase
 import dev.holocron.core.PeopleSnapshot
 
 @Composable
-fun HolocronNavigation(endpoint: String? = null) {
+fun HolocronNavigation(endpoint: String? = null, archive: ArchiveController? = null, storageUnavailable: Boolean = false) {
     val navigation = rememberNavController()
     fun select(category: CatalogCategory) {
         val route = if (category == CatalogCategory.PEOPLE) "people" else "catalog/${category.name}"
         navigation.navigate(route) { popUpTo("people"); launchSingleTop = true }
     }
-    NavHost(navigation, startDestination = "people") {
+    CompositionLocalProvider(LocalArchive provides archive, LocalOpenArchive provides { navigation.navigate("saved") { launchSingleTop = true } }) {
+    NavHost(navigation, startDestination = "people",
+        enterTransition = { fadeIn(tween(240)) + scaleIn(initialScale = .96f, animationSpec = tween(300)) },
+        exitTransition = { fadeOut(tween(180)) },
+        popEnterTransition = { fadeIn(tween(220)) },
+        popExitTransition = { fadeOut(tween(180)) + scaleOut(targetScale = .96f, animationSpec = tween(240)) }) {
+        composable("saved") { archive?.let { SavedArchiveScreen(it, { navigation.popBackStack() }) { category, id ->
+            navigation.navigate(if (category == CatalogCategory.PEOPLE) "person/$id" else "record/${category.name}/$id")
+        } } }
         composable("people") {
-            val model: PeopleViewModel = viewModel(factory = viewModelFactory { initializer { PeopleViewModel(createSavedStateHandle(), endpoint) } })
+            val model: PeopleViewModel = viewModel(factory = viewModelFactory { initializer { PeopleViewModel(createSavedStateHandle(), endpoint, archive?.session) } })
             val snapshot by model.controller.state.collectAsStateWithLifecycle()
             val query by model.query.collectAsStateWithLifecycle()
             PeopleScreen(snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry, onCategory = ::select) {
@@ -63,7 +73,7 @@ fun HolocronNavigation(endpoint: String? = null) {
         }
         composable("catalog/{category}") { entry ->
             val category = CatalogCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
-            val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, null, endpoint) } })
+            val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, null, endpoint, archive?.session) } })
             val snapshot by model.controller.state.collectAsStateWithLifecycle()
             val query by model.query.collectAsStateWithLifecycle()
             CatalogScreen(category, snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry, ::select) {
@@ -73,13 +83,13 @@ fun HolocronNavigation(endpoint: String? = null) {
         composable("record/{category}/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) { entry ->
             val category = CatalogCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
             val id = requireNotNull(entry.arguments).getInt("id").toUInt()
-            val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, id, endpoint) } })
+            val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, id, endpoint, archive?.session) } })
             val snapshot by model.controller.state.collectAsStateWithLifecycle()
             CatalogDetailScreen(category, snapshot, model.controller::refresh, model.controller::retry) { navigation.popBackStack() }
         }
         composable("person/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) { entry ->
             val id = requireNotNull(entry.arguments).getInt("id").toUInt()
-            val model: CharacterViewModel = viewModel(factory = viewModelFactory { initializer { CharacterViewModel(id, endpoint) } })
+            val model: CharacterViewModel = viewModel(factory = viewModelFactory { initializer { CharacterViewModel(id, endpoint, archive?.session) } })
             Box {
                 CharacterRoute(model.controller)
                 FilledIconButton(onClick = { navigation.popBackStack() }, modifier = Modifier.statusBarsPadding().padding(start = 12.dp, top = 48.dp),
@@ -88,6 +98,8 @@ fun HolocronNavigation(endpoint: String? = null) {
                 }
             }
         }
+    }
+    if (storageUnavailable) Text("Offline storage unavailable. Browsing uses live data.", modifier = Modifier.statusBarsPadding().padding(24.dp), color = MaterialTheme.colorScheme.error)
     }
 }
 
@@ -98,7 +110,7 @@ fun PeopleScreen(snapshot: PeopleSnapshot, query: String, onSearch: (String) -> 
     ArchiveScreen(CatalogCategory.PEOPLE, snapshot.people.map { ArchiveItem(it.id, it.name, "${it.filmCount} films · Born ${it.birthYear}") },
         snapshot.total, snapshot.hasMore, snapshot.phase == PeoplePhase.Ready,
         snapshot.phase == PeoplePhase.Loading || snapshot.phase == PeoplePhase.Refreshing || snapshot.phase == PeoplePhase.LoadingMore,
-        failure?.kind, failure?.retryable == true, query, onSearch, onRefresh, onMore, onRetry, onCategory, onPerson)
+        failure?.kind, failure?.retryable == true, query, onSearch, onRefresh, onMore, onRetry, onCategory, onPerson, snapshot.cache)
 }
 
 data class ArchiveItem(val id: UInt, val name: String, val summary: String)
@@ -107,7 +119,7 @@ data class ArchiveItem(val id: UInt, val name: String, val summary: String)
 fun ArchiveScreen(category: CatalogCategory, records: List<ArchiveItem>, total: UInt, hasMore: Boolean, ready: Boolean,
                   busy: Boolean, failure: FailureKind?, retryable: Boolean, query: String,
                   onSearch: (String) -> Unit, onRefresh: () -> Unit, onMore: () -> Unit, onRetry: () -> Unit,
-                  onCategory: (CatalogCategory) -> Unit, onPerson: (UInt) -> Unit) {
+                  onCategory: (CatalogCategory) -> Unit, onPerson: (UInt) -> Unit, cache: dev.holocron.core.CacheStatus = emptyCache()) {
     // Keep selection, composing text and IME updates in one synchronous native
     // state holder. Feeding edits back through StateFlow can replay stale text
     // when the keyboard connects. Rust observes the draft; it still debounces.
@@ -136,6 +148,7 @@ fun ArchiveScreen(category: CatalogCategory, records: List<ArchiveItem>, total: 
                 }
             }
             item(key = "categories") { CategoryPicker(category, onCategory) }
+            item(key = "saved") { ArchiveShortcut() }
             item(key = "search") {
                 OutlinedTextField(state = draft, lineLimits = TextFieldLineLimits.SingleLine, label = { Text("Search ${category.title.lowercase()}") },
                     leadingIcon = { Icon(Icons.Outlined.Search, null) },
@@ -152,6 +165,7 @@ fun ArchiveScreen(category: CatalogCategory, records: List<ArchiveItem>, total: 
                     IconButton(onClick = onRefresh, enabled = !busy) { Icon(Icons.Outlined.Refresh, "Refresh ${category.title.lowercase()}") }
                 }
             }
+            item(key = "cache") { Box(Modifier.padding(horizontal = 24.dp)) { CacheNotice(cache) } }
             if (busy) item(key = "progress") { LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) }
             items(records, key = { it.id.toString() }) { person ->
                 Surface(onClick = { keyboard?.hide(); onPerson(person.id) }, color = MaterialTheme.colorScheme.surfaceContainer,

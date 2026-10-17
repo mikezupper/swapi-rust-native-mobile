@@ -12,7 +12,9 @@ serde_json.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 url.workspace = true
+rusqlite.workspace = true
 
 [dev-dependencies]
+tempfile = "=3.27.0"
 wiremock = "=0.6.2"
 tokio = { workspace = true, features = ["test-util"] }

@@ -48,12 +48,13 @@ extension CatalogCategory {
 struct ArchiveHome: View {
     @ObservedObject var people: PeopleModel
     @State private var selected: CatalogCategory = .people
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        if selected == .people {
+        Group { if selected == .people {
             PeopleScreen(model: people, onCategory: { selected = $0 })
         } else {
             CatalogCollection(category: selected, onCategory: { selected = $0 }).id(selected)
-        }
+        } }.animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: selected)
     }
 }
 
@@ -193,6 +194,8 @@ struct CatalogDetailScreen: View {
                         if retryable { Button("Try again", action: model.retry).buttonStyle(.borderedProminent) }
                     }
                     if let record {
+                        CacheNotice(cache: model.snapshot.cache)
+                        FavoriteButton(category: category, id: record.id)
                         Text("The details").font(.title2).accessibilityAddTraits(.isHeader)
                         VStack(alignment: .leading, spacing: 20) {
                             ForEach(record.facts, id: \.label) { fact in

@@ -1,8 +1,12 @@
 //! Shared SWAPI transport and validated records. No platform UI dependencies.
+mod cache;
 mod client;
 mod model;
 mod people;
 mod state;
+pub use cache::{ArchiveCache, CacheInfo, CollectionInfo, Loaded, SavedRecord};
+mod archive;
+pub use archive::{ArchiveSnapshot, ArchiveStore, DownloadState};
 
 pub use client::SwapiClient;
 pub use model::{ApiError, Measurement, PeoplePage, Person, ResourceKind, ResourceRef};

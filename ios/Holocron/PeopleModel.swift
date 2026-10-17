@@ -10,7 +10,7 @@ final class PeopleModel: ObservableObject {
     init(core injectedCore: PeopleSession? = nil, autoload: Bool = true) {
         do {
             let core: PeopleSession
-            if let injectedCore { core = injectedCore } else {
+            if let injectedCore { core = injectedCore } else if let archive = ArchiveModel.shared.session { core = try archive.peopleSession() } else {
                 #if DEBUG
                 let args = ProcessInfo.processInfo.arguments
                 if let index = args.firstIndex(of: "--endpoint"), args.count > index + 1 {

@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
+import dev.holocron.core.ArchiveSession
 import dev.holocron.core.CharacterListener
 import dev.holocron.core.CharacterSession
 import dev.holocron.core.CharacterSnapshot
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /** Adapts Rust snapshots to the Android main thread; owns no request policy. */
 class CharacterController(private val session: CharacterSession = CharacterSession(), private val personId: UInt = 1u) : AutoCloseable {
-    private val mutableState = MutableStateFlow(CharacterSnapshot(0uL, CharacterState.Idle))
+    private val mutableState = MutableStateFlow(CharacterSnapshot(0uL, CharacterState.Idle, emptyCache()))
     val state = mutableState.asStateFlow()
     private var closed = false // Accessed on the main thread only.
     private val subscription = run {
@@ -47,7 +48,7 @@ class CharacterController(private val session: CharacterSession = CharacterSessi
     }
 }
 
-class CharacterViewModel(id: UInt = 1u, endpoint: String? = null) : ViewModel() {
-    val controller = CharacterController(endpoint?.let { CharacterSession.withEndpoint(it) } ?: CharacterSession(), id).also { it.load() }
+class CharacterViewModel(id: UInt = 1u, endpoint: String? = null, archive: ArchiveSession? = null) : ViewModel() {
+    val controller = CharacterController(archive?.characterSession() ?: endpoint?.let { CharacterSession.withEndpoint(it) } ?: CharacterSession(), id).also { it.load() }
     override fun onCleared() { controller.close() }
 }

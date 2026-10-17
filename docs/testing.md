@@ -206,3 +206,23 @@ On October 17, 2026 it successfully fetched each collection and its first detail
 82 people, 60 planets, 36 starships, 39 vehicles, 37 species and 6 films.
 The user's Mac checkout, project caches and simulator installations were removed
 at their request. Hosted CI can validate iOS without restoring files to that Mac.
+
+## Category artwork verification
+
+[Run 39076835419](https://github.com/mikezupper/swapi-rust-native-mobile/actions/runs/39076835419)
+passed the Rust, Android and iOS gates for artwork commit `4714000`. Six live
+Android category screens and six iOS fixture collection screenshots were
+visually reviewed. The [artwork gallery](../design/artwork/README.md) includes
+Android captures. iOS captures are in that run's `ios-verification` artifact.
+
+## Offline archive verification
+
+The Rust archive suite checks database reopening, favorite preservation after
+cache clearing, namespace and query isolation, fresh cache hits, stale-content
+publication before refresh, malformed refresh fallback, two-page download
+failure/retry/completeness, cancellation and switching offline during HTTP.
+Native tests exercise favorite actions, downloads, local browsing and reopening
+the same database. Screenshot names include `offline-favorites` and
+`offline-planet-detail` on Android and `Offline favorites` /
+`Offline favorite after relaunch` on iOS. These are fixture tests; a live API
+smoke test is separate.

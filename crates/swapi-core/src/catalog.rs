@@ -1,6 +1,6 @@
 //! Validated catalog records and a shared pager for every SWAPI collection.
 use crate::people::{Page, PageSnapshot, PagedStore, Record};
-use crate::{ApiError, ResourceKind, ResourceRef, SwapiClient};
+use crate::{ApiError, Loaded, ResourceKind, ResourceRef, SwapiClient};
 use serde::{Deserialize, de::DeserializeOwned};
 use serde_json::Value;
 use std::sync::Arc;
@@ -36,19 +36,32 @@ impl CatalogStore {
         id: Option<u32>,
         runtime: &Handle,
     ) -> Self {
-        Self::start(
-            Arc::new(move |query, page| {
+        let cached = client.clone();
+        Self::start_cached(
+            Arc::new(move |query, page, force| {
                 let client = client.clone();
                 Box::pin(async move {
                     match id {
-                        Some(id) => Ok(Page {
-                            total: 1,
-                            next_page: None,
-                            items: vec![client.resource(kind, id).await?],
+                        Some(id) => client.resource_loaded(kind, id, force).await.map(|loaded| {
+                            loaded.map(|record| Page {
+                                total: 1,
+                                next_page: None,
+                                items: vec![record],
+                            })
                         }),
-                        None => client.resources(kind, &query, page).await,
+                        None => client.resources_loaded(kind, &query, page, force).await,
                     }
                 })
+            }),
+            Arc::new(move |query, page| match id {
+                Some(id) => cached.cached_resource(kind, id).map(|loaded| {
+                    loaded.map(|record| Page {
+                        total: 1,
+                        next_page: None,
+                        items: vec![record],
+                    })
+                }),
+                None => cached.cached_resources(kind, query, page),
             }),
             runtime,
         )
@@ -69,6 +82,14 @@ impl SwapiClient {
         query: &str,
         page: u32,
     ) -> Result<Page<CatalogRecord>, ApiError> {
+        Ok(self.resources_loaded(kind, query, page, false).await?.value)
+    }
+    pub(crate) fn resources_url(
+        &self,
+        kind: ResourceKind,
+        query: &str,
+        page: u32,
+    ) -> Result<url::Url, ApiError> {
         if page == 0 {
             return Err(ApiError::InvalidRequest);
         }
@@ -81,7 +102,17 @@ impl SwapiClient {
         if !query.is_empty() {
             url.query_pairs_mut().append_pair("search", query);
         }
-        let dto: CatalogPageDto = self.get(url).await?;
+        Ok(url)
+    }
+    fn parse_resources(
+        &self,
+        kind: ResourceKind,
+        query: &str,
+        page: u32,
+        value: Value,
+    ) -> Result<Page<CatalogRecord>, ApiError> {
+        let dto: CatalogPageDto =
+            serde_json::from_value(value).map_err(|_| ApiError::InvalidData)?;
         let next_page = dto
             .next
             .as_deref()
@@ -101,19 +132,69 @@ impl SwapiClient {
             items,
         })
     }
+    pub(crate) async fn resources_loaded(
+        &self,
+        kind: ResourceKind,
+        query: &str,
+        page: u32,
+        force: bool,
+    ) -> Result<Loaded<Page<CatalogRecord>>, ApiError> {
+        self.load(self.resources_url(kind, query, page)?, force, |value| {
+            self.parse_resources(kind, query.trim(), page, value)
+        })
+        .await
+    }
+    pub(crate) fn cached_resources(
+        &self,
+        kind: ResourceKind,
+        query: &str,
+        page: u32,
+    ) -> Option<Loaded<Page<CatalogRecord>>> {
+        self.cached(&self.resources_url(kind, query, page).ok()?, |value| {
+            self.parse_resources(kind, query.trim(), page, value)
+        })
+    }
     pub async fn resource(&self, kind: ResourceKind, id: u32) -> Result<CatalogRecord, ApiError> {
+        Ok(self.resource_loaded(kind, id, false).await?.value)
+    }
+    fn resource_url(&self, kind: ResourceKind, id: u32) -> Result<url::Url, ApiError> {
         if id == 0 {
             return Err(ApiError::InvalidRequest);
         }
-        let url = self
-            .base
+        self.base
             .join(&format!("{}/{id}/", kind.path()))
-            .map_err(|_| ApiError::InvalidRequest)?;
-        let record = CatalogRecord::parse(kind, self.get(url).await?)?;
+            .map_err(|_| ApiError::InvalidRequest)
+    }
+    fn parse_resource(
+        kind: ResourceKind,
+        id: u32,
+        value: Value,
+    ) -> Result<CatalogRecord, ApiError> {
+        let record = CatalogRecord::parse(kind, value)?;
         if record.id != id {
             return Err(ApiError::InvalidData);
         }
         Ok(record)
+    }
+    pub(crate) async fn resource_loaded(
+        &self,
+        kind: ResourceKind,
+        id: u32,
+        force: bool,
+    ) -> Result<Loaded<CatalogRecord>, ApiError> {
+        self.load(self.resource_url(kind, id)?, force, |value| {
+            Self::parse_resource(kind, id, value)
+        })
+        .await
+    }
+    pub(crate) fn cached_resource(
+        &self,
+        kind: ResourceKind,
+        id: u32,
+    ) -> Option<Loaded<CatalogRecord>> {
+        self.cached(&self.resource_url(kind, id).ok()?, |value| {
+            Self::parse_resource(kind, id, value)
+        })
     }
 }
 
@@ -122,7 +203,7 @@ fn field<T: DeserializeOwned>(value: &Value, key: &str) -> Result<T, ApiError> {
         .map_err(|_| ApiError::InvalidData)
 }
 impl CatalogRecord {
-    fn parse(kind: ResourceKind, value: Value) -> Result<Self, ApiError> {
+    pub(crate) fn parse(kind: ResourceKind, value: Value) -> Result<Self, ApiError> {
         let identity = ResourceRef::parse(&field::<String>(&value, "url")?)?;
         if identity.kind != kind {
             return Err(ApiError::InvalidData);

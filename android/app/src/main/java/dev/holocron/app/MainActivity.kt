@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.holocron.core.Character
 import dev.holocron.core.CatalogCategory
@@ -45,7 +47,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         setContent {
-            HolocronTheme { HolocronNavigation(endpoint = if (BuildConfig.DEBUG) intent.getStringExtra("endpoint") else null) }
+            val endpoint = if (BuildConfig.DEBUG) intent.getStringExtra("endpoint") else null
+            val archive: ArchiveViewModel = viewModel(factory = viewModelFactory { initializer { ArchiveViewModel(java.io.File(filesDir, "archive.sqlite").path, endpoint) } })
+            HolocronTheme { HolocronNavigation(endpoint = endpoint, archive = archive.controller, storageUnavailable = archive.controller == null) }
         }
     }
 }
@@ -67,11 +71,11 @@ fun HolocronTheme(content: @Composable () -> Unit) {
 @Composable
 fun CharacterRoute(controller: CharacterController) {
     val snapshot by controller.state.collectAsStateWithLifecycle()
-    CharacterScreen(snapshot.state, onRetry = controller::retry, onLoad = { controller.load() })
+    CharacterScreen(snapshot.state, onRetry = controller::retry, onLoad = { controller.load() }, cache = snapshot.cache)
 }
 
 @Composable
-fun CharacterScreen(state: CharacterState, onRetry: () -> Unit, onLoad: () -> Unit) {
+fun CharacterScreen(state: CharacterState, onRetry: () -> Unit, onLoad: () -> Unit, cache: dev.holocron.core.CacheStatus = emptyCache()) {
     val character = (state as? CharacterState.Ready)?.character
     Surface(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize()) {
@@ -91,7 +95,11 @@ fun CharacterScreen(state: CharacterState, onRetry: () -> Unit, onLoad: () -> Un
                 }
                 Column(Modifier.padding(DesignTokens.Space.lg.dp), verticalArrangement = Arrangement.spacedBy(DesignTokens.Shape.card.dp)) {
                     when (state) {
-                        is CharacterState.Ready -> CharacterDetails(state.character, onLoad)
+                        is CharacterState.Ready -> {
+                            CacheNotice(cache)
+                            FavoriteButton(CatalogCategory.PEOPLE, state.character.id)
+                            CharacterDetails(state.character, onLoad)
+                        }
                         is CharacterState.Failed -> {
                             Text(failureMessage(state.kind), fontSize = 18.sp, lineHeight = 26.sp)
                             if (state.retryable) FilledTonalButton(onClick = onRetry) { Text("Try again") }
@@ -164,6 +172,7 @@ private fun measurement(value: Measurement, unit: String): String = when (value)
 }
 
 fun failureMessage(kind: FailureKind): String = when (kind) {
+    FailureKind.Storage -> "The archive could not be saved. Check available device storage."
     FailureKind.Network -> "The archive is out of reach. Check your connection and try again."
     FailureKind.Timeout -> "The archive took too long to respond. Try again in a moment."
     is FailureKind.Http -> if (kind.status == 404.toUShort()) "This record could not be found." else "The archive is temporarily unavailable."

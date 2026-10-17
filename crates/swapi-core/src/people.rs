@@ -1,6 +1,6 @@
 //! One serialized owner for query, paging and refresh. Replacing a query drops
 //! both its debounce timer and its HTTP future before a result can be published.
-use crate::{ApiError, PeoplePage, Person, SwapiClient};
+use crate::{ApiError, CacheInfo, Loaded, PeoplePage, Person, SwapiClient};
 use std::{future::Future, pin::Pin, sync::Arc, time::Duration};
 use tokio::{
     runtime::Handle,
@@ -36,6 +36,7 @@ pub struct PageSnapshot<T> {
     pub total: u32,
     pub next_page: Option<u32>,
     pub phase: PeoplePhase,
+    pub cache: CacheInfo,
 }
 impl<T> Default for PageSnapshot<T> {
     fn default() -> Self {
@@ -46,6 +47,7 @@ impl<T> Default for PageSnapshot<T> {
             total: 0,
             next_page: None,
             phase: PeoplePhase::Idle,
+            cache: CacheInfo::default(),
         }
     }
 }
@@ -82,8 +84,9 @@ impl From<PeoplePage> for Page<Person> {
 }
 pub type PeopleSnapshot = PageSnapshot<Person>;
 pub type PeopleStore = PagedStore<Person>;
-type Request<T> = Pin<Box<dyn Future<Output = Result<Page<T>, ApiError>> + Send>>;
-type Loader<T> = Arc<dyn Fn(String, u32) -> Request<T> + Send + Sync>;
+type Request<T> = Pin<Box<dyn Future<Output = Result<Loaded<Page<T>>, ApiError>> + Send>>;
+type Loader<T> = Arc<dyn Fn(String, u32, bool) -> Request<T> + Send + Sync>;
+type CachedLoader<T> = Arc<dyn Fn(&str, u32) -> Option<Loaded<Page<T>>> + Send + Sync>;
 
 pub struct PagedStore<T> {
     commands: mpsc::UnboundedSender<Command>,
@@ -92,17 +95,32 @@ pub struct PagedStore<T> {
 }
 impl PagedStore<Person> {
     pub fn new(client: SwapiClient, runtime: &Handle) -> Self {
-        Self::start(
-            Arc::new(move |query, page| {
+        let cached = client.clone();
+        Self::start_cached(
+            Arc::new(move |query, page, force| {
                 let client = client.clone();
-                Box::pin(async move { client.people(&query, page).await.map(Into::into) })
+                Box::pin(async move {
+                    client
+                        .people_loaded(&query, page, force)
+                        .await
+                        .map(|loaded| loaded.map(Into::into))
+                })
+            }),
+            Arc::new(move |query, page| {
+                cached
+                    .cached_people(query, page)
+                    .map(|loaded| loaded.map(Into::into))
             }),
             runtime,
         )
     }
 }
 impl<T: Record> PagedStore<T> {
+    #[cfg(test)]
     pub(crate) fn start(load: Loader<T>, runtime: &Handle) -> Self {
+        Self::start_cached(load, Arc::new(|_, _| None), runtime)
+    }
+    pub(crate) fn start_cached(load: Loader<T>, cached: CachedLoader<T>, runtime: &Handle) -> Self {
         let (commands, mut inbox) = mpsc::unbounded_channel();
         let (publisher, states) = watch::channel(PageSnapshot::default());
         let actor = runtime.spawn(async move {
@@ -112,6 +130,7 @@ impl<T: Record> PagedStore<T> {
                 tokio::select! {
                     biased;
                     command = inbox.recv() => {
+                        let force = matches!(&command, Some(Command::Refresh | Command::Retry)) && snapshot.phase != PeoplePhase::Idle;
                         let (operation, debounce) = match command {
                             Some(Command::Search(query)) => {
                                 let query = query.trim().to_owned();
@@ -131,13 +150,21 @@ impl<T: Record> PagedStore<T> {
                         };
                         let page = if operation == PeopleOperation::More { snapshot.next_page.expect("more requires a next page") } else { 1 };
                         let query = snapshot.query.clone();
+                        if snapshot.items.is_empty()
+                            && let Some(saved) = cached(&query, page) {
+                                snapshot.items = saved.value.items;
+                                snapshot.total = saved.value.total;
+                                snapshot.next_page = saved.value.next_page;
+                                snapshot.cache = saved.cache;
+                            }
                         let loader = load.clone();
                         pending = Some((operation, Box::pin(async move {
                             if debounce { tokio::time::sleep(Duration::from_millis(300)).await; }
-                            loader(query, page).await
+                            loader(query, page, force).await
                         })));
                         snapshot.phase = match operation {
-                            PeopleOperation::Initial => PeoplePhase::Loading,
+                            PeopleOperation::Initial if snapshot.items.is_empty() => PeoplePhase::Loading,
+                            PeopleOperation::Initial => PeoplePhase::Refreshing,
                             PeopleOperation::Refresh => PeoplePhase::Refreshing,
                             PeopleOperation::More => PeoplePhase::LoadingMore,
                         };
@@ -145,7 +172,9 @@ impl<T: Record> PagedStore<T> {
                     result = async { pending.as_mut().expect("guarded request").1.as_mut().await }, if pending.is_some() => {
                         let operation = pending.take().expect("completed request").0;
                         match result {
-                            Ok(page) => {
+                            Ok(loaded) => {
+                                let page = loaded.value;
+                                snapshot.cache = loaded.cache;
                                 if operation != PeopleOperation::More { snapshot.items.clear(); }
                                 let mut seen: std::collections::HashSet<_> = snapshot.items.iter().map(|p| p.id()).collect();
                                 snapshot.items.extend(page.items.into_iter().filter(|p| seen.insert(p.id())));

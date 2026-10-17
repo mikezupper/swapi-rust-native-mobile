@@ -1,6 +1,7 @@
-use crate::{ApiError, PeoplePage, Person, model::PersonDto};
+use crate::{ApiError, ArchiveCache, CacheInfo, Loaded, PeoplePage, Person, model::PersonDto};
 use serde::{Deserialize, de::DeserializeOwned};
-use std::time::Duration;
+use serde_json::Value;
+use std::{sync::Arc, time::Duration};
 use url::Url;
 
 const PRODUCTION: &str = "https://swapi.dev/api/";
@@ -10,6 +11,7 @@ const MAX_BODY: usize = 1024 * 1024;
 pub struct SwapiClient {
     http: reqwest::Client,
     pub(crate) base: Url,
+    pub(crate) cache: Option<Arc<ArchiveCache>>,
 }
 
 impl SwapiClient {
@@ -53,26 +55,62 @@ impl SwapiClient {
             .retry(reqwest::retry::never())
             .build()
             .map_err(|_| ApiError::Network)?;
-        Ok(Self { http, base })
+        Ok(Self {
+            http,
+            base,
+            cache: None,
+        })
+    }
+
+    pub fn with_cache(mut self, cache: Arc<ArchiveCache>) -> Self {
+        self.cache = Some(cache);
+        self
+    }
+    pub fn endpoint(&self) -> &str {
+        self.base.as_str()
     }
 
     pub async fn person(&self, id: u32) -> Result<Person, ApiError> {
+        Ok(self.person_loaded(id, false).await?.value)
+    }
+
+    fn person_url(&self, id: u32) -> Result<Url, ApiError> {
         if id == 0 {
             return Err(ApiError::InvalidRequest);
         }
-        let url = self
-            .base
+        self.base
             .join(&format!("people/{id}/"))
-            .map_err(|_| ApiError::InvalidRequest)?;
-        let dto: PersonDto = self.get(url).await?;
-        let person = Person::try_from(dto)?;
+            .map_err(|_| ApiError::InvalidRequest)
+    }
+    fn parse_person(value: Value, id: u32) -> Result<Person, ApiError> {
+        let person = Person::try_from(
+            serde_json::from_value::<PersonDto>(value).map_err(|_| ApiError::InvalidData)?,
+        )?;
         if person.id != id {
             return Err(ApiError::InvalidData);
         }
         Ok(person)
     }
+    pub(crate) async fn person_loaded(
+        &self,
+        id: u32,
+        force: bool,
+    ) -> Result<Loaded<Person>, ApiError> {
+        self.load(self.person_url(id)?, force, |value| {
+            Self::parse_person(value, id)
+        })
+        .await
+    }
+    pub(crate) fn cached_person(&self, id: u32) -> Option<Loaded<Person>> {
+        self.cached(&self.person_url(id).ok()?, |value| {
+            Self::parse_person(value, id)
+        })
+    }
 
     pub async fn people(&self, search: &str, page: u32) -> Result<PeoplePage, ApiError> {
+        Ok(self.people_loaded(search, page, false).await?.value)
+    }
+    fn people_url(&self, search: &str, page: u32) -> Result<Url, ApiError> {
         if page == 0 {
             return Err(ApiError::InvalidRequest);
         }
@@ -85,7 +123,10 @@ impl SwapiClient {
         if !search.is_empty() {
             url.query_pairs_mut().append_pair("search", search);
         }
-        let dto: PageDto = self.get(url).await?;
+        Ok(url)
+    }
+    fn parse_people(&self, value: Value, search: &str, page: u32) -> Result<PeoplePage, ApiError> {
+        let dto: PageDto = serde_json::from_value(value).map_err(|_| ApiError::InvalidData)?;
         let next_page = dto
             .next
             .as_deref()
@@ -104,6 +145,118 @@ impl SwapiClient {
             next_page,
             people,
         })
+    }
+    pub(crate) async fn people_loaded(
+        &self,
+        search: &str,
+        page: u32,
+        force: bool,
+    ) -> Result<Loaded<PeoplePage>, ApiError> {
+        self.load(self.people_url(search, page)?, force, |value| {
+            self.parse_people(value, search.trim(), page)
+        })
+        .await
+    }
+    pub(crate) fn cached_people(&self, search: &str, page: u32) -> Option<Loaded<PeoplePage>> {
+        self.cached(&self.people_url(search, page).ok()?, |value| {
+            self.parse_people(value, search.trim(), page)
+        })
+    }
+
+    pub(crate) fn cached<T>(
+        &self,
+        url: &Url,
+        parse: impl Fn(Value) -> Result<T, ApiError>,
+    ) -> Option<Loaded<T>> {
+        let cache = self.cache.as_ref()?;
+        let saved = cache.response(url).ok()??;
+        Some(Loaded {
+            value: parse(saved.body).ok()?,
+            cache: CacheInfo {
+                saved_at: Some(saved.saved_at),
+                from_cache: true,
+                offline: cache.is_offline(),
+                ..Default::default()
+            },
+        })
+    }
+
+    pub(crate) async fn load<T>(
+        &self,
+        url: Url,
+        force: bool,
+        parse: impl Fn(Value) -> Result<T, ApiError>,
+    ) -> Result<Loaded<T>, ApiError> {
+        let saved = self
+            .cache
+            .as_ref()
+            .and_then(|cache| cache.response(&url).ok().flatten());
+        let offline = self.cache.as_ref().is_some_and(|cache| cache.is_offline());
+        if let Some(saved) = &saved
+            && (offline || (!force && saved.fresh()))
+            && let Ok(value) = parse(saved.body.clone())
+        {
+            return Ok(Loaded {
+                value,
+                cache: CacheInfo {
+                    saved_at: Some(saved.saved_at),
+                    from_cache: true,
+                    offline,
+                    ..Default::default()
+                },
+            });
+        }
+        if offline {
+            return Err(ApiError::Network);
+        }
+        let response = if let Some(cache) = &self.cache {
+            let mut changes = cache.observe();
+            let request = self.get::<Value>(url.clone());
+            tokio::pin!(request);
+            loop {
+                // The mode can change while a request is waiting on the socket.
+                if cache.is_offline() {
+                    break Err(ApiError::Network);
+                }
+                tokio::select! {
+                    biased;
+                    _ = changes.changed() => {},
+                    response = &mut request => break response,
+                }
+            }
+        } else {
+            self.get::<Value>(url.clone()).await
+        };
+        let network = response.and_then(|body| parse(body.clone()).map(|value| (body, value)));
+        match network {
+            Ok((body, value)) => {
+                let mut info = CacheInfo::default();
+                if let Some(cache) = &self.cache {
+                    match cache.save_response(&url, &body) {
+                        Ok(saved_at) => info.saved_at = Some(saved_at),
+                        Err(_) => info.saving_failed = true,
+                    }
+                }
+                Ok(Loaded { value, cache: info })
+            }
+            Err(error) => {
+                if let Some(saved) = saved
+                    && let Ok(value) = parse(saved.body)
+                {
+                    return Ok(Loaded {
+                        value,
+                        cache: CacheInfo {
+                            saved_at: Some(saved.saved_at),
+                            from_cache: true,
+                            offline: matches!(error, ApiError::Network | ApiError::Timeout),
+                            refresh_failed: true,
+                            saving_failed: false,
+                        },
+                    });
+                }
+                Err(error)
+            }
+        }
     }
 
     pub(crate) fn next_page(

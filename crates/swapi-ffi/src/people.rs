@@ -18,6 +18,7 @@ pub struct PeopleSnapshot {
     pub total: u32,
     pub has_more: bool,
     pub phase: PeoplePhase,
+    pub cache: CacheStatus,
 }
 impl From<swapi_core::PeopleSnapshot> for PeopleSnapshot {
     fn from(value: swapi_core::PeopleSnapshot) -> Self {
@@ -27,6 +28,7 @@ impl From<swapi_core::PeopleSnapshot> for PeopleSnapshot {
             people: value.items.into_iter().map(Into::into).collect(),
             total: value.total,
             has_more: value.next_page.is_some(),
+            cache: value.cache.into(),
             phase: match value.phase {
                 CorePhase::Idle => PeoplePhase::Idle,
                 CorePhase::Loading => PeoplePhase::Loading,
@@ -51,7 +53,7 @@ pub struct PeopleSession {
     closed: AtomicBool,
 }
 impl PeopleSession {
-    fn with_client(client: SwapiClient) -> Arc<Self> {
+    pub(super) fn with_client(client: SwapiClient) -> Arc<Self> {
         Arc::new(Self {
             store: PeopleStore::new(client, runtime().handle()),
             closed: AtomicBool::new(false),

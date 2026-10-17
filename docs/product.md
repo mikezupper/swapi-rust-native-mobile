@@ -23,8 +23,9 @@ Planets, Starships, Vehicles, Species and Films with collection search, paginati
 details, refresh and retry through the Rust core.
 
 Explore, search results, and character detail are the first design surfaces.
-Navigation between related records, favorites, and persistent offline caching
-remain later scope decisions. A full backend, authentication, and social features have no
+The next implemented milestone adds persistent favorites, SQLite-backed offline
+records, local search, downloadable collections and native motion/haptics.
+Navigation between related records remains a future feature. A full backend, authentication, and social features have no
 current product requirement.
 
 ## Experience expectations

@@ -95,6 +95,36 @@ episode IDs are parsed separately; a species may have a null homeworld. Fact
 labels are shared English display metadata; values preserve SWAPI sentinels and
 units are identified in labels. Native apps never parse response JSON.
 
+## Persistent archive
+
+An app-scoped `ArchiveSession` opens the native-provided database path and creates
+cache-enabled People, Catalog and Character sessions. The existing standalone
+constructors remain stateless for isolated fixture tests. Native code never
+issues HTTP or implements freshness rules. `ArchiveStore` serializes favorites,
+local search/filtering, offline mode, cache clearing and one cancellable collection
+download. Its revisioned snapshot includes saved records, favorite identities,
+collection completeness and download progress.
+
+SQLite uses WAL, transactions, a three-second busy timeout and a checked schema
+version. Tables are scoped by canonical endpoint: response URL/body/timestamp,
+validated records by category/ID, favorite flags, collection metadata and the
+offline preference. Upserts preserve favorites. Only fully validated API pages
+are saved atomically; failed or malformed HTTP responses never replace good data.
+Detail reads can use records from cached collection pages. Clearing evictable
+cache data retains favorite records. Foreign callbacks run after database locks
+are released. A response cache budget of 16 MiB evicts old responses without
+removing normalized saved records.
+
+Freshness is 24 hours; explicit refresh bypasses it. Actors publish cached
+content before a stale refresh completes. Failure retains content with typed
+cache metadata (`savedAt`, `fromCache`, `offline`, `refreshFailed`, `savingFailed`).
+Offline mode persists and cancels pending network futures. A download follows
+validated pages, deduplicates IDs, verifies a consistent total, and marks the
+collection complete only when all expected records arrive. Cancellation and
+failure retain partial data. Restarting a download reuses fresh pages; updating
+a previously complete collection forces revalidation. Downloads are process
+work, not platform background jobs.
+
 ## API boundary
 
 Use `https://swapi.dev/api/` as the production endpoint. Provide an injectable

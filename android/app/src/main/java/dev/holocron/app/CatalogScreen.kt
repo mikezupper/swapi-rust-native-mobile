@@ -82,7 +82,7 @@ fun CatalogScreen(category: CatalogCategory, snapshot: CatalogSnapshot, query: S
     ArchiveScreen(category, snapshot.items.map { ArchiveItem(it.id, it.name, it.facts.take(2).joinToString(" · ") { fact -> "${fact.label}: ${fact.value}" }) },
         snapshot.total, snapshot.hasMore, snapshot.phase == CatalogPhase.Ready,
         snapshot.phase == CatalogPhase.Loading || snapshot.phase == CatalogPhase.Refreshing || snapshot.phase == CatalogPhase.LoadingMore,
-        failure?.kind, failure?.retryable == true, query, onSearch, onRefresh, onMore, onRetry, onCategory, onRecord)
+        failure?.kind, failure?.retryable == true, query, onSearch, onRefresh, onMore, onRetry, onCategory, onRecord, snapshot.cache)
 }
 
 @Composable
@@ -116,6 +116,8 @@ fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, on
                         if (failure.retryable) FilledTonalButton(onClick = onRetry) { Text("Try again") }
                     }
                     if (record != null) {
+                        CacheNotice(snapshot.cache)
+                        FavoriteButton(category, record.id)
                         Text("The details", fontSize = 24.sp, modifier = Modifier.semantics { heading() })
                         Surface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(24.dp)) {
                             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {

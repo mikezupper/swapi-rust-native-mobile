@@ -1,6 +1,6 @@
 //! Serialized character state. Observers receive the latest immutable snapshot;
 //! slow observers may skip intermediate revisions, but never receive them reversed.
-use crate::{ApiError, Person, SwapiClient};
+use crate::{ApiError, CacheInfo, Loaded, Person, SwapiClient};
 use std::{future::Future, pin::Pin, sync::Arc};
 use tokio::{
     runtime::Handle,
@@ -20,6 +20,7 @@ pub enum CharacterState {
 pub struct CharacterSnapshot {
     pub revision: u64,
     pub state: CharacterState,
+    pub cache: CacheInfo,
 }
 
 enum Command {
@@ -27,8 +28,9 @@ enum Command {
     Retry,
     Cancel,
 }
-type Request = Pin<Box<dyn Future<Output = Result<Person, ApiError>> + Send>>;
-type Loader = Arc<dyn Fn(u32) -> Request + Send + Sync>;
+type Request = Pin<Box<dyn Future<Output = Result<Loaded<Person>, ApiError>> + Send>>;
+type Loader = Arc<dyn Fn(u32, bool) -> Request + Send + Sync>;
+type CachedLoader = Arc<dyn Fn(u32) -> Option<Loaded<Person>> + Send + Sync>;
 
 pub struct CharacterStore {
     commands: mpsc::UnboundedSender<Command>,
@@ -38,23 +40,30 @@ pub struct CharacterStore {
 
 impl CharacterStore {
     pub fn new(client: SwapiClient, runtime: &Handle) -> Self {
-        Self::start(
-            Arc::new(move |id| {
+        let cached = client.clone();
+        Self::start_cached(
+            Arc::new(move |id, force| {
                 let client = client.clone();
-                Box::pin(async move { client.person(id).await })
+                Box::pin(async move { client.person_loaded(id, force).await })
             }),
+            Arc::new(move |id| cached.cached_person(id)),
             runtime,
         )
     }
 
+    #[cfg(test)]
     fn start(load: Loader, runtime: &Handle) -> Self {
+        Self::start_cached(load, Arc::new(|_| None), runtime)
+    }
+    fn start_cached(load: Loader, cached: CachedLoader, runtime: &Handle) -> Self {
         let (commands, mut inbox) = mpsc::unbounded_channel();
         let (publisher, states) = watch::channel(CharacterSnapshot {
             revision: 0,
             state: CharacterState::Idle,
+            cache: CacheInfo::default(),
         });
         let actor = runtime.spawn(async move {
-            let mut snapshot = CharacterSnapshot { revision: 0, state: CharacterState::Idle };
+            let mut snapshot = CharacterSnapshot { revision: 0, state: CharacterState::Idle, cache: CacheInfo::default() };
             let mut pending: Option<(u32, Request)> = None;
             loop {
                 let next = tokio::select! {
@@ -62,17 +71,23 @@ impl CharacterStore {
                     command = inbox.recv() => match command {
                         Some(Command::Load(id)) => {
                             // Dropping the previous future cancels its HTTP request.
-                            pending = Some((id, load(id)));
-                            CharacterState::Loading { person_id: id }
+                            let force = matches!(&snapshot.state, CharacterState::Ready { person } if person.id == id);
+                            pending = Some((id, load(id, force)));
+                            snapshot.cache = CacheInfo::default();
+                            if let Some(saved) = cached(id) {
+                                snapshot.cache = saved.cache;
+                                CharacterState::Ready { person: saved.value }
+                            } else { CharacterState::Loading { person_id: id } }
                         }
                         Some(Command::Cancel) => {
                             pending = None;
+                            snapshot.cache = CacheInfo::default();
                             CharacterState::Idle
                         }
                         Some(Command::Retry) => match &snapshot.state {
                             CharacterState::Failed { person_id, error } if error.is_retryable() => {
                                 let id = *person_id;
-                                pending = Some((id, load(id)));
+                                pending = Some((id, load(id, true)));
                                 CharacterState::Loading { person_id: id }
                             }
                             _ => continue,
@@ -82,12 +97,16 @@ impl CharacterStore {
                     result = async { pending.as_mut().expect("guarded request").1.as_mut().await }, if pending.is_some() => {
                         let (person_id, _) = pending.take().expect("completed request");
                         match result {
-                            Ok(person) => CharacterState::Ready { person },
+                            Ok(loaded) => {
+                                snapshot.cache = loaded.cache;
+                                CharacterState::Ready { person: loaded.value }
+                            },
                             Err(error) => CharacterState::Failed { person_id, error },
                         }
                     }
                 };
-                snapshot = CharacterSnapshot { revision: snapshot.revision + 1, state: next };
+                snapshot.revision += 1;
+                snapshot.state = next;
                 publisher.send_replace(snapshot.clone());
             }
         }).abort_handle();
@@ -133,12 +152,12 @@ mod tests {
     fn controlled() -> (CharacterStore, mpsc::UnboundedReceiver<(u32, Completion)>) {
         let (tx, rx) = mpsc::unbounded_channel();
         let store = CharacterStore::start(
-            Arc::new(move |id| {
+            Arc::new(move |id, _force| {
                 let tx = tx.clone();
                 Box::pin(async move {
-                    let (complete, result) = oneshot::channel();
+                    let (complete, result) = oneshot::channel::<Result<Person, ApiError>>();
                     tx.send((id, complete)).unwrap();
-                    result.await.unwrap()
+                    result.await.unwrap().map(Loaded::live)
                 })
             }),
             &Handle::current(),
@@ -177,7 +196,8 @@ mod tests {
             ready,
             CharacterSnapshot {
                 revision: 2,
-                state: CharacterState::Ready { person: person(1) }
+                state: CharacterState::Ready { person: person(1) },
+                cache: CacheInfo::default()
             }
         );
         assert_eq!(*store.observe().borrow(), ready);

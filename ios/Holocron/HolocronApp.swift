@@ -51,7 +51,10 @@ struct CharacterScreen: View {
                 hero
                 VStack(alignment: .leading, spacing: 26) {
                     switch model.snapshot.state {
-                    case .ready(let person): details(person)
+                    case .ready(let person):
+                        CacheNotice(cache: model.snapshot.cache)
+                        FavoriteButton(category: .people, id: person.id)
+                        details(person)
                     case .failed(_, let kind, let retryable):
                         Text(message(kind)).font(.title3)
                         if retryable {
@@ -144,6 +147,7 @@ struct CharacterScreen: View {
     }
     private func message(_ kind: FailureKind) -> String {
         switch kind {
+        case .storage: return "The archive could not be saved. Check available device storage."
         case .network: return "The archive is out of reach. Check your connection and try again."
         case .timeout: return "The archive took too long to respond. Try again in a moment."
         case .http(let status): return status == 404 ? "This record could not be found." : "The archive is temporarily unavailable."

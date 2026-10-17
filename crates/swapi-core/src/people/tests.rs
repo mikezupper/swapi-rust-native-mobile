@@ -8,12 +8,12 @@ fn controlled() -> (
 ) {
     let (tx, rx) = mpsc::unbounded_channel();
     let store = PeopleStore::start(
-        Arc::new(move |query, page| {
+        Arc::new(move |query, page, _force| {
             let tx = tx.clone();
             Box::pin(async move {
-                let (complete, result) = oneshot::channel();
+                let (complete, result) = oneshot::channel::<Result<Page<Person>, ApiError>>();
                 tx.send((query, page, complete)).unwrap();
-                result.await.unwrap()
+                result.await.unwrap().map(Loaded::live)
             })
         }),
         &Handle::current(),

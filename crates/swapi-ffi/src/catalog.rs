@@ -21,6 +21,18 @@ impl From<CatalogCategory> for ResourceKind {
         }
     }
 }
+impl From<ResourceKind> for CatalogCategory {
+    fn from(value: ResourceKind) -> Self {
+        match value {
+            ResourceKind::Person => Self::People,
+            ResourceKind::Planet => Self::Planets,
+            ResourceKind::Starship => Self::Starships,
+            ResourceKind::Vehicle => Self::Vehicles,
+            ResourceKind::Species => Self::Species,
+            ResourceKind::Film => Self::Films,
+        }
+    }
+}
 #[derive(Clone, Debug, PartialEq, uniffi::Record)]
 pub struct CatalogFact {
     pub label: String,
@@ -70,6 +82,7 @@ pub struct CatalogSnapshot {
     pub total: u32,
     pub has_more: bool,
     pub phase: CatalogPhase,
+    pub cache: CacheStatus,
 }
 impl From<swapi_core::CatalogSnapshot> for CatalogSnapshot {
     fn from(value: swapi_core::CatalogSnapshot) -> Self {
@@ -79,6 +92,7 @@ impl From<swapi_core::CatalogSnapshot> for CatalogSnapshot {
             items: value.items.into_iter().map(Into::into).collect(),
             total: value.total,
             has_more: value.next_page.is_some(),
+            cache: value.cache.into(),
             phase: match value.phase {
                 CorePhase::Idle => CatalogPhase::Idle,
                 CorePhase::Loading => CatalogPhase::Loading,
@@ -103,7 +117,7 @@ pub struct CatalogSession {
     closed: AtomicBool,
 }
 impl CatalogSession {
-    fn with_client(
+    pub(super) fn with_client(
         client: SwapiClient,
         category: CatalogCategory,
         record_id: Option<u32>,

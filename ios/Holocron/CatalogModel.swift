@@ -10,7 +10,7 @@ final class CatalogModel: ObservableObject {
     init(category: CatalogCategory, recordId: UInt32? = nil, core injectedCore: CatalogSession? = nil, autoload: Bool = true) {
         do {
             let core: CatalogSession
-            if let injectedCore { core = injectedCore } else {
+            if let injectedCore { core = injectedCore } else if let archive = ArchiveModel.shared.session { core = try archive.catalogSession(category: category, recordId: recordId) } else {
                 #if DEBUG
                 let args = ProcessInfo.processInfo.arguments
                 if let index = args.firstIndex(of: "--endpoint"), args.count > index + 1 {

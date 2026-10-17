@@ -2,6 +2,50 @@ import XCTest
 
 final class CharacterTests: XCTestCase {
     @MainActor
+    func testOfflineArchiveSurvivesRelaunch() async throws {
+        _ = try await URLSession.shared.data(from: URL(string: "http://127.0.0.1:18765/reset?scenario=people")!)
+        let app = XCUIApplication()
+        app.launchArguments = ["--endpoint", "http://127.0.0.1:18765/api/", "--archive", "--archive-reset"]
+        app.launch()
+        XCTAssertTrue(app.buttons["person-1"].waitForExistence(timeout: 15))
+        if !app.buttons["person-1"].isHittable { app.swipeUp() }
+        app.buttons["person-1"].tap()
+        let favorite = app.buttons["favorite-record"]
+        XCTAssertTrue(favorite.waitForExistence(timeout: 10))
+        if !favorite.isHittable { app.swipeUp() }
+        favorite.tap()
+        XCTAssertTrue(app.buttons["Remove favorite"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        if !app.buttons["open-saved"].isHittable { app.swipeDown() }
+        app.buttons["open-saved"].tap()
+        XCTAssertTrue(app.switches["offline-mode"].waitForExistence(timeout: 5))
+        app.buttons["Download collections"].tap()
+        let planets = app.buttons["Download planets"]
+        for _ in 0..<4 { if planets.isHittable { break }; app.swipeUp() }
+        planets.tap()
+        XCTAssertTrue(app.staticTexts["Complete · 1 records"].waitForExistence(timeout: 15))
+        for _ in 0..<5 { if app.buttons["Download collections"].isHittable { break }; app.swipeDown() }
+        app.buttons["Download collections"].tap()
+        app.switches["offline-mode"].tap()
+        app.segmentedControls.buttons["Favorites"].tap()
+        capture(app, "Offline favorites")
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--archive-reset" }
+        app.launch()
+        XCTAssertTrue(app.buttons["open-saved"].waitForExistence(timeout: 15))
+        app.buttons["open-saved"].tap()
+        XCTAssertTrue(app.switches["offline-mode"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.switches["offline-mode"].value as? String, "1")
+        app.segmentedControls.buttons["Favorites"].tap()
+        let luke = app.buttons["saved-people-1"]
+        XCTAssertTrue(luke.waitForExistence(timeout: 5))
+        if !luke.isHittable { app.swipeUp() }
+        luke.tap()
+        XCTAssertTrue(app.buttons["Remove favorite"].waitForExistence(timeout: 10))
+        capture(app, "Offline favorite after relaunch")
+    }
+
+    @MainActor
     func testEveryCatalogCategoryAndDetail() async throws {
         _ = try await URLSession.shared.data(from: URL(string: "http://127.0.0.1:18765/reset?scenario=people")!)
         let app = XCUIApplication()

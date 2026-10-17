@@ -16,8 +16,8 @@ The normal app makes real HTTPS requests to `https://swapi.dev/api/`.
   <tr><td>SwiftUI · iOS simulator</td><td>Jetpack Compose · Android emulator</td></tr>
 </table>
 
-These are native screenshots of the original People experience with live API
-data, captured on October 17, 2026. The archive now also has category selection.
+These native screenshots show the category artwork on October 17, 2026:
+Android uses live API data; iOS uses deterministic test fixtures.
 Each collection now has distinct cinematic [category artwork](design/artwork/README.md),
 with the original orbital illustration retained for Planets. The illustrations
 are atmospheric; SWAPI does not supply character portraits. Holocron is a
@@ -94,8 +94,49 @@ focus, scroll position and navigation are native concerns. Android retains its
 query across activity recreation; both platforms are tested across navigation
 and background/foreground transitions.
 
-This is a development application. It currently has no accounts, favorites,
-offline persistence, relationship browsing, or release/distribution setup.
+Both apps now offer a **Saved archive**: automatically saved records, persistent
+favorites, local search, and whole-collection downloads. SwiftUI provides zoom
+navigation and selection haptics; Compose provides fade/scale navigation and
+favorite feedback. System reduced-motion settings are respected.
+
+This is a development application. Accounts, relationship browsing, widgets,
+and release/distribution setup remain outside the implemented scope.
+
+### Offline browsing and favorites
+
+1. Browse a category while connected. Valid responses and complete records are
+   saved automatically; the UI shows their last successful update time.
+2. Open a record and choose **Add favorite**. Favorites survive app restarts and
+   cache clearing.
+3. Open **Saved archive** below the category picker. **Download collections**
+   offers each of the six categories, progress, cancellation, and retry. A
+   collection is marked complete only after every page succeeds.
+4. Turn on **Offline mode** to stop HTTP requests, then use **All saved** or
+   **Favorites** and search the local archive. Downloaded list records can open
+   their details even if those detail screens have never been visited.
+5. Turn offline mode off to fetch again. **Refresh** explicitly revalidates;
+   **Update** downloads a complete collection again.
+
+The shared Rust core uses bundled SQLite (`rusqlite`). Responses are fresh for
+24 hours. Fresh responses avoid HTTP; stale responses appear immediately while
+Rust refreshes them. Failed refreshes retain a valid saved copy and show a
+warning. The response cache has a 16 MiB logical payload budget; normalized
+records and favorites are retained separately. This is a small-catalog design,
+not a general-purpose unbounded media cache. Artwork is bundled with the apps.
+
+Local search covers saved names and vessel models, across categories. Remote
+search still uses SWAPI and requires either a connection or that exact cached
+query/page. A partial collection is explicitly labeled; selecting Offline mode
+does not download missing records. Downloads run while the app process is alive;
+there is no OS-scheduled background synchronization. Retry reuses valid saved
+pages. Clearing the saved cache removes responses, downloaded status and
+non-favorite records, while preserving favorites and the offline preference.
+
+Storage lives in Android's private `filesDir/archive.sqlite` and iOS Application
+Support's `Holocron/archive.sqlite`. SQLite schema version 1 is checked on open;
+newer unsupported schemas are rejected rather than overwritten. Endpoint
+namespaces isolate fixture data from production. Uninstalling the app removes
+its private storage; this demo provides no cross-device favorites sync.
 
 ## Architecture
 
