@@ -1,0 +1,17 @@
+[package]
+name = "swapi-ffi"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+swapi-core = { path = "../swapi-core" }
+uniffi.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+wiremock = "=0.6.2"
+serde_json.workspace = true

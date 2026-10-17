@@ -4,3 +4,30 @@
 *.db
 .beads-credential-key
 .beads/proxieddb/
+.beads/dolt-backup.json
+.beads/dolt-backup-state.json
+
+# Local reports and build output
+.artifacts/
+target/
+.gradle/
+.kotlin/
+**/build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+__pycache__/
+ios/Frameworks/
+
+# Machine-specific settings and credentials
+local.properties
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# VM images belong outside the source tree
+*.qcow2
+*.vmdk
+*.iso
+*.dmg

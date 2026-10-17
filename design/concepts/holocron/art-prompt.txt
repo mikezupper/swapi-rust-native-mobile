@@ -1,0 +1,9 @@
+Generation mode: built-in image_gen; new image, no reference images.
+Selected asset: assets/desert-orbit.png
+
+Use case: stylized-concept.
+Asset type: original atmospheric illustration for a refined mobile astronomy-inspired reference app.
+Create a striking vertical editorial space illustration. A beautiful ochre desert planet fills the middle of the composition, seen from low orbit, with intricately eroded dunes and dark geological ridges visible on its surface. Its thin atmospheric rim glows with warm copper light. One distant small amber sun and a few sparse stars. The upper and lower edges fade naturally into very dark graphite space so app text can be placed over those areas later.
+Style: sophisticated cinematic matte painting, photographic geological textures mixed with subtle painterly grain, dramatic but restrained lighting, premium museum exhibition artwork.
+Palette: graphite black, deep petrol shadows, burnished orange, pale ivory highlights, tiny cyan glints. Portrait 2:3 composition with the planet centered and ample dark space above. This is a standalone artwork, not an app screenshot.
+No people, characters, creatures, spacecraft, typography, logos, watermarks, frames or interface elements.

@@ -1,0 +1,9 @@
+[bindings.kotlin]
+package_name = "dev.holocron.core"
+cdylib_name = "swapi_ffi"
+android = true
+
+[bindings.swift]
+module_name = "HolocronCore"
+ffi_module_name = "HolocronCoreFFI"
+generate_module_map = true

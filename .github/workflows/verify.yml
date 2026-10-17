@@ -1,0 +1,70 @@
+name: Verify native apps
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - run: rustup toolchain install 1.97.1 --profile minimal --component rustfmt --component clippy
+      - run: python3 scripts/verify.py core
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: always()
+        with:
+          name: core-verification
+          path: .artifacts/verification/core
+          include-hidden-files: true
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      JAVA_HOME: ''
+      ANDROID_HOME: ''
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - run: rustup toolchain install 1.97.1 --profile minimal
+      - run: python3 scripts/setup-android.py
+      - name: Enable runner KVM access
+        run: sudo chmod a+rw /dev/kvm
+      - run: bash scripts/ci-android.sh
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: always()
+        with:
+          name: android-verification
+          path: |
+            .artifacts/verification/android
+            .artifacts/android
+            android/app/build/outputs/apk/debug
+            android/app/build/outputs/androidTest-results
+            android/app/build/reports
+          include-hidden-files: true
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - run: bash scripts/setup-mac.sh
+      - name: Build and test arm64 iOS
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          HOLOCRON_SIMULATOR="$(python3 scripts/select-ios-simulator.py)"
+          export HOLOCRON_SIMULATOR
+          HOLOCRON_RECORD=1 python3 scripts/verify.py ios
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: always()
+        with:
+          name: ios-verification
+          path: |
+            .artifacts/verification/ios
+            .artifacts/ios/*.xcresult
+            .artifacts/ios/*.mp4
+            .artifacts/ios/*.log
+          include-hidden-files: true

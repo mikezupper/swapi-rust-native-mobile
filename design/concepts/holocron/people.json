@@ -1,0 +1,115 @@
+{
+  "source": "https://swapi.dev/api/",
+  "retrieved": "2026-10-17",
+  "scope": "Six records for a local design prototype; not the complete search corpus.",
+  "people": [
+    {
+      "id": 1,
+      "name": "Luke Skywalker",
+      "birthYear": "19BBY",
+      "height": "172",
+      "mass": "77",
+      "eyeColor": "blue",
+      "hairColor": "blond",
+      "homeworldUrl": "https://swapi.dev/api/planets/1/",
+      "filmUrls": [
+        "https://swapi.dev/api/films/1/",
+        "https://swapi.dev/api/films/2/",
+        "https://swapi.dev/api/films/3/",
+        "https://swapi.dev/api/films/6/"
+      ],
+      "url": "https://swapi.dev/api/people/1/"
+    },
+    {
+      "id": 2,
+      "name": "C-3PO",
+      "birthYear": "112BBY",
+      "height": "167",
+      "mass": "75",
+      "eyeColor": "yellow",
+      "hairColor": "n/a",
+      "homeworldUrl": "https://swapi.dev/api/planets/1/",
+      "filmUrls": [
+        "https://swapi.dev/api/films/1/",
+        "https://swapi.dev/api/films/2/",
+        "https://swapi.dev/api/films/3/",
+        "https://swapi.dev/api/films/4/",
+        "https://swapi.dev/api/films/5/",
+        "https://swapi.dev/api/films/6/"
+      ],
+      "url": "https://swapi.dev/api/people/2/"
+    },
+    {
+      "id": 3,
+      "name": "R2-D2",
+      "birthYear": "33BBY",
+      "height": "96",
+      "mass": "32",
+      "eyeColor": "red",
+      "hairColor": "n/a",
+      "homeworldUrl": "https://swapi.dev/api/planets/8/",
+      "filmUrls": [
+        "https://swapi.dev/api/films/1/",
+        "https://swapi.dev/api/films/2/",
+        "https://swapi.dev/api/films/3/",
+        "https://swapi.dev/api/films/4/",
+        "https://swapi.dev/api/films/5/",
+        "https://swapi.dev/api/films/6/"
+      ],
+      "url": "https://swapi.dev/api/people/3/"
+    },
+    {
+      "id": 4,
+      "name": "Darth Vader",
+      "birthYear": "41.9BBY",
+      "height": "202",
+      "mass": "136",
+      "eyeColor": "yellow",
+      "hairColor": "none",
+      "homeworldUrl": "https://swapi.dev/api/planets/1/",
+      "filmUrls": [
+        "https://swapi.dev/api/films/1/",
+        "https://swapi.dev/api/films/2/",
+        "https://swapi.dev/api/films/3/",
+        "https://swapi.dev/api/films/6/"
+      ],
+      "url": "https://swapi.dev/api/people/4/"
+    },
+    {
+      "id": 5,
+      "name": "Leia Organa",
+      "birthYear": "19BBY",
+      "height": "150",
+      "mass": "49",
+      "eyeColor": "brown",
+      "hairColor": "brown",
+      "homeworldUrl": "https://swapi.dev/api/planets/2/",
+      "filmUrls": [
+        "https://swapi.dev/api/films/1/",
+        "https://swapi.dev/api/films/2/",
+        "https://swapi.dev/api/films/3/",
+        "https://swapi.dev/api/films/6/"
+      ],
+      "url": "https://swapi.dev/api/people/5/"
+    },
+    {
+      "id": 10,
+      "name": "Obi-Wan Kenobi",
+      "birthYear": "57BBY",
+      "height": "182",
+      "mass": "77",
+      "eyeColor": "blue-gray",
+      "hairColor": "auburn, white",
+      "homeworldUrl": "https://swapi.dev/api/planets/20/",
+      "filmUrls": [
+        "https://swapi.dev/api/films/1/",
+        "https://swapi.dev/api/films/2/",
+        "https://swapi.dev/api/films/3/",
+        "https://swapi.dev/api/films/4/",
+        "https://swapi.dev/api/films/5/",
+        "https://swapi.dev/api/films/6/"
+      ],
+      "url": "https://swapi.dev/api/people/10/"
+    }
+  ]
+}

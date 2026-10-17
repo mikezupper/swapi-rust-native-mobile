@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Holocron — native app concept</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="studio-header">
+    <a class="studio-brand" href="#concepts"><span class="brand-mark" aria-hidden="true">H</span> HOLOCRON <span class="edition">DESIGN STUDY / 01</span></a>
+    <span class="prototype-tag"><i></i> Interactive concept</span>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="study-title">
+      <div><p class="eyebrow">A FIELD GUIDE TO A GALAXY FAR, FAR AWAY</p><h1 id="study-title">A little wonder.<br>A whole galaxy.</h1></div>
+      <div class="intro-copy"><p>A cinematic direction for a native Star Wars explorer. Rich imagery, quiet surfaces, and character stories that invite a closer look.</p><p class="fine-print">Browser concept with six SWAPI sample records. SwiftUI and Compose implementation follows design review.</p></div>
+    </section>
+    <section class="review-toolbar" aria-label="Preview controls">
+      <div class="control-group"><span id="platform-label">Platform</span><div class="segmented" role="group" aria-labelledby="platform-label"><button data-platform="ios" aria-pressed="true">iOS</button><button data-platform="android" aria-pressed="false">Android</button></div></div>
+      <div class="control-group"><span id="theme-label">Appearance</span><div class="segmented" role="group" aria-labelledby="theme-label"><button data-theme="dark" aria-pressed="true">Dark</button><button data-theme="light" aria-pressed="false">Light</button></div></div>
+      <label class="control-group">Preview state <select id="state-select"><option value="content">Content</option><option value="loading">Loading</option><option value="empty">No search results</option><option value="error">Connection error</option></select></label>
+      <button class="reset-button" id="reset">Reset preview ↺</button>
+    </section>
+    <p class="interaction-hint" id="preview-status" role="status">Tap a character to update Detail. Search the six sample records. Each phone scrolls independently.</p>
+    <section class="concepts" id="concepts" data-platform="ios" data-theme="dark" aria-label="Three interactive app screen concepts">
+      <article class="concept" id="explore-concept">
+        <div class="screen-caption"><h2><span>01</span> Explore</h2><p>Discovery with a point of view.</p></div>
+        <div class="phone" aria-label="Explore phone preview">
+          <div class="status-bar" aria-hidden="true"><span>9:41</span><span class="camera"></span><span>▮▮▮ <span class="battery"></span></span></div>
+          <div class="phone-scroll" id="explore-scroll" tabindex="0" aria-label="Explore content">
+            <header class="app-header"><span class="wordmark">HOLOCRON<span class="wordmark-dot">✦</span></span><button class="icon-button" data-action="search" aria-label="Go to Search"><span data-icon="search"></span></button></header>
+            <div class="page-heading"><p class="kicker">THE GALAXY, DISCOVERED</p><h3>Every legend<br>starts somewhere.</h3></div>
+            <div id="explore-content"></div>
+          </div>
+          <nav class="app-nav" aria-label="Explore navigation"><button class="selected" data-action="explore" aria-current="page"><span data-icon="compass"></span><span>Explore</span></button><button data-action="search"><span data-icon="search"></span><span>Search</span></button></nav>
+          <div class="home-indicator" aria-hidden="true"></div>
+        </div>
+      </article>
+      <article class="concept" id="search-concept">
+        <div class="screen-caption"><h2><span>02</span> Search</h2><p>Fast, clear, and beautifully focused.</p></div>
+        <div class="phone" aria-label="Search phone preview">
+          <div class="status-bar" aria-hidden="true"><span>9:41</span><span class="camera"></span><span>▮▮▮ <span class="battery"></span></span></div>
+          <div class="phone-scroll" tabindex="0" aria-label="Search content">
+            <div class="search-heading"><p class="kicker">FIND YOUR CONNECTION</p><h3>Search the galaxy.</h3></div>
+            <form id="search-form" role="search"><span data-icon="search"></span><label class="sr-only" for="search-input">Search characters in the sample collection</label><input id="search-input" type="search" placeholder="Characters, by name" autocomplete="off"><button type="button" class="clear-search" id="clear-search" aria-label="Clear search" hidden>×</button></form>
+            <div class="search-category"><span class="category-pill"><span data-icon="people"></span> Characters</span><span class="sample-note">Sample collection</span></div>
+            <div id="search-results" aria-live="polite" aria-atomic="true"></div>
+          </div>
+          <nav class="app-nav" aria-label="Search navigation"><button data-action="explore"><span data-icon="compass"></span><span>Explore</span></button><button class="selected" data-action="search" aria-current="page"><span data-icon="search"></span><span>Search</span></button></nav>
+          <div class="home-indicator" aria-hidden="true"></div>
+        </div>
+      </article>
+      <article class="concept" id="detail-concept">
+        <div class="screen-caption"><h2><span>03</span> Character detail</h2><p>Identity first. Details at a glance.</p></div>
+        <div class="phone detail-phone" aria-label="Character detail phone preview">
+          <div class="status-bar" aria-hidden="true"><span>9:41</span><span class="camera"></span><span>▮▮▮ <span class="battery"></span></span></div>
+          <div class="phone-scroll detail-scroll" id="detail-content" tabindex="0" aria-label="Character detail content"></div>
+          <div class="home-indicator" aria-hidden="true"></div>
+        </div>
+      </article>
+    </section>
+    <section class="design-notes" aria-label="Design rationale">
+      <div><span class="note-number">01 / ART DIRECTION</span><h2>Cinematic, with restraint.</h2><p>Original orbital art sets the atmosphere. Cyan guides interaction; amber brings warmth. Character monograms keep the identity system useful without relying on portraits.</p></div>
+      <div><span class="note-number">02 / NATIVE EXPRESSION</span><h2>One identity. Two dialects.</h2><p id="platform-note">iOS concept: floating translucent navigation, soft continuous shapes, and a chevron back control. SwiftUI will supply native materials, gestures, and accessibility.</p></div>
+      <div><span class="note-number">03 / MOTION & ACCESS</span><h2>Polish you can feel.</h2><p>Press feedback and brief detail transitions add life. Keyboard focus stays visible. Reduced motion follows your system setting; larger native text and device performance need later validation.</p></div>
+    </section>
+  </main>
+  <footer class="studio-footer"><span>HOLOCRON / WORKING TITLE</span><span>Design proposal · Generated orbital illustration · Data from <a href="https://swapi.dev/documentation">SWAPI</a></span></footer>
+</body>
+</html>

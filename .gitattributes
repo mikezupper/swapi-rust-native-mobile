@@ -1,0 +1,3 @@
+# Preserve the pinned UniFFI generator's output, including template whitespace.
+bindings/** linguist-generated=true -whitespace
+android/gradlew.bat text eol=crlf
