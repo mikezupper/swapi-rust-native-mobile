@@ -126,6 +126,8 @@ struct PeopleScreen: View {
             }.frame(maxWidth: .infinity, alignment: .leading)
             Image(systemName: "chevron.right").font(.caption).foregroundStyle(accent).accessibilityHidden(true)
         }.padding(18).background(surface, in: RoundedRectangle(cornerRadius: DesignTokens.Shape.card))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(person.name), \(person.filmCount) films, born \(person.birthYear)")
     }
     private func message(_ kind: FailureKind) -> String {
         switch kind {

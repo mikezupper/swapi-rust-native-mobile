@@ -121,6 +121,8 @@ struct CatalogScreen: View {
             }.frame(maxWidth: .infinity, alignment: .leading)
             Image(systemName: "chevron.right").font(.caption).foregroundStyle(accent).accessibilityHidden(true)
         }.padding(18).background(surface, in: RoundedRectangle(cornerRadius: DesignTokens.Shape.card))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(([person.name] + person.facts.prefix(2).map { "\($0.label): \($0.value)" }).joined(separator: ", "))
     }
     private func message(_ kind: FailureKind) -> String {
         switch kind {

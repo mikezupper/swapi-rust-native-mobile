@@ -26,8 +26,14 @@ final class CharacterTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Complete · 1 record"].waitForExistence(timeout: 15))
         for _ in 0..<5 { if app.buttons["Download collections"].isHittable { break }; app.swipeDown() }
         app.buttons["Download collections"].tap()
-        app.switches["offline-mode"].tap()
+        let offline = app.switches["offline-mode"]
+        // SwiftUI exposes the labeled row as the switch's accessibility frame.
+        // Tap the actual trailing switch, then wait for Rust's committed state.
+        offline.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        let enabled = NSPredicate(format: "value == %@", "1")
+        await fulfillment(of: [XCTNSPredicateExpectation(predicate: enabled, object: offline)], timeout: 5)
         app.segmentedControls.buttons["Favorites"].tap()
+        try app.performAccessibilityAudit()
         capture(app, "Offline favorites")
         app.terminate()
         app.launchArguments.removeAll { $0 == "--archive-reset" }
@@ -35,7 +41,7 @@ final class CharacterTests: XCTestCase {
         XCTAssertTrue(app.buttons["open-saved"].waitForExistence(timeout: 15))
         app.buttons["open-saved"].tap()
         XCTAssertTrue(app.switches["offline-mode"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.switches["offline-mode"].value as? String, "1")
+        await fulfillment(of: [XCTNSPredicateExpectation(predicate: enabled, object: app.switches["offline-mode"])], timeout: 5)
         app.segmentedControls.buttons["Favorites"].tap()
         let luke = app.buttons["saved-people-1"]
         XCTAssertTrue(luke.waitForExistence(timeout: 5))

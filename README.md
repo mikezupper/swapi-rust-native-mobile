@@ -469,7 +469,8 @@ this as a reusable open-source project.
 | iOS tests cannot find a destination | Install an iOS 18+ runtime and run `scripts/select-ios-simulator.py`. |
 | Fixture port 18765 is occupied | Stop the previous fixture process; tests deliberately fail instead of using an unknown server. |
 | Mac SSH fails host verification | Confirm the host fingerprint out of band and update the dedicated known-hosts file; do not disable verification. |
-| API is unavailable | Use retry in the app; run offline verification separately to distinguish service failure from a regression. |
+| API is unavailable | Open Saved archive to browse stored records; Refresh tries the service again while keeping cached content visible. |
+| `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | Local and CI debug APKs may use different signing keys. Use the same key to update in place; uninstalling deletes saved records and favorites. |
 | Browser concept cannot be reviewed | The historical HTML preview is not the runtime app; native screenshots/tests are the current design evidence. |
 
 The verified delivery is a simulator/emulator development build. Physical-device

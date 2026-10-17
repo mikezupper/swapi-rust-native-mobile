@@ -228,3 +228,8 @@ the same database. Screenshot names include `offline-favorites` and
 `offline-planet-detail` on Android and `Offline favorites` /
 `Offline favorite after relaunch` on iOS. These are fixture tests; a live API
 smoke test is separate.
+
+iOS persistence UI tests use a separate `archive-fixture.sqlite` when launched
+with `--endpoint` and `--archive`. `--archive-reset` clears only that fixture
+database in this flow, preserving the normal production archive. Android's
+archive integration test uses a unique temporary database under `cacheDir`.

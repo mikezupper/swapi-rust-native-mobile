@@ -28,16 +28,22 @@ extension CatalogSnapshot {
     init(core: ArchiveSession? = nil) {
         do {
             if let core { session = core } else {
-                let args = ProcessInfo.processInfo.arguments
                 #if DEBUG
+                let args = ProcessInfo.processInfo.arguments
                 // Existing fixture tests remain stateless unless they explicitly test persistence.
                 if args.contains("--endpoint") && !args.contains("--archive") { return }
                 #endif
                 let folder = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("Holocron", isDirectory: true)
                 try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-                let database = folder.appendingPathComponent("archive.sqlite")
                 #if DEBUG
-                if args.contains("--archive-reset") {
+                // UI-test resets must never erase the production archive.
+                let databaseName = args.contains("--endpoint") ? "archive-fixture.sqlite" : "archive.sqlite"
+                #else
+                let databaseName = "archive.sqlite"
+                #endif
+                let database = folder.appendingPathComponent(databaseName)
+                #if DEBUG
+                if args.contains("--endpoint") && args.contains("--archive-reset") {
                     for suffix in ["", "-wal", "-shm"] { try? FileManager.default.removeItem(atPath: database.path + suffix) }
                 }
                 if let index = args.firstIndex(of: "--endpoint"), args.count > index + 1 {
@@ -85,6 +91,8 @@ struct ArchiveShortcut: View {
 }
 struct CacheNotice: View {
     let cache: CacheStatus
+    @Environment(\.colorScheme) private var appearance
+    private var secondary: Color { appearance == .dark ? DesignTokens.Dark.secondary : DesignTokens.Light.secondary }
     private var message: String {
         if cache.savingFailed { return "Live data · Could not save for offline use" }
         let date = cache.savedAt.map { Date(timeIntervalSince1970: Double($0)).formatted(date: .abbreviated, time: .shortened) } ?? ""
@@ -93,7 +101,7 @@ struct CacheNotice: View {
         return (cache.fromCache ? "Saved copy · Updated " : "Available offline · Updated ") + date
     }
     var body: some View {
-        if cache.savedAt != nil || cache.savingFailed { Text(message).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading) }
+        if cache.savedAt != nil || cache.savingFailed { Text(message).font(.caption).foregroundStyle(secondary).frame(maxWidth: .infinity, alignment: .leading) }
     }
 }
 struct FavoriteButton: View {
@@ -131,6 +139,7 @@ struct SavedArchiveScreen: View {
     @State private var confirmClear = false
     private var background: Color { appearance == .dark ? DesignTokens.Dark.background : DesignTokens.Light.background }
     private var surface: Color { appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface }
+    private var secondary: Color { appearance == .dark ? DesignTokens.Dark.secondary : DesignTokens.Light.secondary }
     private var foreground: Color { appearance == .dark ? DesignTokens.Dark.text : DesignTokens.Light.text }
     private var accent: Color { appearance == .dark ? DesignTokens.Dark.accent : DesignTokens.Light.accent }
     private var running: CatalogCategory? { if case .downloading(let category, _, _) = archive.snapshot.download { return category }; return nil }
@@ -151,7 +160,7 @@ struct SavedArchiveScreen: View {
                         Toggle(isOn: Binding(get: { archive.snapshot.offline }, set: { value in archive.offline(value) })) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Offline mode").font(.headline)
-                                Text("Browse saved records without a connection").font(.caption).foregroundStyle(.secondary)
+                                Text("Browse saved records without a connection").font(.caption).foregroundStyle(secondary)
                             }
                         }.accessibilityIdentifier("offline-mode")
                         DisclosureGroup("Download collections", isExpanded: $showDownloads) {
@@ -162,15 +171,18 @@ struct SavedArchiveScreen: View {
                         }
                         downloadNotice
                         if archive.snapshot.error != nil { Text("The archive could not save this change. Check available storage and try again.").font(.caption) }
-                        TextField("Search saved records", text: $query).textFieldStyle(.roundedBorder).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("saved-search")
+                        TextField("Search saved records", text: $query, prompt: Text("Search saved records").foregroundStyle(secondary), axis: .vertical)
+                            .lineLimit(1...3).textFieldStyle(.plain).padding(14)
+                            .background(surface, in: RoundedRectangle(cornerRadius: DesignTokens.Shape.control))
+                            .textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("saved-search")
                             .onChange(of: query) { _, value in archive.search(value) }
                         Picker("Saved records", selection: Binding(get: { archive.snapshot.favoritesOnly }, set: { value in archive.favoritesOnly(value) })) {
                             Text("All saved").tag(false)
                             Text("Favorites").tag(true)
                         }.pickerStyle(.segmented)
                         Text("\(archive.snapshot.entries.count) saved \(archive.snapshot.entries.count == 1 ? "record" : "records")").font(.title2).accessibilityAddTraits(.isHeader)
-                        Text("Search covers saved records only. Download a collection to keep every story.").font(.caption).foregroundStyle(.secondary)
-                        if archive.snapshot.entries.isEmpty { Text("No saved signals yet. Explore a collection or download it for your next journey.").foregroundStyle(.secondary) }
+                        Text("Search covers saved records only. Download a collection to keep every story.").font(.caption).foregroundStyle(secondary)
+                        if archive.snapshot.entries.isEmpty { Text("No saved signals yet. Explore a collection or download it for your next journey.").foregroundStyle(secondary) }
                         ForEach(archive.snapshot.entries, id: \.identity) { saved in
                             NavigationLink {
                                 if saved.category == .people { CharacterDestination(id: saved.entry.id) }
@@ -199,7 +211,7 @@ struct SavedArchiveScreen: View {
     private func downloadRow(_ collection: SavedCollection) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(collection.category.title).font(.headline)
-            Text(collection.complete ? "Complete · \(collection.savedCount) \(collection.savedCount == 1 ? "record" : "records")" : "\(collection.savedCount) saved · \(collection.totalCount.map(String.init) ?? "?") total · Partial").font(.caption).foregroundStyle(.secondary)
+            Text(collection.complete ? "Complete · \(collection.savedCount) \(collection.savedCount == 1 ? "record" : "records")" : "\(collection.savedCount) saved · \(collection.totalCount.map(String.init) ?? "?") total · Partial").font(.caption).foregroundStyle(secondary)
             if case .downloading(let category, let completed, let total) = archive.snapshot.download, category == collection.category {
                 ProgressView().accessibilityLabel("Downloading \(completed) of \(total) records")
                 Text("Downloading \(completed) of \(total) records").font(.caption)
@@ -212,7 +224,7 @@ struct SavedArchiveScreen: View {
     }
     @ViewBuilder private var downloadNotice: some View {
         switch archive.snapshot.download {
-        case .ready(let category, let count): Text("\(category.title): \(count) records ready offline").font(.caption).foregroundStyle(accent)
+        case .ready(let category, let count): Text("\(category.title): \(count) \(count == 1 ? "record" : "records") ready offline").font(.caption).foregroundStyle(accent)
         case .failed(let category, _):
             Text("Download interrupted. Saved records are still available.").font(.caption)
             Button("Retry download") { archive.download(category) }.disabled(archive.snapshot.offline)
