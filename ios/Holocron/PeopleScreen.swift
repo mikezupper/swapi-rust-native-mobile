@@ -18,7 +18,6 @@ struct PeopleScreen: View {
     private var foreground: Color { appearance == .dark ? DesignTokens.Dark.text : DesignTokens.Light.text }
     private var secondary: Color { appearance == .dark ? DesignTokens.Dark.secondary : DesignTokens.Light.secondary }
     private var surface: Color { appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface }
-    private var onAccent: Color { appearance == .dark ? DesignTokens.Dark.onAccent : DesignTokens.Light.onAccent }
     private var accent: Color { appearance == .dark ? DesignTokens.Dark.accent : DesignTokens.Light.accent }
     private var busy: Bool {
         switch model.snapshot.phase { case .loading, .refreshing, .loadingMore: return true; default: return false }
@@ -33,7 +32,7 @@ struct PeopleScreen: View {
                         HStack(spacing: 12) {
                             Image(systemName: "magnifyingglass").foregroundStyle(accent)
                             TextField("Search people", text: $query, prompt: Text("Search people").foregroundStyle(secondary), axis: .vertical).focused($searching)
-                                .textInputAutocapitalization(.never).autocorrectionDisabled()
+                                .lineLimit(1...3).textInputAutocapitalization(.never).autocorrectionDisabled()
                                 .submitLabel(.search).onSubmit { searching = false }
                                 .accessibilityIdentifier("people-search")
                             if !query.isEmpty {
@@ -116,8 +115,8 @@ struct PeopleScreen: View {
         HStack(spacing: 16) {
             if !typeSize.isAccessibilitySize {
                 Text(person.name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined())
-                    .font(.headline.weight(.semibold)).foregroundStyle(onAccent).frame(width: 48, height: 48)
-                    .background(accent, in: RoundedRectangle(cornerRadius: 16)).accessibilityHidden(true)
+                    .font(.headline.weight(.semibold)).foregroundStyle(foreground).frame(width: 48, height: 48)
+                    .background(background, in: RoundedRectangle(cornerRadius: 16)).accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(person.name).font(.headline.weight(.medium)).fixedSize(horizontal: false, vertical: true)
