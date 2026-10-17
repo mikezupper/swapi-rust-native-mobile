@@ -14,9 +14,9 @@ Keep live SWAPI smoke tests separate from required offline checks. A mock
 transport is a core dependency choice, not duplicate behavior in native views.
 
 Current commands: `cargo test --workspace`, `cargo fmt --all --check`, and
-`cargo clippy --workspace --all-targets -- -D warnings`. The 20 tests cover ten
-HTTP/data scenarios, eight serialized-state scenarios, and two FFI listener/
-error/lifetime scenarios. State tests control request completion explicitly;
+`cargo clippy --workspace --all-targets -- -D warnings`. The 24 tests cover ten
+People/character HTTP/data scenarios, four catalog scenarios, eight serialized-state
+scenarios, and two FFI listener/error/lifetime scenarios. State tests control request completion explicitly;
 they do not depend on race-prone sleeps or SWAPI availability.
 
 ## Native boundary
@@ -28,15 +28,16 @@ subscription cleanup, and view lifecycle changes in each platform.
 Test device and simulator/ABI packaging in the relevant build environment.
 Linux Rust tests alone do not validate the Apple target or native adapters.
 
-Android's `connectedDebugAndroidTest` runs six tests against the packaged Rust
+Android's `connectedDebugAndroidTest` runs eight tests against the packaged Rust
 library through generated Kotlin bindings: loading/failure/retry/content, and
 disposal during pending character and People responses, and a browse/detail/
 back/page-retry/search/empty/refresh journey. Additional tests exercise activity
 recreation/backgrounding with accessibility checks and collect warm-scroll frame
-statistics. Its fixture server is loopback-only.
-Swift has four model tests for main-actor delivery, stale/queued snapshot rejection,
-and reference cleanup, plus four UI tests for character loading/failure/retry,
-the People journey, accessibility/background restoration, and scrolling
+statistics. Two catalog tests cover category navigation, details, paging, retries
+and searches. Its fixture server is loopback-only.
+Swift has five model tests for main-actor delivery, stale/queued snapshot rejection,
+and reference cleanup, plus five UI tests for character loading/failure/retry,
+the People journey, the catalog tour, accessibility/background restoration, and scrolling
 measurement through the actual Rust transport. The iOS fixture response waits for the test to
 release it, making the loading assertion independent of network timing.
 
@@ -64,7 +65,7 @@ Measure scrolling and transitions on documented hardware. Set frame-time
 targets using the actual display refresh rate and report emulator limitations.
 Use native platform diagnostics when a measured problem warrants them.
 
-## Recorded verification (2026-10-17)
+## Original People-only verification (2026-10-17)
 
 On the Apple M4 Mac, Xcode 27.1 built both arm64 XCFramework slices, passed all
 four model and four UI tests on the iPhone 18 Pro / iOS 27.0 simulator, and built
@@ -79,10 +80,11 @@ scroll/deceleration durations of 2.485190, 2.485184 and 2.484810 seconds (mean
 2.485 s); the whole gesture block averaged 10.299 s. The simulator returned
 duration metrics only, so these are **not** frame-rate or hitch measurements.
 No physical iPhone performance claim or regression threshold is established.
-The result is retained in `Test-20261017-151859.xcresult` with screenshots and
-an interaction recording under the pulled Mac artifacts.
+The result was recorded in `Test-20261017-151859.xcresult` with screenshots and
+an interaction recording. Those temporary local artifacts were removed during
+the requested project cleanup; the measurements above preserve the baseline.
 
-Android's final disposable `holocron-ci` Pixel 7 AVD run passed all six tests,
+The original disposable `holocron-ci` Pixel 7 AVD run passed all six Android tests,
 assembled both packaged ABIs, passed lint with warnings, and retained all eight
 expected screenshot/diagnostic artifacts. Lint warnings concern available
 dependency updates, older-OS backup metadata and launcher-icon configuration;
@@ -99,7 +101,7 @@ Debug instrumentation, Compose's test clock, software rendering and shared-host
 load make it unsuitable for a physical-device release budget. Preserve these
 conditions when comparing emulator runs; profile a release/profileable build
 on physical devices before making a performance commitment. Raw gfxinfo and
-display data are in the validated Android artifact archive. No native UI
+display data were checked in the Android artifact archive before cleanup. No native UI
 animation or per-frame work crosses the Rust boundary.
 
 ## Harness
@@ -171,9 +173,33 @@ The iOS suite adds a catalog adapter lifetime/revision test and a UI tour of
 all five added collections, including accessibility audits of the planet list
 and detail. The initial hosted run exposed contrast issues in the original
 People count/monograms; the count now uses larger primary text and monograms
-use opaque accent surfaces with the matching on-accent color. No accessibility
-checks are suppressed. These updates require a fresh hosted iOS run; older Mac
-verification above applies to the original People-only revision.
+use primary text on the background color (13.57:1 in light mode, 16.25:1 in dark
+mode). A later audit exposed category buttons losing Dynamic Type support when
+the lazy grid moved them offscreen. An eager layout preserves their identities
+and resolved those failures. Search fields can grow from one to three lines.
+The badge text uses intrinsic bounds inside a separate decorated tile: framing
+the Text itself caused the audit to treat the entire tile as the text element.
+Separating those views resolved the remaining contrast failures. No accessibility
+checks are suppressed. Older Mac verification above applies to the original
+People-only revision.
+
+[Hosted run 39073533572](https://github.com/mikezupper/swapi-rust-native-mobile/actions/runs/39073533572)
+passed all three jobs on commit `c795f69`: 24 Rust tests plus formatting, Clippy
+and generation checks; eight Android instrumentation tests, both packaged ABIs,
+lint and all 18 required artifacts; five iOS model tests and five UI tests,
+both arm64 XCFramework slices and an unsigned device build. iOS used Xcode 26.6,
+the iOS 26.5 SDK and an iPhone Air simulator. The People/character and planet
+list/detail accessibility audits passed with all audit types enabled.
+
+Reviewed Android evidence includes live lists for all collections, dark-mode
+Planets/Films, a Starship detail, 160% light-mode Planets, and the corrected
+full-width light-mode detail card/status bar. Reviewed iOS evidence includes
+the native Planets, Starships and Films lists and resource details. Selected
+live Android and fixture-backed iOS screens are retained in the README; full
+logs, screenshots, recordings and result bundles are available in the Actions
+artifacts. Temporary local reports/build outputs were removed after verification,
+while source, generated bindings, toolchains and Beads were preserved. These
+results do not establish physical-device performance or minimum-OS coverage.
 
 `cargo run --locked -p swapi-core --example catalog` is an explicit live check.
 On October 17, 2026 it successfully fetched each collection and its first detail:

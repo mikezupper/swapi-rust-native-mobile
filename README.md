@@ -74,12 +74,18 @@ links between individual related records are not yet navigable.
     <td><img src="docs/images/android-films.png" width="290" alt="Native Android Films catalog with live titles and release dates"></td>
   </tr>
   <tr><td>Planets · live API</td><td>Films · live API</td></tr>
+  <tr>
+    <td><img src="docs/images/ios-starships-fixture.png" width="290" alt="Native SwiftUI Starships catalog on the hosted iPhone simulator"></td>
+    <td><img src="docs/images/ios-planet-detail-fixture.png" width="290" alt="Native SwiftUI planet detail with wrapping facts and native back navigation"></td>
+  </tr>
+  <tr><td>iOS Starships · test fixture</td><td>iOS planet detail · test fixture</td></tr>
 </table>
 
 Rust debounces queries for 300 ms and cancels obsolete requests. Refresh and
 pagination retain useful content; page failures can retry the failed page.
-Duplicate requests and duplicate records are handled centrally. Unknown and
-not-applicable measurements remain distinct typed values.
+Duplicate requests and duplicate records are handled centrally. Character
+measurements preserve unknown and not-applicable values as distinct types;
+catalog facts preserve the API's original sentinel strings.
 
 Both apps support light/dark appearance and native text scaling. Search drafts,
 focus, scroll position and navigation are native concerns. Android retains its
@@ -155,6 +161,9 @@ included.
 Actual native verification has used a Pixel 7 AVD on Android API 36 and an
 iPhone 18 Pro simulator on iOS 27.0, built with Xcode 27.1 on an M4 Mac. These
 results do not establish physical-device performance or minimum-OS compatibility.
+The expanded catalog also passes hosted verification with Xcode 26.6, the iOS
+26.5 SDK and an arm64 iPhone Air simulator. See the [verification evidence](docs/testing.md#six-collection-catalog-expansion)
+for test counts, reviewed screens and the successful Actions run.
 
 ## Get the source and check the core
 

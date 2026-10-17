@@ -50,7 +50,10 @@ accessibility-size vertical layout. Native screenshots, rather than the HTML
 concept alone, guide subsequent refinement.
 
 A six-button, two-row category picker sits below the archive hero on both
-platforms, adapting to two or one columns as text grows. Each collection has its own headline and subtitle; selected categories
+platforms, adapting to two or one columns as text grows. The six SwiftUI buttons
+use an eager [Layout](https://developer.apple.com/documentation/swiftui/layout)
+so they retain their identities and update their fonts even when larger text
+moves them beyond the viewport. Each collection has its own headline and subtitle; selected categories
 use the shared accent. People cards use monograms, film counts and birth years.
 Other catalog cards use monograms and two identifying facts. Detail pages use
 stacked, wrapping fact labels/values so long manufacturers and large text fit.
