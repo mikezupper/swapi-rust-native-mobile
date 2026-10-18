@@ -150,7 +150,7 @@ substitute a plan or mockup for observed native execution.
 The catalog fixtures in `crates/swapi-core/tests/fixtures/catalog.json` cover
 People, Planets, Starships, Vehicles, Species and Films. They are deterministic
 samples, with a synthetic film crawl. They are never bundled as production data.
-The Rust suite now has 24 tests. Catalog checks exercise collection/detail
+At that milestone the Rust suite had 24 tests. Catalog checks exercise collection/detail
 routing, encoded searches, category-bound pagination, malformed identities and
 relationships, nullable species homeworlds, film episode/crawl parsing, and
 retrying the exact detail identity. The original paging tests now exercise the
@@ -233,3 +233,27 @@ iOS persistence UI tests use a separate `archive-fixture.sqlite` when launched
 with `--endpoint` and `--archive`. `--archive-reset` clears only that fixture
 database in this flow, preserving the normal production archive. Android's
 archive integration test uses a unique temporary database under `cacheDir`.
+
+The current suites contain 33 Rust tests, nine Android instrumentation tests,
+five iOS adapter tests and six iOS UI tests. The saved-archive iOS flow performs
+the full accessibility audit and checks that offline mode and a favorite survive
+process termination and relaunch. Its toggle assertion waits for the state
+committed by Rust before restarting.
+
+Live Android verification downloaded all 36 Starships, enabled Offline mode,
+searched for Falcon locally, and opened Millennium Falcon from saved collection
+data. A separate check disabled emulator Wi-Fi and mobile data while app Offline
+mode was off: refresh preserved the People list and displayed a saved-copy warning.
+Networking, normal text size and animation settings were restored afterward.
+Light appearance with 160% text and disabled animations was also reviewed.
+
+[Run 39083100472](https://github.com/mikezupper/swapi-rust-native-mobile/actions/runs/39083100472)
+passed all three gates for code commit `92ae821`: all 33 Rust tests, formatting,
+Clippy, generated binding/token checks; all nine Android instrumentation tests,
+lint, both packaged ABIs and 20 required artifacts; all five iOS adapter tests
+and six UI tests, both arm64 XCFramework slices, and the unsigned device build.
+The iOS People, catalog and saved-archive accessibility audits ran with every
+audit type enabled. Native saved-archive and offline-detail screenshots from both
+platforms were visually reviewed and selected captures are in the README.
+The iOS build used hosted macOS; the user's cleaned Mac was not repopulated.
+These checks do not establish physical-device frame timing or haptic feel.

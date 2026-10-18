@@ -94,6 +94,11 @@ honors the system duration scale. Both platforms provide native haptic feedback
 on favorite selection. Physical-device frame timing and haptic feel remain
 separate from emulator/simulator rendering evidence.
 
+The SwiftUI zoom source belongs to the decorative card surface. Keeping it off
+the enclosing navigation link preserves the text's intrinsic accessibility
+bounds. Saved-archive headings wrap naturally with the shared scalable hero
+typography, and the native close symbol has an explicit accessibility label.
+
 ## Assets
 
 SWAPI's documented data does not include character image URLs. Decide the art

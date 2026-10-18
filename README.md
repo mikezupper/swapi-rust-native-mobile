@@ -101,13 +101,19 @@ favorite feedback. System reduced-motion settings are respected.
 
 This is a development application. Accounts, relationship browsing, widgets,
 and release/distribution setup remain outside the implemented scope.
+The [product brief](docs/product.md#recommended-directions-for-future-milestones)
+compares proposed additions, starting with connected records and starship comparison.
 
 ### Offline browsing and favorites
 
 <table><tr>
 <td><img src="docs/images/android-offline-favorites.png" width="290" alt="Native Android saved archive with offline mode and a persistent favorite"></td>
 <td><img src="docs/images/android-offline-detail.png" width="290" alt="A planet detail opened entirely from saved collection data"></td>
-</tr><tr><td>Saved favorites · test fixture</td><td>Offline detail · test fixture</td></tr></table>
+</tr><tr><td>Android favorites · test fixture</td><td>Android offline detail · test fixture</td></tr>
+<tr>
+<td><img src="docs/images/ios-offline-favorites.png" width="290" alt="Native SwiftUI saved archive with offline mode enabled and a favorite"></td>
+<td><img src="docs/images/ios-offline-detail.png" width="290" alt="A favorite character opened offline after terminating and relaunching the iOS app"></td>
+</tr><tr><td>iOS favorites · test fixture</td><td>iOS offline relaunch · test fixture</td></tr></table>
 
 1. Browse a category while connected. Valid responses and complete records are
    saved automatically; the UI shows their last successful update time.
