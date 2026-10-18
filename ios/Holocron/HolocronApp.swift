@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct HolocronApp: App {
     @StateObject private var model: PeopleModel
+    @State private var linkedRecord: FavoriteIdentity?
     init() {
         #if DEBUG
         // The unit-test host must not issue production requests at app startup.
@@ -14,13 +15,24 @@ struct HolocronApp: App {
     }
     var body: some Scene {
         WindowGroup {
-            #if DEBUG
-            if ProcessInfo.processInfo.arguments.contains("--detail") {
-                CharacterDestination(id: 1)
-            } else { ArchiveHome(people: model) }
-            #else
-            ArchiveHome(people: model)
-            #endif
+            Group {
+                if let link = linkedRecord {
+                    NavigationStack {
+                        RecordDestination(category: link.category, id: link.id).id("\(link.category.title)/\(link.id)")
+                            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { linkedRecord = nil } } }
+                    }.safeAreaInset(edge: .bottom) { ComparisonTray() }
+                } else {
+                    #if DEBUG
+                    if ProcessInfo.processInfo.arguments.contains("--detail") { CharacterDestination(id: 1) }
+                    else { ArchiveHome(people: model) }
+                    #else
+                    ArchiveHome(people: model)
+                    #endif
+                }
+            }.onOpenURL { url in
+                // Replace the presentation root so a widget works even while a sheet is open.
+                if let identity = parseRecordLink(value: url.absoluteString) { linkedRecord = identity }
+            }
         }
     }
 }

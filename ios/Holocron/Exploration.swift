@@ -111,6 +111,7 @@ struct ComparisonTray: View {
 }
 
 struct ComparisonScreen: View {
+    @State private var revealed = false
     @ObservedObject private var archive = ArchiveModel.shared
     @Environment(\.colorScheme) private var appearance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -137,7 +138,8 @@ struct ComparisonScreen: View {
                             if index < state.ships.count {
                                 Text("\(state.ships[index].name): \(value.display)").font(.subheadline).fixedSize(horizontal: false, vertical: true)
                                 if let fraction = value.fraction {
-                                    ProgressView(value: fraction).tint(index == 0 ? accent : warm).accessibilityHidden(true)
+                                    ProgressView(value: revealed ? fraction : 0).tint(index == 0 ? accent : warm).accessibilityHidden(true)
+                                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: revealed)
                                         .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: fraction)
                                 }
                             }
@@ -147,7 +149,7 @@ struct ComparisonScreen: View {
                 }
                 Text("Bars show relative values, not an overall score. Unknown values and crew ranges keep their original meaning.").font(.caption)
             }.padding(24)
-        }.navigationTitle("Starship comparison").navigationBarTitleDisplayMode(.inline)
+        }.navigationTitle("Starship comparison").navigationBarTitleDisplayMode(.inline).onAppear { revealed = true }
     }
 }
 
@@ -190,6 +192,7 @@ struct DiscoveryScreen: View {
                     Text("Continue exploring").font(.title2).accessibilityAddTraits(.isHeader)
                     if state.suggestions.isEmpty { Text("Open a few records to build your own trail through the stars.") }
                     ForEach(state.suggestions, id: \.discoveryIdentity) { row($0) }
+                    NavigationLink("Preview home-screen widget") { WidgetPreviewScreen() }
                     Text("Add the Holocron widget from your home screen’s widget gallery for a favorite and a saved discovery.").font(.caption)
                 }.padding(24)
             }.navigationTitle("Discover").navigationBarTitleDisplayMode(.inline)
@@ -258,6 +261,22 @@ struct FilmExperience: View {
                 }
             }
         }.onChange(of: scenePhase) { _, phase in if phase != .active { pause() } }
-            .onChange(of: reduceMotion) { _, _ in pause() }.onDisappear { pause() }
+            .onChange(of: reduceMotion) { _, _ in pause() }.onChange(of: typeSize) { _, _ in pause() }.onDisappear { pause() }
+    }
+}
+
+struct WidgetPreviewScreen: View {
+    @ObservedObject private var archive = ArchiveModel.shared
+    private var cards: [WidgetCard] { archive.snapshot.exploration.widget.map { saved in
+        WidgetCard(name: saved.entry.name, subtitle: "\(saved.favorite ? "Favorite" : "Saved discovery") · \(saved.category.title)", url: recordLink(category: saved.category, id: saved.entry.id), artwork: saved.category.artwork)
+    } }
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Text("Your galaxy, at a glance.").font(.largeTitle)
+                WidgetContentView(cards: cards, medium: true).padding(20).frame(minHeight: 180).background(DesignTokens.Hero.background).clipShape(RoundedRectangle(cornerRadius: 24))
+                Text("This is the same content view used by the WidgetKit extension. Add Holocron from the home-screen widget gallery.").font(.subheadline)
+            }.padding(24)
+        }.navigationTitle("Widget preview").navigationBarTitleDisplayMode(.inline)
     }
 }

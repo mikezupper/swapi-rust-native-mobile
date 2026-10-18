@@ -120,7 +120,7 @@ fun Modifier.recordBounds(category: CatalogCategory, id: UInt): Modifier {
         Text(if (snapshot.offline) "Discoveries from your saved galaxy." else "A familiar world. An unexpected connection.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         discovery.featured?.let { saved ->
             Card(onClick = { open(saved.category, saved.entry.id) }, modifier = Modifier.fillMaxWidth().recordBounds(saved.category, saved.entry.id), shape = RoundedCornerShape(28.dp)) {
-                Box {
+                Box(Modifier.fillMaxWidth()) {
                     Image(painterResource(saved.category.artwork), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, DesignTokens.Hero.background))))
                     Column(Modifier.padding(24.dp)) {
@@ -163,6 +163,8 @@ fun Modifier.recordBounds(category: CatalogCategory, id: UInt): Modifier {
 @Composable fun ComparisonScreen(archive: ArchiveController, onBack: () -> Unit) {
     val snapshot by archive.state.collectAsStateWithLifecycle()
     val comparison = snapshot.exploration
+    var revealed by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { revealed = true }
     ExplorationScaffold("Starship comparison", onBack) {
         Text("Choose your\nride.", fontSize = 38.sp, lineHeight = 44.sp, modifier = Modifier.semantics { heading() })
         if (comparison.ships.size != 2) Text("Select two starships from their collection or detail screens.")
@@ -182,8 +184,10 @@ fun Modifier.recordBounds(category: CatalogCategory, id: UInt): Modifier {
                     val color = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
                     Text("${comparison.ships[index].name}: ${value.display}", fontSize = 14.sp)
                     value.fraction?.let { fraction ->
-                        val animated by animateFloatAsState(fraction.toFloat(), tween(600), label = "Comparison bar")
-                        LinearProgressIndicator(progress = { animated }, modifier = Modifier.fillMaxWidth().height(8.dp).clearAndSetSemantics {}, color = color)
+                        val animated by animateFloatAsState(if (revealed) fraction.toFloat() else 0f, tween(600), label = "Comparison bar")
+                        Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(color.copy(alpha = .15f)).clearAndSetSemantics {}) {
+                            Box(Modifier.fillMaxWidth(animated).fillMaxHeight().background(color))
+                        }
                     }
                 }
                 if (metric.lowerIsBetter) Text("Lower hyperdrive ratings are faster.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -201,8 +205,9 @@ fun Modifier.recordBounds(category: CatalogCategory, id: UInt): Modifier {
     val reduced = !ValueAnimator.areAnimatorsEnabled()
     val large = LocalDensity.current.fontScale > 1.3f
     val duration = (crawl.length / 12f).coerceIn(35f, 160f)
-    LaunchedEffect(playing, cinematic, reduced, lifecycle) {
-        if (playing && cinematic && !reduced && lifecycle.isAtLeast(Lifecycle.State.RESUMED)) {
+    LaunchedEffect(lifecycle, reduced, large) { if (!lifecycle.isAtLeast(Lifecycle.State.RESUMED) || reduced || large) playing = false }
+    LaunchedEffect(playing, cinematic, reduced, large, lifecycle) {
+        if (playing && cinematic && !reduced && !large && lifecycle.isAtLeast(Lifecycle.State.RESUMED)) {
             var previous = withFrameNanos { it }
             while (elapsed < duration) {
                 val now = withFrameNanos { it }; elapsed = (elapsed + (now - previous).coerceAtMost(100_000_000) / 1_000_000_000f).coerceAtMost(duration); previous = now

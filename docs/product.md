@@ -25,7 +25,8 @@ details, refresh and retry through the Rust core.
 Explore, search results, and character detail are the first design surfaces.
 The app includes persistent favorites, SQLite-backed offline
 records, local search, downloadable collections and native motion/haptics.
-Navigation between related records remains a future feature. A full backend, authentication, and social features have no
+Connected records, discovery, ship comparison, cinematic crawl playback and
+home-screen widgets extend that foundation. A full backend, authentication, and social features have no
 current product requirement.
 
 ## Experience expectations
@@ -38,7 +39,7 @@ readable experience. Empty and failure screens are designed alongside content.
 The first implemented feature should already exhibit the intended visual
 quality. Broader content coverage follows a working and inspectable foundation.
 
-## Recommended directions for future milestones
+## Experience directions
 
 | Addition | Example experience | What it demonstrates |
 | --- | --- | --- |
@@ -50,10 +51,12 @@ quality. Broader content coverage follows a working and inspectable foundation.
 | Shareable record links | Share a record and reopen directly into its native detail | Native share sheets and deep-link routing into typed Rust identities |
 | Demo inspector | View HTTP timing, cache hits, saved counts and request cancellation | Observable shared-core behavior that makes the architecture understandable |
 
-Connected stories offers the largest improvement in exploration; comparison
-adds a distinctive demo surface. Widgets and adaptive layouts then make the
-platform integration more visible. Background synchronization can follow if
-there is a useful freshness requirement; the current catalog changes slowly.
+Connected stories, comparison, the cinematic crawl and widgets are implemented.
+Discovery adds featured saved worlds, recent visits and related saved suggestions.
+Adaptive layouts, public shareable web links and the demo inspector remain future
+options. Personal named collections were not selected for this milestone.
+Background synchronization can follow if there is a useful freshness requirement;
+the current catalog changes slowly.
 
 Relevant native foundations include [Apple App Intents](https://developer.apple.com/documentation/appintents),
 [WidgetKit](https://developer.apple.com/documentation/widgetkit),

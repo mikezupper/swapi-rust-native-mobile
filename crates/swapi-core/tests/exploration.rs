@@ -177,3 +177,79 @@ fn deep_links_only_accept_known_record_routes() {
         assert!(parse_record_link(bad).is_err(), "{bad}");
     }
 }
+
+#[tokio::test]
+async fn relationship_groups_page_without_duplicate_records_and_cancel_on_close() {
+    let (server, _dir, client, _) = setup().await;
+    for id in 1..=7 {
+        mount(
+            &server,
+            "planets",
+            id,
+            json!({"name":format!("World {id}")}),
+        )
+        .await;
+    }
+    let store = CatalogStore::related(
+        client,
+        ResourceKind::Planet,
+        vec![1, 2, 3, 4, 5, 6, 7, 1],
+        &tokio::runtime::Handle::current(),
+    );
+    let mut states = store.observe();
+    store.refresh();
+    async fn ready(
+        states: &mut tokio::sync::watch::Receiver<swapi_core::CatalogSnapshot>,
+        count: usize,
+    ) {
+        tokio::time::timeout(Duration::from_secs(3), async {
+            loop {
+                if states.borrow().phase == PeoplePhase::Ready
+                    && states.borrow().items.len() == count
+                {
+                    break;
+                }
+                states.changed().await.unwrap();
+            }
+        })
+        .await
+        .unwrap();
+    }
+    ready(&mut states, 6).await;
+    assert_eq!(states.borrow().next_page, Some(2));
+    assert_eq!(states.borrow().total, 7);
+    store.load_more();
+    ready(&mut states, 7).await;
+    assert_eq!(states.borrow().items[6].name, "World 7");
+    assert_eq!(states.borrow().next_page, None);
+    assert_eq!(server.received_requests().await.unwrap().len(), 7);
+    store.close();
+    // The actor's publisher is released on shutdown; listeners cannot be retained.
+    while states.changed().await.is_ok() {}
+}
+
+#[tokio::test]
+async fn schema_one_migration_preserves_existing_favorites() {
+    let (server, dir, client, cache) = setup().await;
+    mount(&server, "planets", 1, json!({})).await;
+    client.resource(ResourceKind::Planet, 1).await.unwrap();
+    cache.set_favorite(ResourceKind::Planet, 1, true).unwrap();
+    cache.set_offline(true).unwrap();
+    let endpoint = client.endpoint().to_string();
+    drop(client);
+    drop(cache);
+    let path = dir.path().join("archive.sqlite");
+    let connection = rusqlite::Connection::open(&path).unwrap();
+    connection
+        .execute_batch("DROP TABLE visits; DROP TABLE comparison; PRAGMA user_version=1;")
+        .unwrap();
+    drop(connection);
+    let migrated = ArchiveCache::open(&path, &endpoint).unwrap();
+    assert!(migrated.is_offline());
+    assert_eq!(
+        migrated.records("", true).unwrap()[0].record.name,
+        "Tatooine"
+    );
+    migrated.visit(ResourceKind::Planet, 1).unwrap();
+    assert_eq!(migrated.exploration(1).unwrap().recent.len(), 1);
+}

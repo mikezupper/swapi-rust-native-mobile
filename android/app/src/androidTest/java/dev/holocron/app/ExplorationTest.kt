@@ -14,7 +14,11 @@ import java.io.File
 class ExplorationTest {
     @get:Rule val compose = createComposeRule()
     private fun waitText(text: String) { compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
-    private fun tap(text: String) { compose.onNodeWithText(text).performScrollTo().performClick() }
+    private fun tap(text: String) {
+        if (compose.onAllNodesWithText(text).fetchSemanticsNodes().isEmpty()) compose.onNodeWithTag("catalog-list").performScrollToNode(hasText(text))
+        compose.onNodeWithText(text).performScrollTo().performClick()
+    }
+    private fun capture(name: String) { compose.captureContent(name) }
     @Test fun connected_discovery_comparison_crawl_and_offline_widget_route() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val db = File(context.cacheDir, "exploration-${System.nanoTime()}.sqlite")
@@ -31,30 +35,41 @@ class ExplorationTest {
             compose.setContent { HolocronTheme { HolocronNavigation(server.endpoint,archive) } }
             waitText("Luke Skywalker"); tap("Luke Skywalker")
             waitText("Homeworld · 1"); tap("Homeworld · 1")
-            waitText("Climate"); captureScreen("connected-homeworld")
+            waitText("Climate"); capture("connected-homeworld")
             compose.onNodeWithContentDescription("Back to planets").performClick()
             compose.onNodeWithContentDescription("Back to people").performClick()
             tap("Starships"); waitText("Death Star")
             compose.onNodeWithContentDescription("Compare ship 9").performScrollTo().performClick()
             compose.waitUntil(5_000) { archive.state.value.exploration.ships.size == 1 }
+            compose.onNodeWithTag("catalog-list").performScrollToNode(hasContentDescription("Compare ship 10"))
             compose.onNodeWithContentDescription("Compare ship 10").performScrollTo().performClick()
             compose.waitUntil(5_000) { archive.state.value.exploration.ships.size == 2 }
-            captureScreen("comparison-tray")
+            capture("comparison-tray")
             compose.onNodeWithText("Compare starships").performClick()
-            waitText("Starship comparison"); captureScreen("ship-comparison")
+            waitText("Starship comparison"); capture("ship-comparison")
             tap("Cargo (kg)")
             compose.onNodeWithText("Test courier: Unknown").performScrollTo().assertIsDisplayed()
             compose.onNodeWithContentDescription("Back").performClick()
             compose.onNodeWithContentDescription("Remove Death Star").performClick()
+            compose.waitUntil(5_000) { archive.state.value.exploration.ships.size == 1 }
+            compose.waitForIdle()
             compose.onNodeWithContentDescription("Remove Test courier").performClick()
+            compose.waitUntil(5_000) { archive.state.value.exploration.ships.isEmpty() }
+            compose.waitForIdle()
             tap("Films"); waitText("A New Hope"); tap("A New Hope")
             waitText("Cinematic opening crawl"); tap("Cinematic opening crawl")
-            tap("Play crawl")
-            tap("Pause crawl"); captureScreen("film-crawl")
+            compose.waitForIdle()
+            compose.onNodeWithText("Play crawl").performScrollTo()
+            compose.mainClock.autoAdvance = false
+            compose.onNodeWithText("Play crawl").performClick()
+            compose.mainClock.advanceTimeBy(12_000)
+            tap("Pause crawl")
+            compose.mainClock.autoAdvance = true
+            compose.waitForIdle(); capture("film-crawl")
             tap("Read opening crawl")
             compose.onNodeWithText(fixtures.getJSONObject("films").getString("opening_crawl").replace("\r\n","\n")).performScrollTo().assertIsDisplayed()
             compose.onNodeWithContentDescription("Back to films").performClick()
-            tap("✦ Discover your galaxy"); waitText("FEATURED WORLD"); captureScreen("discovery")
+            tap("✦ Discover your galaxy"); waitText("FEATURED WORLD"); capture("discovery")
             compose.onNodeWithText("Recently explored").performScrollTo().assertIsDisplayed()
             compose.runOnUiThread { archive.session.setOffline(true) }
             compose.waitUntil(5_000) { archive.state.value.offline }

@@ -45,6 +45,9 @@ final class CharacterTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["FEATURED WORLD"].waitForExistence(timeout: 10))
         capture(app, "Discovery")
         try app.performAccessibilityAudit()
+        tap(app.buttons["Preview home-screen widget"])
+        XCTAssertTrue(app.staticTexts["Your galaxy, at a glance."].waitForExistence(timeout: 5))
+        capture(app, "Home widget preview")
     }
 
     @MainActor

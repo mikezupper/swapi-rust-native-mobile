@@ -22,6 +22,7 @@ with tarfile.open(output) as archive:
     expected |= {f'screenshots/catalog-{category}{suffix}.png'
                  for category in ('planets', 'starships', 'vehicles', 'species', 'films')
                  for suffix in ('', '-detail')}
+    expected |= {f'screenshots/{name}.png' for name in ('connected-homeworld', 'comparison-tray', 'ship-comparison', 'film-crawl', 'discovery', 'widget-linked-detail', 'home-widget', 'home-widget-empty')}
     if missing := expected - names:
         raise SystemExit(f'Missing native test artifacts: {sorted(missing)}')
     for name in expected:

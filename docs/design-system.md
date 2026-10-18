@@ -89,7 +89,7 @@ protects cache clearing, which preserves favorite records.
 
 SwiftUI uses matched-source zoom navigation into records and a category fade;
 Reduce Motion removes the custom zoom and symbol transition. Compose uses
-native fade/scale navigation and an animated favorite star; its animation clock
+shared card bounds with native navigation and an animated favorite star; its animation clock
 honors the system duration scale. Both platforms provide native haptic feedback
 on favorite selection. Physical-device frame timing and haptic feel remain
 separate from emulator/simulator rendering evidence.
@@ -124,3 +124,17 @@ Every visible defect or deferred design issue belongs in Beads.
 - [Apple materials](https://developer.apple.com/design/human-interface-guidelines/materials)
 - [Material 3 in Compose](https://developer.android.com/develop/ui/compose/designsystems/material3)
 - [SWAPI fields](https://swapi.dev/documentation)
+
+## Discovery, comparison and film playback
+
+Discovery emphasizes a large illustrated featured world, followed by recent visits
+and compact saved suggestions. Related-record groups use explicit names and counts;
+a single relationship opens directly, while larger groups open a paged collection.
+Comparison selection stays in a bottom tray with removable ship names and a clear
+two-ship limit. Comparison charts pair each bar with its name and original value;
+color is supplementary, and ranges/unknowns are not plotted as zero.
+
+The cinematic crawl is opt-in, with pause, restart, scrubbing and a readable static
+alternative. Leaving the screen or backgrounding pauses playback. Reduced motion
+and large accessibility text preserve the full content in reading mode. Artwork
+remains atmospheric; relationship names and comparisons come from SWAPI records.

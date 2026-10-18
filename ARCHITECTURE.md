@@ -161,3 +161,30 @@ native asset bundles. Generated libraries and build output are not committed.
 - [UniFFI async support](https://mozilla.github.io/uniffi-rs/latest/futures.html)
 - [UniFFI foreign traits](https://mozilla.github.io/uniffi-rs/latest/foreign_traits.html)
 - [SWAPI contract](https://swapi.dev/documentation)
+
+## Connected exploration and system surfaces
+
+`CatalogRecord` and People records expose validated relationship groups with
+resource kinds and IDs. Relationship sessions page six referenced records at a
+time using existing cached transport, cancellation and state delivery. Native
+navigation receives typed identities; API URLs are never opened as arbitrary
+fetch targets. A group failure retains completed earlier pages and offers retry.
+
+SQLite schema 2 adds bounded recent visits (20 persisted, eight displayed) and
+two comparison selections per endpoint namespace. The migration preserves schema
+1 records, favorites and preferences. Discovery is a Rust projection independent
+of the saved-archive query/filter: featured world, recent visits, related saved
+suggestions and widget cards. Ship comparisons preserve original display values;
+only validated scalar numbers receive a normalized bar fraction. Ranges and
+unknown values have no fabricated numeric score.
+
+Widgets consume the core's selected cards via native storage serialization.
+Android uses private preferences and RemoteViews; iOS exports an atomic JSON
+projection to an App Group for a separate WidgetKit extension. The extension has
+no HTTP implementation or direct database access. Widget refresh is requested
+when projected content changes, not on every core state revision. Fixture data
+is excluded from production widget exports. Record links use a strict Rust parser
+for the `holocron://record/<collection>/<positive-id>` grammar.
+
+Crawl playback, clocks, haptics, card geometry, navigation stacks and reduced-motion
+handling are native concerns. None of their frame updates cross UniFFI.

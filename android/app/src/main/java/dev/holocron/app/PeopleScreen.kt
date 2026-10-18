@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -174,7 +175,7 @@ fun ArchiveScreen(category: CatalogCategory, records: List<ArchiveItem>, total: 
     val largeText = LocalDensity.current.fontScale > 1.3f
     val list = rememberLazyListState()
     Surface(Modifier.fillMaxSize()) { Box {
-        LazyColumn(state = list, modifier = Modifier.fillMaxSize().imePadding(),
+        LazyColumn(state = list, modifier = Modifier.fillMaxSize().imePadding().testTag("catalog-list"),
             contentPadding = PaddingValues(bottom = 36.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item(key = "hero") {
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = DesignTokens.Shape.hero.dp, bottomEnd = DesignTokens.Shape.hero.dp))) {

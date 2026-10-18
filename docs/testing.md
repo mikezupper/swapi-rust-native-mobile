@@ -257,3 +257,25 @@ audit type enabled. Native saved-archive and offline-detail screenshots from bot
 platforms were visually reviewed and selected captures are in the README.
 The iOS build used hosted macOS; the user's cleaned Mac was not repopulated.
 These checks do not establish physical-device frame timing or haptic feel.
+
+## Connected exploration milestone
+
+`crates/swapi-core/tests/exploration.rs` adds deterministic coverage for validated
+relationships, paged related records, offline resolution, persisted recency and
+comparison selection, numeric/range/sentinel comparison values, schema-1 migration,
+and the strict widget link grammar. The core suite now contains 40 tests.
+
+Android's exploration journey follows Luke to his homeworld, selects two ships,
+opens the comparison, checks an unknown value, operates the film crawl and opens
+discovery. The crawl uses a controlled Compose clock so Play/Pause is exercised
+without the test runner fast-forwarding to the end. Widget tests reopen saved
+content offline through a record link and render the actual RemoteViews layout
+with populated and empty snapshots. Widget rendering uses isolated test preferences.
+New screenshots use draw-synchronized capture; widget previews use the measured
+native view renderer. These previews do not establish launcher placement behavior.
+
+SwiftUI's added journey follows the same related-record, comparison, crawl and
+discovery flows, audits the discovery screen, and captures the shared WidgetKit
+content view in an in-app preview. The widget extension is an embedded Xcode target
+included in simulator and device builds. A signed physical-device App Group setup
+and widget scheduling remain separate from simulator UI evidence.

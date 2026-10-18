@@ -67,8 +67,8 @@ search according to [the API contract](https://swapi.dev/documentation).
 Refresh and retry are available where appropriate. Navigation back from detail
 retains the collection's query and loaded pages. Switching to a different
 non-People collection starts a fresh session and cancels the previous one;
-People remains the home collection. Relationship counts are informational;
-links between individual related records are not yet navigable.
+People remains the home collection. Connected stories link each record to its homeworld, residents, films, pilots,
+ships, vehicles and species where SWAPI supplies those relationships.
 
 <table>
   <tr>
@@ -99,10 +99,9 @@ favorites, local search, and whole-collection downloads. SwiftUI provides zoom
 navigation and selection haptics; Compose provides fade/scale navigation and
 favorite feedback. System reduced-motion settings are respected.
 
-This is a development application. Accounts, relationship browsing, widgets,
-and release/distribution setup remain outside the implemented scope.
+This is a development application. Accounts and release/distribution setup remain outside the implemented scope.
 The [product brief](docs/product.md#recommended-directions-for-future-milestones)
-compares proposed additions, starting with connected records and starship comparison.
+describes the current experience and remaining directions.
 
 ### Offline browsing and favorites
 
@@ -144,10 +143,68 @@ pages. Clearing the saved cache removes responses, downloaded status and
 non-favorite records, while preserving favorites and the offline preference.
 
 Storage lives in Android's private `filesDir/archive.sqlite` and iOS Application
-Support's `Holocron/archive.sqlite`. SQLite schema version 1 is checked on open;
+Support's `Holocron/archive.sqlite`. SQLite schema version 2 adds recent visits and comparison selection while preserving
+version 1 records and favorites;
 newer unsupported schemas are rejected rather than overwritten. Endpoint
 namespaces isolate fixture data from production. Uninstalling the app removes
 its private storage; this demo provides no cross-device favorites sync.
+
+### Connected exploration and cinematic features
+
+- **Connected stories:** open a record and follow its relationship buttons. A
+  single connection opens directly; larger groups show named records in batches
+  of six. Rust validates identities and loads through the same cache. Missing
+  offline connections offer retry; download their category to make them available.
+- **Starship comparison:** choose **Compare ship** on a card or detail. The tray
+  follows navigation and persists across app restarts. Select two ships, then
+  choose **Compare starships** for length, crew, cargo and hyperdrive comparisons.
+  Bars represent relative numeric values, not an overall score. Unknown values,
+  not-applicable values and ranges remain explicit; lower hyperdrive ratings are
+  faster. Remove a ship from the tray to choose a replacement.
+- **Discover your galaxy:** a featured saved world, eight recent visits and up to
+  six suggestions. Rust prioritizes saved connections from the most recent visit,
+  then other saved records. Opening discovery online fetches Tatooine if no world
+  is saved yet. Once worlds are saved, the featured selection rotates by UTC day
+  when the archive publishes new state. This is deterministic local discovery,
+  with no account, tracking service or generated factual content.
+- **Cinematic opening crawl:** film details offer Play/Pause, Restart and a
+  progress scrubber, plus a complete static reading mode. Playback pauses when
+  leaving the screen or backgrounding. Reduced motion and large accessibility
+  text use the reading view. There is no bundled soundtrack.
+- **Card-to-detail motion:** SwiftUI uses native zoom navigation; Compose uses
+  shared card bounds coordinated with its navigation animation. System animation
+  preferences apply. All animation frames stay in the native layer.
+
+### Home-screen widgets
+
+Widgets show a favorite and a saved discovery chosen by Rust. They consume a
+small local snapshot; they never fetch SWAPI themselves. Tapping a record opens
+its native detail through a validated `holocron://record/<category>/<id>` route.
+An uncached record can load online; normal offline failure behavior applies if
+it is unavailable. Custom-scheme links do not require a website association.
+
+**Android:** open Discover and choose **Add home-screen widget**, or touch and
+hold the launcher, choose Widgets, then Holocron. The resizable widget uses native
+RemoteViews. Its snapshot lives in private application preferences and is updated
+when the core publishes changed content. Launcher placement is user-controlled.
+
+**iOS:** add **Holocron → Your galaxy** from the home-screen widget gallery.
+The app embeds a WidgetKit extension with small and medium sizes. The extension
+reads `discovery.json` from an App Group; the main app writes that projection
+atomically and asks WidgetKit to reload after changes. SQLite stays in the app's
+private Application Support directory. Fixture sessions do not overwrite the
+production widget snapshot.
+
+For a signed device build, select your team for **both** Xcode targets, choose a
+unique `HOLOCRON_BUNDLE_ID`, and register the same `HOLOCRON_APP_GROUP` for the app
+and widget. Defaults are `dev.holocron.app` (with `.widget` for the extension) and
+`group.dev.holocron.shared`. Both entitlements derive from that shared build setting.
+The widget extension is included automatically by the Holocron scheme. Unsigned
+CI builds verify packaging and compilation; physical-device signing still needs
+your Apple development configuration.
+
+Widgets update from app activity, subject to the launcher's/WidgetKit's scheduling.
+There is no scheduled background synchronization or guaranteed daily widget refresh.
 
 ## Architecture
 

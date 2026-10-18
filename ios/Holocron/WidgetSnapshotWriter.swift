@@ -18,7 +18,10 @@ import WidgetKit
             do {
                 try data.write(to: folder.appendingPathComponent("discovery.json"), options: .atomic)
                 WidgetCenter.shared.reloadTimelines(ofKind: "HolocronDiscovery")
-            } catch { /* The app archive remains authoritative if a widget snapshot cannot be written. */ }
+            } catch {
+                // Retry the same projection on the next archive update.
+                Task { @MainActor in if previous == data { previous = nil } }
+            }
         }
     }
 }

@@ -48,7 +48,6 @@ extension CatalogCategory {
 struct ArchiveHome: View {
     @ObservedObject var people: PeopleModel
     @State private var selected: CatalogCategory = .people
-    @State private var linkedRecord: LinkedRecord?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         Group { if selected == .people {
@@ -57,13 +56,10 @@ struct ArchiveHome: View {
             CatalogCollection(category: selected, onCategory: { selected = $0 }).id(selected)
         } }.animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: selected)
             .safeAreaInset(edge: .bottom) { ComparisonTray() }
-            .onOpenURL { url in if let identity = parseRecordLink(value: url.absoluteString) { linkedRecord = LinkedRecord(category: identity.category, recordId: identity.id) } }
-            .sheet(item: $linkedRecord) { link in NavigationStack { RecordDestination(category: link.category, id: link.recordId).toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { linkedRecord = nil } } } }.safeAreaInset(edge: .bottom) { ComparisonTray() } }
 
     }
 }
 
-private struct LinkedRecord: Identifiable { let category: CatalogCategory; let recordId: UInt32; var id: String { "\(category.title)/\(recordId)" } }
 
 struct CatalogCollection: View {
     @StateObject private var model: CatalogModel
