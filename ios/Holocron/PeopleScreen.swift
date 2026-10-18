@@ -58,7 +58,7 @@ struct PeopleScreen: View {
                         if busy { ProgressView().frame(maxWidth: .infinity).accessibilityLabel("Loading people") }
                         ForEach(model.snapshot.people, id: \.id) { person in
                             NavigationLink(value: person.id) { personRow(person) }
-                                .buttonStyle(.plain).matchedTransitionSource(id: person.id, in: transition).accessibilityIdentifier("person-\(person.id)")
+                                .buttonStyle(.plain).accessibilityIdentifier("person-\(person.id)")
                         }
                         if model.snapshot.phase == .ready && model.snapshot.people.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
@@ -125,7 +125,10 @@ struct PeopleScreen: View {
                 Text("\(person.filmCount) films · Born \(person.birthYear)").font(.caption).foregroundStyle(secondary)
             }.frame(maxWidth: .infinity, alignment: .leading)
             Image(systemName: "chevron.right").font(.caption).foregroundStyle(accent).accessibilityHidden(true)
-        }.padding(18).background(surface, in: RoundedRectangle(cornerRadius: DesignTokens.Shape.card))
+        }.padding(18).background {
+            RoundedRectangle(cornerRadius: DesignTokens.Shape.card).fill(surface)
+                .modifier(ArchiveZoomSource(id: person.id, namespace: transition))
+        }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(person.name), \(person.filmCount) films, born \(person.birthYear)")
     }

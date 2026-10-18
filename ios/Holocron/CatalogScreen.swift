@@ -53,7 +53,7 @@ struct CatalogScreen: View {
                         if busy { ProgressView().frame(maxWidth: .infinity).accessibilityLabel("Loading \(category.title.lowercased())") }
                         ForEach(model.snapshot.items, id: \.id) { person in
                             NavigationLink(value: person.id) { personRow(person) }
-                                .buttonStyle(.plain).matchedTransitionSource(id: person.id, in: transition).accessibilityIdentifier("record-\(person.id)")
+                                .buttonStyle(.plain).accessibilityIdentifier("record-\(person.id)")
                         }
                         if model.snapshot.phase == .ready && model.snapshot.items.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
@@ -120,7 +120,10 @@ struct CatalogScreen: View {
                 Text(person.facts.prefix(2).map { "\($0.label): \($0.value)" }.joined(separator: " · ")).font(.caption).foregroundStyle(secondary)
             }.frame(maxWidth: .infinity, alignment: .leading)
             Image(systemName: "chevron.right").font(.caption).foregroundStyle(accent).accessibilityHidden(true)
-        }.padding(18).background(surface, in: RoundedRectangle(cornerRadius: DesignTokens.Shape.card))
+        }.padding(18).background {
+            RoundedRectangle(cornerRadius: DesignTokens.Shape.card).fill(surface)
+                .modifier(ArchiveZoomSource(id: person.id, namespace: transition))
+        }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(([person.name] + person.facts.prefix(2).map { "\($0.label): \($0.value)" }).joined(separator: ", "))
     }

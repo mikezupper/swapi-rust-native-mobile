@@ -80,7 +80,6 @@ struct ArchiveMonogram: View {
             RoundedRectangle(cornerRadius: 16).fill(background)
             Text(name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined())
                 .font(.headline.weight(.semibold)).foregroundStyle(foreground)
-                .fixedSize().background(background).accessibilityHidden(true)
         }.frame(width: 48, height: 48).accessibilityHidden(true)
     }
 }

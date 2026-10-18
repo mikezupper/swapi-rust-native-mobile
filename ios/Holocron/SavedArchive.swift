@@ -129,6 +129,15 @@ struct ArchiveZoom: ViewModifier {
         if reduceMotion { content } else { content.navigationTransition(.zoom(sourceID: id, in: namespace)) }
     }
 }
+struct ArchiveZoomSource: ViewModifier {
+    let id: UInt32
+    let namespace: Namespace.ID
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ViewBuilder func body(content: Content) -> some View {
+        // Animate the card surface without changing descendant text geometry.
+        if reduceMotion { content } else { content.matchedTransitionSource(id: id, in: namespace) }
+    }
+}
 
 struct SavedArchiveScreen: View {
     @ObservedObject var archive: ArchiveModel
@@ -146,10 +155,11 @@ struct SavedArchiveScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("YOUR PERSONAL HOLOCRON").font(.caption).tracking(2).foregroundStyle(DesignTokens.Hero.accent)
-                        Text("The galaxy.\nTo go.").font(.largeTitle.weight(.medium)).accessibilityAddTraits(.isHeader)
+                        Text("The galaxy.\nTo go.").font(.largeTitle.weight(.medium))
+                            .fixedSize(horizontal: false, vertical: true).accessibilityAddTraits(.isHeader)
                         Text("Saved stories, wherever you travel.").font(.subheadline).foregroundStyle(DesignTokens.Hero.secondary)
                     }.padding(24).padding(.top, 24).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(DesignTokens.Hero.text)
                         .background { GeometryReader { geometry in
@@ -172,7 +182,7 @@ struct SavedArchiveScreen: View {
                         downloadNotice
                         if archive.snapshot.error != nil { Text("The archive could not save this change. Check available storage and try again.").font(.caption) }
                         TextField("Search saved records", text: $query, prompt: Text("Search saved records").foregroundStyle(secondary), axis: .vertical)
-                            .lineLimit(1...3).textFieldStyle(.plain).padding(14)
+                            .lineLimit(1...3).fixedSize(horizontal: false, vertical: true).textFieldStyle(.plain).padding(14)
                             .background(surface, in: RoundedRectangle(cornerRadius: DesignTokens.Shape.control))
                             .textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("saved-search")
                             .onChange(of: query) { _, value in archive.search(value) }
@@ -200,7 +210,12 @@ struct SavedArchiveScreen: View {
                     }.padding(.horizontal, 24).padding(.bottom, 32)
                 }
             }.background(background).foregroundStyle(foreground).navigationTitle("Saved archive").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+                .toolbar { ToolbarItem(placement: .confirmationAction) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark").font(.body.weight(.semibold))
+                            .frame(minWidth: 44, minHeight: 44)
+                    }.accessibilityLabel("Close saved archive")
+                } }
                 .onAppear { query = archive.snapshot.query }
                 .alert("Clear saved cache?", isPresented: $confirmClear) {
                     Button("Clear cache", role: .destructive) { archive.clearCache() }
