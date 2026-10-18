@@ -62,7 +62,8 @@ struct RelatedDestination: View {
                 }
                 if model.snapshot.hasMore && model.snapshot.phase == .ready { Button("More connections", action: model.loadMore).buttonStyle(.bordered) }
             }.padding(24)
-        }.navigationTitle("Connected \(group.category.title.lowercased())").navigationBarTitleDisplayMode(.inline)
+        }.safeAreaInset(edge: .bottom) { ComparisonTray() }.modifier(ExplorationPalette())
+            .navigationTitle("Connected \(group.category.title.lowercased())").navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -74,6 +75,7 @@ struct CompareShipButton: View {
         if archive.session != nil {
             Button { try? archive.session?.selectShip(id: id, selected: !selected) } label: {
                 Label(selected ? "Remove from comparison" : (archive.snapshot.exploration.ships.count == 2 ? "Comparison full · 2 ships" : "Compare ship"), systemImage: selected ? "minus.circle" : "plus.circle")
+                .frame(minHeight: 36)
             }.buttonStyle(.bordered).disabled(!selected && archive.snapshot.exploration.ships.count == 2)
                 .sensoryFeedback(.selection, trigger: selected).accessibilityIdentifier("compare-\(id)")
         }
@@ -94,18 +96,19 @@ struct ComparisonTray: View {
                     ForEach(ships, id: \.id) { ship in
                         HStack {
                             Text(ship.name).font(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
-                            Button("Remove") { try? archive.session?.selectShip(id: ship.id, selected: false) }
-                                .font(.subheadline).frame(minHeight: 44).accessibilityLabel("Remove \(ship.name)")
+                            Button { try? archive.session?.selectShip(id: ship.id, selected: false) } label: { Text("Remove").font(.subheadline).frame(minWidth: 44, minHeight: 44) }
+                                .buttonStyle(.plain).accessibilityLabel("Remove \(ship.name)")
                         }
                     }
-                    Button(ships.count == 2 ? "Compare starships" : "Choose one more starship") { show = true }
+                    Button { show = true } label: { Text(ships.count == 2 ? "Compare starships" : "Choose one more starship").frame(minHeight: 36) }
                         .buttonStyle(.borderedProminent).disabled(ships.count != 2).frame(maxWidth: .infinity)
                 }.padding(.horizontal, 24).padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
                     .background(appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface)
                     .transition(reduceMotion ? .identity : .move(edge: .bottom).combined(with: .opacity))
             }
-        }.animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: ships.count)
+        }.modifier(ExplorationPalette())
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: ships.count)
             .sheet(isPresented: $show) { NavigationStack { ComparisonScreen().toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { show = false } } } } }
     }
 }
@@ -149,7 +152,7 @@ struct ComparisonScreen: View {
                 }
                 Text("Bars show relative values, not an overall score. Unknown values and crew ranges keep their original meaning.").font(.caption)
             }.padding(24)
-        }.navigationTitle("Starship comparison").navigationBarTitleDisplayMode(.inline).onAppear { revealed = true }
+        }.modifier(ExplorationPalette()).navigationTitle("Starship comparison").navigationBarTitleDisplayMode(.inline).onAppear { revealed = true }
     }
 }
 
@@ -192,12 +195,13 @@ struct DiscoveryScreen: View {
                     Text("Continue exploring").font(.title2).accessibilityAddTraits(.isHeader)
                     if state.suggestions.isEmpty { Text("Open a few records to build your own trail through the stars.") }
                     ForEach(state.suggestions, id: \.discoveryIdentity) { row($0) }
-                    NavigationLink("Preview home-screen widget") { WidgetPreviewScreen() }
+                    NavigationLink { WidgetPreviewScreen() } label: { Text("Preview home-screen widget").frame(minHeight: 44) }
                     Text("Add the Holocron widget from your home screen’s widget gallery for a favorite and a saved discovery.").font(.caption)
                 }.padding(24)
-            }.navigationTitle("Discover").navigationBarTitleDisplayMode(.inline)
+            }.safeAreaInset(edge: .bottom) { ComparisonTray() }.modifier(ExplorationPalette())
+                .navigationTitle("Discover").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Close discovery") } }
-        }.safeAreaInset(edge: .bottom) { ComparisonTray() }
+        }.modifier(ExplorationPalette())
             .task { try? archive.session?.discover() }
     }
     private func row(_ saved: SavedEntry) -> some View {
@@ -278,5 +282,15 @@ struct WidgetPreviewScreen: View {
                 Text("This is the same content view used by the WidgetKit extension. Add Holocron from the home-screen widget gallery.").font(.subheadline)
             }.padding(24)
         }.navigationTitle("Widget preview").navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Keep system presentations and pinned controls on the same native design palette.
+private struct ExplorationPalette: ViewModifier {
+    @Environment(\.colorScheme) private var appearance
+    func body(content: Content) -> some View {
+        content.background(appearance == .dark ? DesignTokens.Dark.background : DesignTokens.Light.background)
+            .foregroundStyle(appearance == .dark ? DesignTokens.Dark.text : DesignTokens.Light.text)
+            .tint(appearance == .dark ? DesignTokens.Dark.accent : DesignTokens.Light.accent)
     }
 }

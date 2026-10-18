@@ -177,6 +177,11 @@ its private storage; this demo provides no cross-device favorites sync.
 
 ### Home-screen widgets
 
+<img src="docs/images/android-home-widget.png" width="290" alt="Holocron installed on the Android emulator home screen, showing the existing Luke favorite and a saved Skako discovery">
+
+This is the installed Android launcher widget with real saved API records.
+
+
 Widgets show a favorite and a saved discovery chosen by Rust. They consume a
 small local snapshot; they never fetch SWAPI themselves. Tapping a record opens
 its native detail through a validated `holocron://record/<category>/<id>` route.

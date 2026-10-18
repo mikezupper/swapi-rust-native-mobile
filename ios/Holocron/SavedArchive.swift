@@ -189,7 +189,7 @@ struct SavedArchiveScreen: View {
                         TextField("Search saved records", text: $query, prompt: Text("Search saved records").foregroundStyle(secondary), axis: .vertical)
                             .lineLimit(1...3).fixedSize(horizontal: false, vertical: true).textFieldStyle(.plain).padding(14)
                             .background(surface, in: RoundedRectangle(cornerRadius: DesignTokens.Shape.control))
-                            .textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("saved-search")
+                            .textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityLabel("Search saved records").accessibilityIdentifier("saved-search")
                             .onChange(of: query) { _, value in archive.search(value) }
                         Picker("Saved records", selection: Binding(get: { archive.snapshot.favoritesOnly }, set: { value in archive.favoritesOnly(value) })) {
                             Text("All saved").tag(false)

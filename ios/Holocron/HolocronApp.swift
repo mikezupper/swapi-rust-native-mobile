@@ -20,7 +20,7 @@ struct HolocronApp: App {
                     NavigationStack {
                         RecordDestination(category: link.category, id: link.id).id("\(link.category.title)/\(link.id)")
                             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { linkedRecord = nil } } }
-                    }.safeAreaInset(edge: .bottom) { ComparisonTray() }
+                    }
                 } else {
                     #if DEBUG
                     if ProcessInfo.processInfo.arguments.contains("--detail") { CharacterDestination(id: 1) }
@@ -84,6 +84,7 @@ struct CharacterScreen: View {
                 .padding(DesignTokens.Space.lg)
             }
         }
+        .safeAreaInset(edge: .bottom) { ComparisonTray() }
         .background(background)
         .foregroundStyle(foreground)
         .tint(accent)

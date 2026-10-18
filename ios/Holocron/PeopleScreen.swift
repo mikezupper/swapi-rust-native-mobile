@@ -37,7 +37,7 @@ struct PeopleScreen: View {
                                 .lineLimit(1...3).fixedSize(horizontal: false, vertical: true)
                                 .textInputAutocapitalization(.never).autocorrectionDisabled()
                                 .submitLabel(.search).onSubmit { searching = false }
-                                .accessibilityIdentifier("people-search")
+                                .accessibilityLabel("Search people").accessibilityIdentifier("people-search")
                             if !query.isEmpty {
                                 Button { query = "" } label: { Image(systemName: "xmark.circle.fill").frame(minWidth: 32, minHeight: 44) }
                                     .accessibilityLabel("Clear search")
@@ -80,6 +80,7 @@ struct PeopleScreen: View {
                     }.padding(.horizontal, DesignTokens.Space.lg).padding(.bottom, 32)
                 }
             }
+            .safeAreaInset(edge: .bottom) { ComparisonTray() }
             .background(background).foregroundStyle(foreground)
             .scrollDismissesKeyboard(.interactively)
             .onAppear { query = model.snapshot.query }
@@ -118,7 +119,7 @@ struct PeopleScreen: View {
     private func personRow(_ person: Character) -> some View {
         HStack(spacing: 16) {
             if !typeSize.isAccessibilitySize {
-                ArchiveMonogram(name: person.name)
+                ArchiveThumbnail(category: .people)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(person.name).font(.headline.weight(.medium)).fixedSize(horizontal: false, vertical: true)

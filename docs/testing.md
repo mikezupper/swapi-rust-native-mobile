@@ -272,7 +272,9 @@ without the test runner fast-forwarding to the end. Widget tests reopen saved
 content offline through a record link and render the actual RemoteViews layout
 with populated and empty snapshots. Widget rendering uses isolated test preferences.
 New screenshots use draw-synchronized capture; widget previews use the measured
-native view renderer. These previews do not establish launcher placement behavior.
+native view renderer. The preview tests do not establish launcher placement behavior. Separately, the
+widget was pinned to the local Pixel launcher with real saved API content and its
+discovery link opened Skako (planet 56); the launcher screenshot is in the README.
 
 SwiftUI's added journey follows the same related-record, comparison, crawl and
 discovery flows, audits the discovery screen, and captures the shared WidgetKit

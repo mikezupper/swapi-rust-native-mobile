@@ -32,7 +32,7 @@ struct CatalogScreen: View {
                                 .lineLimit(1...3).fixedSize(horizontal: false, vertical: true)
                                 .textInputAutocapitalization(.never).autocorrectionDisabled()
                                 .submitLabel(.search).onSubmit { searching = false }
-                                .accessibilityIdentifier("catalog-search")
+                                .accessibilityLabel("Search \(category.title.lowercased())").accessibilityIdentifier("catalog-search")
                             if !query.isEmpty {
                                 Button { query = "" } label: { Image(systemName: "xmark.circle.fill").frame(minWidth: 32, minHeight: 44) }
                                     .accessibilityLabel("Clear search")
@@ -76,6 +76,7 @@ struct CatalogScreen: View {
                     }.padding(.horizontal, DesignTokens.Space.lg).padding(.bottom, 32)
                 }
             }
+            .safeAreaInset(edge: .bottom) { ComparisonTray() }
             .background(background).foregroundStyle(foreground)
             .scrollDismissesKeyboard(.interactively)
             .onAppear { query = model.snapshot.query }
@@ -114,7 +115,7 @@ struct CatalogScreen: View {
     private func personRow(_ person: CatalogEntry) -> some View {
         HStack(spacing: 16) {
             if !typeSize.isAccessibilitySize {
-                ArchiveMonogram(name: person.name)
+                ArchiveThumbnail(category: category)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(person.name).font(.headline.weight(.medium)).fixedSize(horizontal: false, vertical: true)

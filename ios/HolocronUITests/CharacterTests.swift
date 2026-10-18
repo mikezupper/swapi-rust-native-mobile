@@ -7,6 +7,7 @@ final class CharacterTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["--endpoint", "http://127.0.0.1:18765/api/", "--archive", "--archive-reset"]
         app.launch()
+        continueAfterFailure = false
         func tap(_ button: XCUIElement) {
             XCTAssertTrue(button.waitForExistence(timeout: 15))
             for _ in 0..<7 { if button.isHittable { break }; app.swipeUp() }
@@ -21,7 +22,9 @@ final class CharacterTests: XCTestCase {
         for _ in 0..<6 { if app.buttons["category-starships"].isHittable { break }; app.swipeDown() }
         tap(app.buttons["category-starships"])
         tap(app.buttons["compare-9"])
+        XCTAssertTrue(app.buttons["Remove Death Star"].waitForExistence(timeout: 5))
         tap(app.buttons["compare-10"])
+        XCTAssertTrue(app.buttons["Remove Test courier"].waitForExistence(timeout: 5))
         capture(app, "Comparison tray")
         tap(app.buttons["Compare starships"])
         XCTAssertTrue(app.staticTexts["Choose your ride."].waitForExistence(timeout: 5))
@@ -30,7 +33,9 @@ final class CharacterTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Test courier: Unknown"].exists)
         tap(app.buttons["Done"])
         tap(app.buttons["Remove Death Star"])
+        XCTAssertTrue(app.buttons["Remove Death Star"].waitForNonExistence(timeout: 5))
         tap(app.buttons["Remove Test courier"])
+        XCTAssertTrue(app.buttons["Remove Test courier"].waitForNonExistence(timeout: 5))
         for _ in 0..<7 { if app.buttons["category-films"].isHittable { break }; app.swipeDown() }
         tap(app.buttons["category-films"])
         tap(app.buttons["record-1"])

@@ -55,7 +55,6 @@ struct ArchiveHome: View {
         } else {
             CatalogCollection(category: selected, onCategory: { selected = $0 }).id(selected)
         } }.animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: selected)
-            .safeAreaInset(edge: .bottom) { ComparisonTray() }
 
     }
 }
@@ -72,18 +71,12 @@ struct CatalogCollection: View {
     var body: some View { CatalogScreen(model: model, onCategory: onCategory, category: category) }
 }
 
-struct ArchiveMonogram: View {
-    let name: String
-    @Environment(\.colorScheme) private var appearance
-    private var background: Color { appearance == .dark ? DesignTokens.Dark.background : DesignTokens.Light.background }
-    private var foreground: Color { appearance == .dark ? DesignTokens.Dark.text : DesignTokens.Light.text }
+struct ArchiveThumbnail: View {
+    let category: CatalogCategory
     var body: some View {
-        // Keep the text's intrinsic bounds separate from the decorated tile.
-        ZStack {
-            RoundedRectangle(cornerRadius: 16).fill(background)
-            Text(name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined())
-                .font(.headline.weight(.semibold)).foregroundStyle(foreground)
-        }.frame(width: 48, height: 48).accessibilityHidden(true)
+        Image(category.artwork).resizable().scaledToFill()
+            .frame(width: 48, height: 48).clipShape(RoundedRectangle(cornerRadius: 16))
+            .accessibilityHidden(true)
     }
 }
 
@@ -218,7 +211,8 @@ struct CatalogDetailScreen: View {
                     Button("Refresh record", action: model.refresh).buttonStyle(.bordered).disabled(busy)
                 }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
             }
-        }.background(background).foregroundStyle(foreground).tint(accent).navigationTitle(category.title).navigationBarTitleDisplayMode(.inline)
+        }.safeAreaInset(edge: .bottom) { ComparisonTray() }
+            .background(background).foregroundStyle(foreground).tint(accent).navigationTitle(category.title).navigationBarTitleDisplayMode(.inline)
             .onChange(of: record?.id, initial: true) { _, id in if let id { try? ArchiveModel.shared.session?.recordVisit(category: category, id: id) } }
     }
 }
