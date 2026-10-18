@@ -50,6 +50,12 @@ final class CharacterTests: XCTestCase {
         let progress = app.sliders["Crawl progress"]
         for _ in 0..<4 { if progress.isHittable { break }; app.swipeUp() }
         progress.adjust(toNormalizedSliderPosition: 0.5)
+        let scrubbed = NSPredicate { _, _ in
+            guard let value = progress.value as? String,
+                  let percent = Double(value.replacingOccurrences(of: "%", with: "")) else { return false }
+            return (45...55).contains(percent)
+        }
+        await fulfillment(of: [XCTNSPredicateExpectation(predicate: scrubbed, object: progress)], timeout: 5)
         capture(app, "Cinematic film")
         tap(app.buttons["Read opening crawl"])
         app.navigationBars.buttons.element(boundBy: 0).tap()
@@ -163,10 +169,17 @@ final class CharacterTests: XCTestCase {
         XCUIDevice.shared.press(.home)
         app.activate()
         XCTAssertEqual(search.value as? String, "Leia")
-        app.buttons["person-5"].tap()
+        let restoredRow = app.buttons["person-5"]
+        XCTAssertTrue(restoredRow.waitForExistence(timeout: 10))
+        // iOS 26.5 XCTest can return a hit point divided by the screen scale
+        // after activation. Use the restored element's actual bounds instead.
+        restoredRow.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.staticTexts["Height"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.staticTexts["Leia Organa"].waitForExistence(timeout: 15))
         try app.performAccessibilityAudit()
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        let back = app.navigationBars.buttons.element(boundBy: 0)
+        XCTAssertTrue(back.waitForExistence(timeout: 5))
+        back.tap()
         XCTAssertEqual(search.value as? String, "Leia")
         capture(app, "Restored query after background and detail")
     }

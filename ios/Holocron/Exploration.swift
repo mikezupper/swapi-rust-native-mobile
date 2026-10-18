@@ -260,6 +260,9 @@ struct FilmExperience: View {
                         }.frame(height: 360).background(DesignTokens.Hero.background)
                             .clipped().clipShape(RoundedRectangle(cornerRadius: 24))
                             .accessibilityElement(children: .ignore).accessibilityLabel("Animated opening crawl for \(title). Use Read opening crawl for the complete text.")
+                            // The image and projected text extend beyond their clip. Keep
+                            // VoiceOver's focus frame on the visible viewport as well.
+                            .contentShape(.accessibility, RoundedRectangle(cornerRadius: 24))
                             .accessibilityIdentifier("cinematic-viewport")
                         HStack {
                             Button(playing && time < duration ? "Pause crawl" : (time >= duration ? "Replay crawl" : "Play crawl")) {
