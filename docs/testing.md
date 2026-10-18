@@ -272,18 +272,46 @@ without the test runner fast-forwarding to the end. Widget tests reopen saved
 content offline through a record link and render the actual RemoteViews layout
 with populated and empty snapshots. Widget rendering uses isolated test preferences.
 New screenshots use draw-synchronized capture; widget previews use the measured
-native view renderer. The preview tests do not establish launcher placement behavior. Separately, the
-widget was pinned to the local Pixel launcher with real saved API content and its
-links opened Luke Skywalker (person 1) and Skako (planet 56); the launcher screenshot is in the README.
+native view renderer. The preview tests do not establish launcher placement
+behavior. Separately, the widget was pinned to the local Pixel launcher with real
+saved API content and its links opened Luke Skywalker (person 1) and Skako (planet
+56); the launcher screenshot is in the README.
 Live saved-data comparison was also reviewed with Millennium Falcon and X-wing.
 Discovery and the film reading fallback were inspected with 160% text and disabled
-animations; normal emulator text and animation settings were restored.
+animations; normal emulator text and animation settings were restored. An actual
+card-to-detail and back transition was recorded on the emulator and its intermediate
+frames inspected; the short recording is linked from the README.
 
 SwiftUI's added journey follows the same related-record, comparison, crawl and
-discovery flows, audits the discovery screen, and captures the shared WidgetKit
-content view in an in-app preview. The widget extension is an embedded Xcode target
+discovery flows, audits the discovery screen, checks that the cinematic viewport
+stays inside the window, operates its native scrubber, and captures the shared
+WidgetKit content view in an in-app preview. The widget extension is an embedded Xcode target
 included in simulator and device builds. Simulator tests use ad-hoc signing to
 carry App Group entitlements; an additional native test checks that the configured
 shared container accepts an atomic snapshot. The UI journey opens two actual
-record URLs from an existing modal presentation and verifies their destinations. A signed physical-device App Group setup
-and widget scheduling remain separate from simulator UI evidence.
+record URLs from an existing modal presentation and verifies their destinations.
+A signed physical-device App Group setup and widget scheduling remain separate
+from simulator UI evidence.
+
+The cinematic viewport uses an accessibility content shape matching its visible
+rounded boundary, so VoiceOver does not focus the oversized image behind the clip.
+The regression checks both horizontal bounds and the scrubber's resulting value.
+The background-restoration test taps the restored row's normalized center and
+requires a detail-only fact before its full audit. This avoids an observed iOS
+26.5 XCTest hit-point error: on the 3× simulator it synthesized `(70, 171.78)`
+instead of the row center `(210, 515.33)`. The coordinate comes from the current
+element frame, not a hard-coded screen location.
+
+[Run 39093987861](https://github.com/mikezupper/swapi-rust-native-mobile/actions/runs/39093987861)
+passed all three gates for code commit `8649c14`: 40 Rust tests, formatting,
+Clippy, generated binding/token checks; 12 Android instrumentation tests with none
+skipped, lint, both packaged ABIs and 28 required artifacts; six iOS adapter tests
+and seven UI tests, both arm64 XCFramework slices, and the unsigned device build
+including the embedded WidgetKit extension. Full native accessibility audits
+remained enabled. The final simulator captures were visually reviewed, including
+the bounded cinematic viewport at the scrubber midpoint, comparison controls,
+discovery and the shared widget preview. Selected captures and the actual Android
+transition recording are linked in the README. iOS verification used hosted
+macOS; the user's cleaned Mac was not repopulated. Physical-device signing,
+launcher scheduling, frame timing and haptic feel are not established by these
+simulator and emulator checks.

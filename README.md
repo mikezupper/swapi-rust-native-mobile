@@ -158,7 +158,11 @@ its private storage; this demo provides no cross-device favorites sync.
 <tr>
 <td><img src="docs/images/android-discovery.png" width="290" alt="Native Android discovery with featured Skako artwork and recently explored records"></td>
 <td><img src="docs/images/android-film-crawl.png" width="290" alt="Native Android cinematic opening crawl paused with a progress scrubber and reading control"></td>
-</tr><tr><td>Discovery · saved API data</td><td>Cinematic film crawl · saved API data</td></tr></table>
+</tr><tr><td>Discovery · saved API data</td><td>Cinematic film crawl · saved API data</td></tr>
+<tr>
+<td><img src="docs/images/ios-discovery.png" width="290" alt="SwiftUI discovery in light appearance with featured Tatooine and recently explored fixture records"></td>
+<td><img src="docs/images/ios-ship-comparison.png" width="290" alt="SwiftUI ship comparison preserving unknown cargo and crew ranges from deterministic fixtures"></td>
+</tr><tr><td>iOS discovery · simulator fixture</td><td>iOS comparison · simulator fixture</td></tr></table>
 
 - **Connected stories:** open a record and follow its relationship buttons. A
   single connection opens directly; larger groups show named records in batches
@@ -179,20 +183,24 @@ its private storage; this demo provides no cross-device favorites sync.
 - **Cinematic opening crawl:** film details offer Play/Pause, Restart and a
   progress scrubber, plus a complete static reading mode. Playback pauses when
   leaving the screen or backgrounding. Reduced motion and large accessibility
-  text use the reading view. There is no bundled soundtrack.
+  text use the reading view. There is no bundled soundtrack. See the
+  [SwiftUI simulator capture](docs/images/ios-film-crawl.png), using fixture text.
 - **Card-to-detail motion:** SwiftUI uses native zoom navigation; Compose uses
   shared card bounds coordinated with its navigation animation. System animation
-  preferences apply. All animation frames stay in the native layer.
+  preferences apply. All animation frames stay in the native layer. See the
+  [Android emulator transition recording](docs/images/android-card-transition.mp4).
 
 ### Home-screen widgets
 
-<img src="docs/images/android-home-widget.png" width="290" alt="Holocron installed on the Android emulator home screen, showing the existing Luke favorite and a saved Skako discovery">
+<table><tr>
+<td><img src="docs/images/android-home-widget.png" width="290" alt="Holocron installed on the Android emulator home screen, showing the existing Luke favorite and a saved Skako discovery"></td>
+<td><img src="docs/images/ios-home-widget.png" width="290" alt="The shared SwiftUI widget content rendered in the app's simulator preview with saved Tatooine fixture data"></td>
+</tr><tr><td>Android launcher · saved API data</td><td>iOS in-app widget preview · simulator fixture</td></tr></table>
 
-This is the installed Android launcher widget with real saved API records.
-
-Widgets show a favorite and a saved discovery chosen by Rust. They consume a
-small local snapshot; they never fetch SWAPI themselves. Tapping a record opens
-its native detail through a validated `holocron://record/<category>/<id>` route.
+Widgets show saved records chosen by Rust, prioritizing a favorite and a featured
+world. Larger layouts show up to two records. They consume a small local snapshot;
+they never fetch SWAPI themselves. Tapping a record opens its native detail through
+a validated `holocron://record/<category>/<id>` route.
 An uncached record can load online; normal offline failure behavior applies if
 it is unavailable. Custom-scheme links do not require a website association.
 
@@ -426,8 +434,9 @@ bash scripts/mac.sh pull
 `~/Developer/holocron-codex`. It syncs sources without build caches or the live
 Beads database. Results are pulled into `.artifacts/ios/mac/`.
 
-The earlier OSX-KVM experiment reached macOS recovery only. The working Apple
-build/test path is the physical Mac; see [environment details](docs/development.md).
+The earlier OSX-KVM experiment reached macOS recovery only. Supported Apple
+build/test paths are a Mac running Xcode and the hosted macOS CI workflow; see
+[environment details](docs/development.md).
 
 ## Configuration and generation
 
@@ -438,6 +447,8 @@ build/test path is the physical Mac; see [environment details](docs/development.
 | `JAVA_HOME`, `ANDROID_HOME`, `HOLOCRON_TOOLS` | Override the local tool locations used by `android-env.sh` |
 | `CARGO_BUILD_JOBS` | Rust build parallelism; native build scripts default to 4 |
 | `HOLOCRON_SIMULATOR` | UUID used by iOS tests |
+| `HOLOCRON_BUNDLE_ID` | Xcode build setting for the app identifier; defaults to `dev.holocron.app` |
+| `HOLOCRON_APP_GROUP` | Xcode build setting shared by app/widget entitlements; defaults to `group.dev.holocron.shared` |
 | `HOLOCRON_RECORD=1` | Save an iOS test interaction video alongside the result bundle |
 | `HOLOCRON_MAC` | SSH `user@host` for remote Apple builds |
 | `HOLOCRON_MAC_KEY`, `HOLOCRON_MAC_KNOWN_HOSTS` | SSH identity and verified host-key file |
