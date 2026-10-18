@@ -315,3 +315,40 @@ transition recording are linked in the README. iOS verification used hosted
 macOS; the user's cleaned Mac was not repopulated. Physical-device signing,
 launcher scheduling, frame timing and haptic feel are not established by these
 simulator and emulator checks.
+
+## App icon verification (2026-10-18)
+
+The shared [generated holocron icon](../design/app-icon/README.md) is packaged
+for both apps. `python3 scripts/generate-app-icons.py --check` verifies pixel
+and metadata consistency with the retained source. Direct resource inspection
+confirmed the iOS PNG is opaque RGB at 1024 × 1024, the universal asset entry
+names that file, and both app build configurations select `AppIcon`.
+The Android foreground's visible pixels have a maximum radius of 31.31 dp,
+inside the 33 dp adaptive safe radius. The authored monochrome geometry also
+stays within that radius.
+
+`source scripts/android-env.sh` followed by
+`./android/gradlew -p android assembleDebug lintDebug` passed, packaging both
+Rust ABIs. Lint retains existing warnings about dependencies, widget metadata,
+text and API usage; the icon's monochrome configuration is provided in the
+base adaptive resource, with no launcher-icon warnings.
+`python3 scripts/check_docs.py` and `git diff --check`
+also passed. No application behavior changed, and the full fixture suites were
+not rerun for this asset change.
+
+The rebuilt APK was installed with `adb -s emulator-5554 install -r` on the
+Pixel 7 API 36 x86_64 AVD. The actual Pixel launcher was inspected with themed
+icons off and on. The cyan/amber cube is legible inside its circular mask;
+the themed version displays the simplified cube in the system's wallpaper
+colors. Tapping each home-screen icon opened the native Holocron People screen.
+The emulator's themed-icons preference was restored to off afterward.
+
+| Color icon · Android emulator | Themed icon · Android emulator |
+| --- | --- |
+| ![Actual Android launcher with the color icon](images/android-app-icon.png) | ![Actual Android launcher with themed icons enabled](images/android-app-icon-themed.png) |
+
+These captures establish API 36 emulator rendering and launch interaction,
+not physical-device or all-OEM launcher coverage. The iOS asset preview is not
+simulator evidence: Xcode compilation, the SpringBoard icon, and iOS appearance
+behavior remain unverified on this Linux host. That native follow-up is tracked
+as `swapi-hrp`; the user's cleaned Mac was not repopulated.

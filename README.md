@@ -23,6 +23,9 @@ with the original orbital illustration retained for Planets. The illustrations
 are atmospheric; SWAPI does not supply character portraits. Holocron is a
 provisional project name.
 
+Both apps use a shared luminous holocron [app icon](design/app-icon/README.md),
+packaged as an iOS asset and an Android adaptive icon with a themed monochrome layer.
+
 Jump to [Android setup](#build-and-run-android), [iOS setup](#build-and-run-ios-on-a-mac),
 [configuration](#configuration-and-generation), or [verification](#testing-fixtures-and-artifacts).
 
