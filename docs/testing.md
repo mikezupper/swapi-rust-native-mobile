@@ -234,8 +234,8 @@ with `--endpoint` and `--archive`. `--archive-reset` clears only that fixture
 database in this flow, preserving the normal production archive. Android's
 archive integration test uses a unique temporary database under `cacheDir`.
 
-The current suites contain 33 Rust tests, nine Android instrumentation tests,
-five iOS adapter tests and six iOS UI tests. The saved-archive iOS flow performs
+At the saved-archive milestone, the suites contained 33 Rust tests, nine Android
+instrumentation tests, five iOS adapter tests and six iOS UI tests. The saved-archive iOS flow performs
 the full accessibility audit and checks that offline mode and a favorite survive
 process termination and relaunch. Its toggle assertion waits for the state
 committed by Rust before restarting.
@@ -274,7 +274,10 @@ with populated and empty snapshots. Widget rendering uses isolated test preferen
 New screenshots use draw-synchronized capture; widget previews use the measured
 native view renderer. The preview tests do not establish launcher placement behavior. Separately, the
 widget was pinned to the local Pixel launcher with real saved API content and its
-discovery link opened Skako (planet 56); the launcher screenshot is in the README.
+links opened Luke Skywalker (person 1) and Skako (planet 56); the launcher screenshot is in the README.
+Live saved-data comparison was also reviewed with Millennium Falcon and X-wing.
+Discovery and the film reading fallback were inspected with 160% text and disabled
+animations; normal emulator text and animation settings were restored.
 
 SwiftUI's added journey follows the same related-record, comparison, crawl and
 discovery flows, audits the discovery screen, and captures the shared WidgetKit

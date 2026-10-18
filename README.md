@@ -96,7 +96,7 @@ and background/foreground transitions.
 
 Both apps now offer a **Saved archive**: automatically saved records, persistent
 favorites, local search, and whole-collection downloads. SwiftUI provides zoom
-navigation and selection haptics; Compose provides fade/scale navigation and
+navigation and selection haptics; Compose provides shared card bounds, fade/scale navigation and
 favorite feedback. System reduced-motion settings are respected.
 
 This is a development application. Accounts and release/distribution setup remain outside the implemented scope.
@@ -151,6 +151,15 @@ its private storage; this demo provides no cross-device favorites sync.
 
 ### Connected exploration and cinematic features
 
+<table><tr>
+<td><img src="docs/images/android-comparison-tray.png" width="290" alt="Android X-wing detail with Millennium Falcon and X-wing in the persistent comparison tray"></td>
+<td><img src="docs/images/android-ship-comparison.png" width="290" alt="Android comparison with cyan and amber bars for actual Millennium Falcon and X-wing measurements"></td>
+</tr><tr><td>Persistent comparison tray · saved API data</td><td>Two-ship comparison · saved API data</td></tr>
+<tr>
+<td><img src="docs/images/android-discovery.png" width="290" alt="Native Android discovery with featured Skako artwork and recently explored records"></td>
+<td><img src="docs/images/android-film-crawl.png" width="290" alt="Native Android cinematic opening crawl paused with a progress scrubber and reading control"></td>
+</tr><tr><td>Discovery · saved API data</td><td>Cinematic film crawl · saved API data</td></tr></table>
+
 - **Connected stories:** open a record and follow its relationship buttons. A
   single connection opens directly; larger groups show named records in batches
   of six. Rust validates identities and loads through the same cache. Missing
@@ -180,7 +189,6 @@ its private storage; this demo provides no cross-device favorites sync.
 <img src="docs/images/android-home-widget.png" width="290" alt="Holocron installed on the Android emulator home screen, showing the existing Luke favorite and a saved Skako discovery">
 
 This is the installed Android launcher widget with real saved API records.
-
 
 Widgets show a favorite and a saved discovery chosen by Rust. They consume a
 small local snapshot; they never fetch SWAPI themselves. Tapping a record opens
