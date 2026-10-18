@@ -101,6 +101,12 @@ typography, and the native close symbol has an explicit accessibility label.
 
 ## Assets
 
+The [app icon](../design/app-icon/README.md) uses a luminous mint-cyan holocron
+cube with graphite faces and amber framing. Both platforms share its generated
+artwork; native packaging supplies the background, sizing, and system masks.
+Android also has a simplified monochrome cube for themed launchers. Keep the
+silhouette recognizable at launcher size and avoid text or baked-in corner masks.
+
 SWAPI's documented data does not include character image URLs. Decide the art
 direction and asset source explicitly. Record asset provenance and usage terms,
 use dependable local placeholders, and keep factual API data separate from
