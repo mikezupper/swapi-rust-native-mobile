@@ -42,6 +42,14 @@ final class CharacterTests: XCTestCase {
         tap(app.buttons["Cinematic opening crawl"])
         tap(app.buttons["Play crawl"])
         tap(app.buttons["Pause crawl"])
+        let viewport = app.descendants(matching: .any)["cinematic-viewport"]
+        XCTAssertTrue(viewport.exists)
+        XCTAssertGreaterThanOrEqual(viewport.frame.minX, app.frame.minX)
+        XCTAssertLessThanOrEqual(viewport.frame.maxX, app.frame.maxX)
+        XCTAssertGreaterThanOrEqual(app.buttons["Read opening crawl"].frame.minX, app.frame.minX)
+        let progress = app.sliders["Crawl progress"]
+        for _ in 0..<4 { if progress.isHittable { break }; app.swipeUp() }
+        progress.adjust(toNormalizedSliderPosition: 0.5)
         capture(app, "Cinematic film")
         tap(app.buttons["Read opening crawl"])
         app.navigationBars.buttons.element(boundBy: 0).tap()

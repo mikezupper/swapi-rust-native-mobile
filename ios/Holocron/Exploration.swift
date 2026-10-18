@@ -101,7 +101,9 @@ struct ComparisonTray: View {
                         }
                     }
                     Button { show = true } label: { Text(ships.count == 2 ? "Compare starships" : "Choose one more starship").frame(minHeight: 36) }
-                        .buttonStyle(.borderedProminent).disabled(ships.count != 2).frame(maxWidth: .infinity)
+                        .buttonStyle(.borderedProminent)
+                        .foregroundStyle(appearance == .dark ? DesignTokens.Dark.onAccent : DesignTokens.Light.onAccent)
+                        .disabled(ships.count != 2).frame(maxWidth: .infinity)
                 }.padding(.horizontal, 24).padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
                     .background(appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface)
@@ -228,6 +230,7 @@ struct FilmExperience: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.colorScheme) private var appearance
     private var duration: Double { min(160, max(35, Double(crawl.count) / 12)) }
     private var reading: Bool { !cinematic || reduceMotion || typeSize.isAccessibilitySize }
     private func position(_ date: Date) -> Double { min(duration, elapsed + (playing ? max(0, date.timeIntervalSince(started)) : 0)) }
@@ -243,21 +246,26 @@ struct FilmExperience: View {
                 TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !playing || scenePhase != .active)) { context in
                     let time = position(context.date)
                     VStack(spacing: 16) {
-                        ZStack(alignment: .top) {
-                            Image(CatalogCategory.films.artwork).resizable().scaledToFill().opacity(0.18)
-                            Text(title + "\n\n" + crawl).font(.title2.weight(.semibold)).multilineTextAlignment(.center).lineSpacing(8)
-                                .foregroundStyle(DesignTokens.Dark.warm).padding(.horizontal, 30)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { textHeight = $0 }
-                                .rotation3DEffect(.degrees(22), axis: (x: 1, y: 0, z: 0), perspective: 0.2)
-                                .offset(y: 360 - (360 + textHeight) * time / duration)
-                        }.frame(height: 360).frame(maxWidth: .infinity).background(DesignTokens.Hero.background)
+                        GeometryReader { geometry in
+                            ZStack(alignment: .top) {
+                                Image(CatalogCategory.films.artwork).resizable().scaledToFill()
+                                    .frame(width: geometry.size.width, height: geometry.size.height).clipped().opacity(0.18)
+                                Text(title + "\n\n" + crawl).font(.title2.weight(.semibold)).multilineTextAlignment(.center).lineSpacing(8)
+                                    .foregroundStyle(DesignTokens.Dark.warm).padding(.horizontal, 30)
+                                    .frame(width: geometry.size.width).fixedSize(horizontal: false, vertical: true)
+                                    .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { textHeight = $0 }
+                                    .rotation3DEffect(.degrees(22), axis: (x: 1, y: 0, z: 0), perspective: 0.2)
+                                    .offset(y: geometry.size.height - (geometry.size.height + textHeight) * time / duration)
+                            }.frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+                        }.frame(height: 360).background(DesignTokens.Hero.background)
                             .clipped().clipShape(RoundedRectangle(cornerRadius: 24))
                             .accessibilityElement(children: .ignore).accessibilityLabel("Animated opening crawl for \(title). Use Read opening crawl for the complete text.")
+                            .accessibilityIdentifier("cinematic-viewport")
                         HStack {
                             Button(playing && time < duration ? "Pause crawl" : (time >= duration ? "Replay crawl" : "Play crawl")) {
                                 if playing && time < duration { pause() } else { if time >= duration { elapsed = 0 }; started = Date(); playing = true }
                             }.buttonStyle(.borderedProminent)
+                                .foregroundStyle(appearance == .dark ? DesignTokens.Dark.onAccent : DesignTokens.Light.onAccent)
                             Button("Restart crawl") { playing = false; elapsed = 0 }.buttonStyle(.bordered)
                         }
                         Slider(value: Binding(get: { time / duration }, set: { playing = false; elapsed = $0 * duration })).accessibilityLabel("Crawl progress")
@@ -279,9 +287,9 @@ struct WidgetPreviewScreen: View {
             VStack(alignment: .leading, spacing: 24) {
                 Text("Your galaxy, at a glance.").font(.largeTitle)
                 WidgetContentView(cards: cards, medium: true).padding(20).frame(minHeight: 180).background(DesignTokens.Hero.background).clipShape(RoundedRectangle(cornerRadius: 24))
-                Text("This is the same content view used by the WidgetKit extension. Add Holocron from the home-screen widget gallery.").font(.subheadline)
+                Text("Add Holocron from the home-screen widget gallery to keep a favorite and a saved discovery close by.").font(.subheadline)
             }.padding(24)
-        }.navigationTitle("Widget preview").navigationBarTitleDisplayMode(.inline)
+        }.modifier(ExplorationPalette()).navigationTitle("Widget preview").navigationBarTitleDisplayMode(.inline)
     }
 }
 

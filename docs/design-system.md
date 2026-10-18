@@ -131,7 +131,10 @@ Discovery emphasizes a large illustrated featured world, followed by recent visi
 and compact saved suggestions. Related-record groups use explicit names and counts;
 a single relationship opens directly, while larger groups open a paged collection.
 Comparison selection stays in a bottom tray with removable ship names and a clear
-two-ship limit. Comparison charts pair each bar with its name and original value;
+two-ship limit. In SwiftUI, the tray inset belongs to each scrollable destination,
+inside its NavigationStack, so the last card and its controls remain reachable.
+Decorative list thumbnails use the category artwork without duplicate spoken labels.
+Comparison charts pair each bar with its name and original value;
 color is supplementary, and ranges/unknowns are not plotted as zero.
 
 The cinematic crawl is opt-in, with pause, restart, scrubbing and a readable static
