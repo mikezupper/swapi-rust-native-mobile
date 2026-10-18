@@ -3,6 +3,17 @@ import XCTest
 @testable import Holocron
 
 final class CharacterModelTests: XCTestCase {
+    func testWidgetAppGroupCanShareAnAtomicSnapshot() throws {
+        let folder = try XCTUnwrap(WidgetStorage.folder, "The app and WidgetKit extension need the configured App Group")
+        let file = folder.appendingPathComponent("verification-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: file) }
+        let cards = [WidgetCard(name: "Fixture world", subtitle: "Saved discovery · Planets", url: "holocron://record/planets/1", artwork: "desert_orbit")]
+        try JSONEncoder().encode(cards).write(to: file, options: .atomic)
+        let restored = try JSONDecoder().decode([WidgetCard].self, from: Data(contentsOf: file))
+        XCTAssertEqual(restored.first?.name, "Fixture world")
+        XCTAssertEqual(parseRecordLink(value: try XCTUnwrap(restored.first?.url))?.id, 1)
+    }
+
     @MainActor
     func testCatalogAdapterRejectsStaleDeliveryAndReleasesSession() throws {
         let core = try CatalogSession(category: .planets, recordId: nil)

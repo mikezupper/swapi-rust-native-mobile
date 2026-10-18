@@ -199,9 +199,10 @@ For a signed device build, select your team for **both** Xcode targets, choose a
 unique `HOLOCRON_BUNDLE_ID`, and register the same `HOLOCRON_APP_GROUP` for the app
 and widget. Defaults are `dev.holocron.app` (with `.widget` for the extension) and
 `group.dev.holocron.shared`. Both entitlements derive from that shared build setting.
-The widget extension is included automatically by the Holocron scheme. Unsigned
-CI builds verify packaging and compilation; physical-device signing still needs
-your Apple development configuration.
+The widget extension is included automatically by the Holocron scheme. Simulator
+tests use local ad-hoc signing so App Group entitlements are present; no Apple
+account is needed for that simulator path. The CI device build remains unsigned.
+Physical-device signing needs your Apple development configuration.
 
 Widgets update from app activity, subject to the launcher's/WidgetKit's scheduling.
 There is no scheduled background synchronization or guaranteed daily widget refresh.

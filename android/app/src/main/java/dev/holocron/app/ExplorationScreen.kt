@@ -124,7 +124,7 @@ fun Modifier.recordBounds(category: CatalogCategory, id: UInt): Modifier {
                     Image(painterResource(saved.category.artwork), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, DesignTokens.Hero.background))))
                     Column(Modifier.padding(24.dp)) {
-                        Text("FEATURED WORLD", fontSize = 12.sp, color = DesignTokens.Hero.accent, letterSpacing = 2.sp)
+                        Text("FEATURED WORLD", fontSize = 12.sp, color = DesignTokens.Hero.accent, letterSpacing = 2.sp, modifier = Modifier.background(DesignTokens.Hero.background.copy(alpha = .92f), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 6.dp))
                         Spacer(Modifier.height(100.dp))
                         Text(saved.entry.name, fontSize = 30.sp, color = DesignTokens.Hero.text)
                         Text(saved.entry.facts.take(2).joinToString(" · ") { it.value }, color = DesignTokens.Hero.secondary)

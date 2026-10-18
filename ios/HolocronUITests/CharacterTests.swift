@@ -48,6 +48,11 @@ final class CharacterTests: XCTestCase {
         tap(app.buttons["Preview home-screen widget"])
         XCTAssertTrue(app.staticTexts["Your galaxy, at a glance."].waitForExistence(timeout: 5))
         capture(app, "Home widget preview")
+        app.open(URL(string: "holocron://record/planets/1")!)
+        XCTAssertTrue(app.staticTexts["Climate"].waitForExistence(timeout: 10))
+        app.open(URL(string: "holocron://record/starships/10")!)
+        XCTAssertTrue(app.staticTexts["Test courier"].waitForExistence(timeout: 10))
+        capture(app, "Widget record link")
     }
 
     @MainActor

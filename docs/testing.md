@@ -277,5 +277,8 @@ native view renderer. These previews do not establish launcher placement behavio
 SwiftUI's added journey follows the same related-record, comparison, crawl and
 discovery flows, audits the discovery screen, and captures the shared WidgetKit
 content view in an in-app preview. The widget extension is an embedded Xcode target
-included in simulator and device builds. A signed physical-device App Group setup
+included in simulator and device builds. Simulator tests use ad-hoc signing to
+carry App Group entitlements; an additional native test checks that the configured
+shared container accepts an atomic snapshot. The UI journey opens two actual
+record URLs from an existing modal presentation and verifies their destinations. A signed physical-device App Group setup
 and widget scheduling remain separate from simulator UI evidence.

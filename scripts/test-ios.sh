@@ -37,4 +37,4 @@ xcodebuild -project ios/Holocron.xcodeproj -scheme Holocron \
   -destination "platform=iOS Simulator,id=$HOLOCRON_SIMULATOR" \
   -derivedDataPath .artifacts/ios/DerivedData \
   -resultBundlePath ".artifacts/ios/Test-$(date +%Y%m%d-%H%M%S).xcresult" \
-  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test "$@"
+  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- test "$@"

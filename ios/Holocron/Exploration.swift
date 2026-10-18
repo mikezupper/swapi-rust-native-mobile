@@ -167,7 +167,7 @@ struct DiscoveryScreen: View {
                     if let featured = state.featured {
                         NavigationLink { RecordDestination(category: featured.category, id: featured.entry.id).modifier(ArchiveZoom(id: featured.entry.id, namespace: transition)) } label: {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("FEATURED WORLD").font(.caption).tracking(2).foregroundStyle(DesignTokens.Hero.accent)
+                                Text("FEATURED WORLD").font(.caption).tracking(2).foregroundStyle(DesignTokens.Hero.accent).padding(8).background(DesignTokens.Hero.background.opacity(0.92), in: RoundedRectangle(cornerRadius: 8))
                                 Spacer(minLength: 100)
                                 Text(featured.entry.name).font(.largeTitle)
                                 Text(featured.entry.facts.prefix(2).map(\.value).joined(separator: " · ")).font(.subheadline)
