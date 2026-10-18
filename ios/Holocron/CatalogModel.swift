@@ -7,10 +7,21 @@ final class CatalogModel: ObservableObject {
     private var session: CatalogSession?
     private var subscription: Subscription?
     private var stopped = false
-    init(category: CatalogCategory, recordId: UInt32? = nil, core injectedCore: CatalogSession? = nil, autoload: Bool = true) {
+    init(category: CatalogCategory, recordId: UInt32? = nil, relatedIds: [UInt32]? = nil, core injectedCore: CatalogSession? = nil, autoload: Bool = true) {
         do {
             let core: CatalogSession
-            if let injectedCore { core = injectedCore } else if let archive = ArchiveModel.shared.session { core = try archive.catalogSession(category: category, recordId: recordId) } else {
+            if let relatedIds {
+                if let archive = ArchiveModel.shared.session { core = try archive.relatedSession(category: category, ids: relatedIds) }
+                else {
+                    let args = ProcessInfo.processInfo.arguments
+                    #if DEBUG
+                    let endpoint = args.firstIndex(of: "--endpoint").flatMap { args.count > $0 + 1 ? args[$0 + 1] : nil }
+                    #else
+                    let endpoint: String? = nil
+                    #endif
+                    core = try CatalogSession.relatedRecords(category: category, ids: relatedIds, baseUrl: endpoint)
+                }
+            } else if let injectedCore { core = injectedCore } else if let archive = ArchiveModel.shared.session { core = try archive.catalogSession(category: category, recordId: recordId) } else {
                 #if DEBUG
                 let args = ProcessInfo.processInfo.arguments
                 if let index = args.firstIndex(of: "--endpoint"), args.count > index + 1 {

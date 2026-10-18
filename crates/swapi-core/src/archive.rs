@@ -38,6 +38,7 @@ pub struct ArchiveSnapshot {
     pub collections: Vec<CollectionInfo>,
     pub download: DownloadState,
     pub error: Option<ApiError>,
+    pub exploration: crate::Exploration,
 }
 impl Default for ArchiveSnapshot {
     fn default() -> Self {
@@ -51,10 +52,14 @@ impl Default for ArchiveSnapshot {
             collections: vec![],
             download: DownloadState::Idle,
             error: None,
+            exploration: Default::default(),
         }
     }
 }
 enum Command {
+    Discover,
+    Visit(ResourceKind, u32),
+    SelectShip(u32, bool),
     Search(String),
     FavoritesOnly(bool),
     Offline(bool),
@@ -63,6 +68,8 @@ enum Command {
     CancelDownload,
     ClearCache,
 }
+type DiscoveryRequest =
+    Pin<Box<dyn Future<Output = Result<Loaded<CatalogRecord>, ApiError>> + Send>>;
 type Request = Pin<Box<dyn Future<Output = Result<Loaded<Page<CatalogRecord>>, ApiError>> + Send>>;
 struct Download {
     kind: ResourceKind,
@@ -89,6 +96,7 @@ impl ArchiveStore {
             let mut snapshot = ArchiveSnapshot::default();
             let mut changes = cache.observe();
             let mut download: Option<Download> = None;
+            let mut discovery: Option<DiscoveryRequest> = None;
             loop {
                 snapshot.offline = cache.is_offline();
                 match cache.records(&snapshot.query, snapshot.favorites_only) {
@@ -103,6 +111,10 @@ impl ArchiveStore {
                     Ok(collections) => snapshot.collections = collections,
                     Err(error) => snapshot.error = Some(error),
                 }
+                match cache.exploration(crate::cache::now() / 86400) {
+                    Ok(value) => snapshot.exploration = value,
+                    Err(error) => snapshot.error = Some(error),
+                }
                 snapshot.revision += 1;
                 publisher.send_replace(snapshot.clone());
                 tokio::select! {
@@ -110,15 +122,24 @@ impl ArchiveStore {
                     command = inbox.recv() => {
                         snapshot.error = None;
                         let result = match command {
+                            Some(Command::Discover) => {
+                                if !cache.is_offline() && discovery.is_none() && snapshot.exploration.featured.is_none() {
+                                    let client = client.clone();
+                                    discovery = Some(Box::pin(async move { client.resource_loaded(ResourceKind::Planet, 1, false).await }));
+                                }
+                                Ok(())
+                            },
+                            Some(Command::Visit(kind, id)) => cache.visit(kind, id),
+                            Some(Command::SelectShip(id, value)) => cache.select_ship(id, value),
                             Some(Command::Search(query)) => { snapshot.query = query; Ok(()) },
                             Some(Command::FavoritesOnly(value)) => { snapshot.favorites_only = value; Ok(()) },
                             Some(Command::Offline(value)) => {
-                                if value { download = None; snapshot.download = DownloadState::Idle; }
+                                if value { discovery = None; download = None; snapshot.download = DownloadState::Idle; }
                                 cache.set_offline(value)
                             },
                             Some(Command::Favorite(kind, id, value)) => cache.set_favorite(kind, id, value),
                             Some(Command::ClearCache) => {
-                                download = None; snapshot.download = DownloadState::Idle;
+                                discovery = None; download = None; snapshot.download = DownloadState::Idle;
                                 cache.clear_cache()
                             },
                             Some(Command::CancelDownload) => {
@@ -180,6 +201,10 @@ impl ArchiveStore {
                             Err(error) => snapshot.download = DownloadState::Failed { kind: job.kind, error },
                         }
                     }
+                    result = async { discovery.as_mut().expect("guarded discovery").as_mut().await }, if discovery.is_some() => {
+                        discovery = None;
+                        if let Err(error) = result { snapshot.error = Some(error); }
+                    }
                     changed = changes.changed() => { if changed.is_err() { break; } }
                 }
             }
@@ -192,6 +217,15 @@ impl ArchiveStore {
     }
     pub fn observe(&self) -> watch::Receiver<ArchiveSnapshot> {
         self.states.clone()
+    }
+    pub fn discover(&self) {
+        let _ = self.commands.send(Command::Discover);
+    }
+    pub fn visit(&self, kind: ResourceKind, id: u32) {
+        let _ = self.commands.send(Command::Visit(kind, id));
+    }
+    pub fn select_ship(&self, id: u32, value: bool) {
+        let _ = self.commands.send(Command::SelectShip(id, value));
     }
     pub fn search(&self, query: String) {
         let _ = self.commands.send(Command::Search(query));

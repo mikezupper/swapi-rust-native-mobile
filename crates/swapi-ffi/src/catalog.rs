@@ -39,11 +39,27 @@ pub struct CatalogFact {
     pub value: String,
 }
 #[derive(Clone, Debug, PartialEq, uniffi::Record)]
+pub struct CatalogRelation {
+    pub label: String,
+    pub category: CatalogCategory,
+    pub ids: Vec<u32>,
+}
+impl From<swapi_core::RelatedGroup> for CatalogRelation {
+    fn from(g: swapi_core::RelatedGroup) -> Self {
+        Self {
+            label: g.label,
+            category: g.kind.into(),
+            ids: g.ids,
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, uniffi::Record)]
 pub struct CatalogEntry {
     pub id: u32,
     pub name: String,
     pub facts: Vec<CatalogFact>,
     pub description: Option<String>,
+    pub related: Vec<CatalogRelation>,
 }
 impl From<swapi_core::CatalogRecord> for CatalogEntry {
     fn from(record: swapi_core::CatalogRecord) -> Self {
@@ -51,6 +67,7 @@ impl From<swapi_core::CatalogRecord> for CatalogEntry {
             id: record.id,
             name: record.name,
             description: record.description,
+            related: record.related.into_iter().map(Into::into).collect(),
             facts: record
                 .facts
                 .into_iter()
@@ -127,6 +144,16 @@ impl CatalogSession {
             closed: AtomicBool::new(false),
         })
     }
+    pub(super) fn related(
+        client: SwapiClient,
+        category: CatalogCategory,
+        ids: Vec<u32>,
+    ) -> Arc<Self> {
+        Arc::new(Self {
+            store: CatalogStore::related(client, category.into(), ids, runtime().handle()),
+            closed: AtomicBool::new(false),
+        })
+    }
     fn ensure_open(&self) -> Result<(), BridgeError> {
         if self.closed.load(Ordering::Acquire) {
             Err(BridgeError::Closed)
@@ -137,6 +164,19 @@ impl CatalogSession {
 }
 #[uniffi::export]
 impl CatalogSession {
+    #[uniffi::constructor]
+    pub fn related_records(
+        category: CatalogCategory,
+        ids: Vec<u32>,
+        base_url: Option<String>,
+    ) -> Result<Arc<Self>, BridgeError> {
+        let client = match base_url {
+            Some(url) => SwapiClient::with_endpoint(&url, std::time::Duration::from_secs(15)),
+            None => SwapiClient::new(),
+        }
+        .map_err(|_| BridgeError::Initialization)?;
+        Ok(Self::related(client, category, ids))
+    }
     #[uniffi::constructor]
     pub fn new(
         category: CatalogCategory,

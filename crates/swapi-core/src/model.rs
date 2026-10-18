@@ -172,6 +172,7 @@ pub struct Person {
     pub hair_color: String,
     pub homeworld: ResourceRef,
     pub films: Vec<ResourceRef>,
+    pub related: Vec<crate::RelatedGroup>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -191,6 +192,12 @@ pub(crate) struct PersonDto {
     hair_color: String,
     homeworld: String,
     films: Vec<String>,
+    #[serde(default)]
+    starships: Vec<String>,
+    #[serde(default)]
+    vehicles: Vec<String>,
+    #[serde(default)]
+    species: Vec<String>,
     url: String,
 }
 
@@ -200,7 +207,34 @@ impl TryFrom<PersonDto> for Person {
         if dto.name.trim().is_empty() {
             return Err(ApiError::InvalidData);
         }
+        let mut related = vec![crate::RelatedGroup {
+            label: "Homeworld".into(),
+            kind: ResourceKind::Planet,
+            ids: vec![ResourceRef::of_kind(&dto.homeworld, ResourceKind::Planet)?.id],
+        }];
+        for (label, kind, links) in [
+            ("Film appearances", ResourceKind::Film, &dto.films),
+            ("Starships", ResourceKind::Starship, &dto.starships),
+            ("Vehicles", ResourceKind::Vehicle, &dto.vehicles),
+            ("Species", ResourceKind::Species, &dto.species),
+        ] {
+            let mut ids = Vec::new();
+            for link in links {
+                let id = ResourceRef::of_kind(link, kind)?.id;
+                if !ids.contains(&id) {
+                    ids.push(id);
+                }
+            }
+            if !ids.is_empty() {
+                related.push(crate::RelatedGroup {
+                    label: label.into(),
+                    kind,
+                    ids,
+                });
+            }
+        }
         Ok(Self {
+            related,
             id: ResourceRef::of_kind(&dto.url, ResourceKind::Person)?.id,
             name: dto.name,
             height_cm: Measurement::parse(&dto.height)?,

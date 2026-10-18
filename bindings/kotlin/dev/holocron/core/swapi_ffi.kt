@@ -765,6 +765,10 @@ internal object IntegrityCheckingUniffiLib {
     }
 
     internal fun ensureInitialized() = Unit
+    external fun uniffi_swapi_ffi_checksum_func_parse_record_link(
+    ): Int
+    external fun uniffi_swapi_ffi_checksum_func_record_link(
+    ): Int
     external fun uniffi_swapi_ffi_checksum_method_characterlistener_on_state(
     ): Int
     external fun uniffi_swapi_ffi_checksum_method_charactersession_cancel(
@@ -789,11 +793,19 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_swapi_ffi_checksum_method_archivesession_clear_cache(
     ): Int
+    external fun uniffi_swapi_ffi_checksum_method_archivesession_discover(
+    ): Int
     external fun uniffi_swapi_ffi_checksum_method_archivesession_download(
     ): Int
     external fun uniffi_swapi_ffi_checksum_method_archivesession_people_session(
     ): Int
+    external fun uniffi_swapi_ffi_checksum_method_archivesession_record_visit(
+    ): Int
+    external fun uniffi_swapi_ffi_checksum_method_archivesession_related_session(
+    ): Int
     external fun uniffi_swapi_ffi_checksum_method_archivesession_search(
+    ): Int
+    external fun uniffi_swapi_ffi_checksum_method_archivesession_select_ship(
     ): Int
     external fun uniffi_swapi_ffi_checksum_method_archivesession_set_favorite(
     ): Int
@@ -842,6 +854,8 @@ internal object IntegrityCheckingUniffiLib {
     external fun uniffi_swapi_ffi_checksum_constructor_archivesession_with_endpoint(
     ): Int
     external fun uniffi_swapi_ffi_checksum_constructor_catalogsession_new(
+    ): Int
+    external fun uniffi_swapi_ffi_checksum_constructor_catalogsession_related_records(
     ): Int
     external fun uniffi_swapi_ffi_checksum_constructor_catalogsession_with_endpoint(
     ): Int
@@ -929,11 +943,19 @@ internal object UniffiLib {
     ): Long
     external fun uniffi_swapi_ffi_fn_method_archivesession_clear_cache(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    external fun uniffi_swapi_ffi_fn_method_archivesession_discover(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     external fun uniffi_swapi_ffi_fn_method_archivesession_download(`ptr`: Long,`category`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     external fun uniffi_swapi_ffi_fn_method_archivesession_people_session(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
+    external fun uniffi_swapi_ffi_fn_method_archivesession_record_visit(`ptr`: Long,`category`: RustBuffer.ByValue,`id`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_swapi_ffi_fn_method_archivesession_related_session(`ptr`: Long,`category`: RustBuffer.ByValue,`ids`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
     external fun uniffi_swapi_ffi_fn_method_archivesession_search(`ptr`: Long,`query`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_swapi_ffi_fn_method_archivesession_select_ship(`ptr`: Long,`id`: Int,`selected`: Byte,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     external fun uniffi_swapi_ffi_fn_method_archivesession_set_favorite(`ptr`: Long,`category`: RustBuffer.ByValue,`id`: Int,`value`: Byte,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -958,6 +980,8 @@ internal object UniffiLib {
     external fun uniffi_swapi_ffi_fn_free_catalogsession(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     external fun uniffi_swapi_ffi_fn_constructor_catalogsession_new(`category`: RustBuffer.ByValue,`recordId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_swapi_ffi_fn_constructor_catalogsession_related_records(`category`: RustBuffer.ByValue,`ids`: RustBuffer.ByValue,`baseUrl`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
     external fun uniffi_swapi_ffi_fn_constructor_catalogsession_with_endpoint(`baseUrl`: RustBuffer.ByValue,`category`: RustBuffer.ByValue,`recordId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
@@ -1001,6 +1025,10 @@ internal object UniffiLib {
     ): Unit
     external fun uniffi_swapi_ffi_fn_method_peoplesession_subscribe(`ptr`: Long,`listener`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
+    external fun uniffi_swapi_ffi_fn_func_parse_record_link(`value`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_swapi_ffi_fn_func_record_link(`category`: RustBuffer.ByValue,`id`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     external fun ffi_swapi_ffi_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun ffi_swapi_ffi_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -1120,6 +1148,12 @@ private fun uniffiCheckContractApiVersion(lib: IntegrityCheckingUniffiLib) {
 }
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
+    if ((lib.uniffi_swapi_ffi_checksum_func_parse_record_link() and 0xFFFF) != 6286) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_swapi_ffi_checksum_func_record_link() and 0xFFFF) != 47088) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if ((lib.uniffi_swapi_ffi_checksum_method_characterlistener_on_state() and 0xFFFF) != 925) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1156,13 +1190,25 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_clear_cache() and 0xFFFF) != 14296) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_discover() and 0xFFFF) != 20720) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_download() and 0xFFFF) != 13097) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_people_session() and 0xFFFF) != 59283) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_record_visit() and 0xFFFF) != 37847) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_related_session() and 0xFFFF) != 13495) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_search() and 0xFFFF) != 50163) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_select_ship() and 0xFFFF) != 30224) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_swapi_ffi_checksum_method_archivesession_set_favorite() and 0xFFFF) != 35753) {
@@ -1235,6 +1281,9 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_swapi_ffi_checksum_constructor_catalogsession_new() and 0xFFFF) != 22772) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_swapi_ffi_checksum_constructor_catalogsession_related_records() and 0xFFFF) != 8230) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_swapi_ffi_checksum_constructor_catalogsession_with_endpoint() and 0xFFFF) != 21401) {
@@ -2033,11 +2082,19 @@ public interface ArchiveSessionInterface {
     
     fun `clearCache`()
     
+    fun `discover`()
+    
     fun `download`(`category`: CatalogCategory)
     
     fun `peopleSession`(): PeopleSession
     
+    fun `recordVisit`(`category`: CatalogCategory, `id`: kotlin.UInt)
+    
+    fun `relatedSession`(`category`: CatalogCategory, `ids`: List<kotlin.UInt>): CatalogSession
+    
     fun `search`(`query`: kotlin.String)
+    
+    fun `selectShip`(`id`: kotlin.UInt, `selected`: kotlin.Boolean)
     
     fun `setFavorite`(`category`: CatalogCategory, `id`: kotlin.UInt, `value`: kotlin.Boolean)
     
@@ -2219,6 +2276,19 @@ open class ArchiveSession: Disposable, AutoCloseable, ArchiveSessionInterface
     
 
     
+    @Throws(BridgeException::class)override fun `discover`()
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(BridgeException) { _status ->
+    UniffiLib.uniffi_swapi_ffi_fn_method_archivesession_discover(
+        it,
+        _status)
+}
+    }
+    
+    
+
+    
     @Throws(BridgeException::class)override fun `download`(`category`: CatalogCategory)
         = 
     callWithHandle {
@@ -2247,6 +2317,37 @@ open class ArchiveSession: Disposable, AutoCloseable, ArchiveSessionInterface
     
 
     
+    @Throws(BridgeException::class)override fun `recordVisit`(`category`: CatalogCategory, `id`: kotlin.UInt)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(BridgeException) { _status ->
+    UniffiLib.uniffi_swapi_ffi_fn_method_archivesession_record_visit(
+        it,
+        
+        FfiConverterTypeCatalogCategory.lower(`category`),
+        FfiConverterUInt.lower(`id`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(BridgeException::class)override fun `relatedSession`(`category`: CatalogCategory, `ids`: List<kotlin.UInt>): CatalogSession {
+            return FfiConverterTypeCatalogSession.lift(
+    callWithHandle {
+    uniffiRustCallWithError(BridgeException) { _status ->
+    UniffiLib.uniffi_swapi_ffi_fn_method_archivesession_related_session(
+        it,
+        
+        FfiConverterTypeCatalogCategory.lower(`category`),
+        FfiConverterSequenceUInt.lower(`ids`),_status)
+}
+    }
+    )
+    }
+    
+
+    
     @Throws(BridgeException::class)override fun `search`(`query`: kotlin.String)
         = 
     callWithHandle {
@@ -2255,6 +2356,21 @@ open class ArchiveSession: Disposable, AutoCloseable, ArchiveSessionInterface
         it,
         
         FfiConverterString.lower(`query`),_status)
+}
+    }
+    
+    
+
+    
+    @Throws(BridgeException::class)override fun `selectShip`(`id`: kotlin.UInt, `selected`: kotlin.Boolean)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(BridgeException) { _status ->
+    UniffiLib.uniffi_swapi_ffi_fn_method_archivesession_select_ship(
+        it,
+        
+        FfiConverterUInt.lower(`id`),
+        FfiConverterBoolean.lower(`selected`),_status)
 }
     }
     
@@ -3009,6 +3125,21 @@ open class CatalogSession: Disposable, AutoCloseable, CatalogSessionInterface
 
     
     companion object {
+        
+    @Throws(BridgeException::class) fun `relatedRecords`(`category`: CatalogCategory, `ids`: List<kotlin.UInt>, `baseUrl`: kotlin.String?): CatalogSession {
+            return FfiConverterTypeCatalogSession.lift(
+    uniffiRustCallWithError(BridgeException) { _status ->
+    UniffiLib.uniffi_swapi_ffi_fn_constructor_catalogsession_related_records(
+    
+        
+        FfiConverterTypeCatalogCategory.lower(`category`),
+        FfiConverterSequenceUInt.lower(`ids`),
+        FfiConverterOptionalString.lower(`baseUrl`),_status)
+}
+    )
+    }
+    
+
         
     @Throws(BridgeException::class) fun `withEndpoint`(`baseUrl`: kotlin.String, `category`: CatalogCategory, `recordId`: kotlin.UInt?): CatalogSession {
             return FfiConverterTypeCatalogSession.lift(
@@ -4660,6 +4791,8 @@ data class ArchiveSnapshot (
     var `download`: DownloadPhase
     , 
     var `error`: FailureKind?
+    , 
+    var `exploration`: ExplorationSnapshot
     
 ){
     
@@ -4685,6 +4818,7 @@ public object FfiConverterTypeArchiveSnapshot: FfiConverterRustBuffer<ArchiveSna
             FfiConverterSequenceTypeSavedCollection.read(buf),
             FfiConverterTypeDownloadPhase.read(buf),
             FfiConverterOptionalTypeFailureKind.read(buf),
+            FfiConverterTypeExplorationSnapshot.read(buf),
         )
     }
 
@@ -4697,7 +4831,8 @@ public object FfiConverterTypeArchiveSnapshot: FfiConverterRustBuffer<ArchiveSna
             FfiConverterSequenceTypeFavoriteIdentity.allocationSize(value.`favorites`) +
             FfiConverterSequenceTypeSavedCollection.allocationSize(value.`collections`) +
             FfiConverterTypeDownloadPhase.allocationSize(value.`download`) +
-            FfiConverterOptionalTypeFailureKind.allocationSize(value.`error`)
+            FfiConverterOptionalTypeFailureKind.allocationSize(value.`error`) +
+            FfiConverterTypeExplorationSnapshot.allocationSize(value.`exploration`)
     )
 
     override fun write(value: ArchiveSnapshot, buf: ByteBuffer) {
@@ -4710,6 +4845,7 @@ public object FfiConverterTypeArchiveSnapshot: FfiConverterRustBuffer<ArchiveSna
             FfiConverterSequenceTypeSavedCollection.write(value.`collections`, buf)
             FfiConverterTypeDownloadPhase.write(value.`download`, buf)
             FfiConverterOptionalTypeFailureKind.write(value.`error`, buf)
+            FfiConverterTypeExplorationSnapshot.write(value.`exploration`, buf)
     }
 }
 
@@ -4776,6 +4912,8 @@ data class CatalogEntry (
     var `facts`: List<CatalogFact>
     , 
     var `description`: kotlin.String?
+    , 
+    var `related`: List<CatalogRelation>
     
 ){
     
@@ -4796,6 +4934,7 @@ public object FfiConverterTypeCatalogEntry: FfiConverterRustBuffer<CatalogEntry>
             FfiConverterString.read(buf),
             FfiConverterSequenceTypeCatalogFact.read(buf),
             FfiConverterOptionalString.read(buf),
+            FfiConverterSequenceTypeCatalogRelation.read(buf),
         )
     }
 
@@ -4803,7 +4942,8 @@ public object FfiConverterTypeCatalogEntry: FfiConverterRustBuffer<CatalogEntry>
             FfiConverterUInt.allocationSize(value.`id`) +
             FfiConverterString.allocationSize(value.`name`) +
             FfiConverterSequenceTypeCatalogFact.allocationSize(value.`facts`) +
-            FfiConverterOptionalString.allocationSize(value.`description`)
+            FfiConverterOptionalString.allocationSize(value.`description`) +
+            FfiConverterSequenceTypeCatalogRelation.allocationSize(value.`related`)
     )
 
     override fun write(value: CatalogEntry, buf: ByteBuffer) {
@@ -4811,6 +4951,7 @@ public object FfiConverterTypeCatalogEntry: FfiConverterRustBuffer<CatalogEntry>
             FfiConverterString.write(value.`name`, buf)
             FfiConverterSequenceTypeCatalogFact.write(value.`facts`, buf)
             FfiConverterOptionalString.write(value.`description`, buf)
+            FfiConverterSequenceTypeCatalogRelation.write(value.`related`, buf)
     }
 }
 
@@ -4849,6 +4990,49 @@ public object FfiConverterTypeCatalogFact: FfiConverterRustBuffer<CatalogFact> {
     override fun write(value: CatalogFact, buf: ByteBuffer) {
             FfiConverterString.write(value.`label`, buf)
             FfiConverterString.write(value.`value`, buf)
+    }
+}
+
+
+
+data class CatalogRelation (
+    var `label`: kotlin.String
+    , 
+    var `category`: CatalogCategory
+    , 
+    var `ids`: List<kotlin.UInt>
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeCatalogRelation: FfiConverterRustBuffer<CatalogRelation> {
+    override fun read(buf: ByteBuffer): CatalogRelation {
+        return CatalogRelation(
+            FfiConverterString.read(buf),
+            FfiConverterTypeCatalogCategory.read(buf),
+            FfiConverterSequenceUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: CatalogRelation) = (
+            FfiConverterString.allocationSize(value.`label`) +
+            FfiConverterTypeCatalogCategory.allocationSize(value.`category`) +
+            FfiConverterSequenceUInt.allocationSize(value.`ids`)
+    )
+
+    override fun write(value: CatalogRelation, buf: ByteBuffer) {
+            FfiConverterString.write(value.`label`, buf)
+            FfiConverterTypeCatalogCategory.write(value.`category`, buf)
+            FfiConverterSequenceUInt.write(value.`ids`, buf)
     }
 }
 
@@ -4933,6 +5117,8 @@ data class Character (
     var `hairColor`: kotlin.String
     , 
     var `filmCount`: kotlin.UInt
+    , 
+    var `related`: List<CatalogRelation>
     
 ){
     
@@ -4957,6 +5143,7 @@ public object FfiConverterTypeCharacter: FfiConverterRustBuffer<Character> {
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterUInt.read(buf),
+            FfiConverterSequenceTypeCatalogRelation.read(buf),
         )
     }
 
@@ -4968,7 +5155,8 @@ public object FfiConverterTypeCharacter: FfiConverterRustBuffer<Character> {
             FfiConverterString.allocationSize(value.`birthYear`) +
             FfiConverterString.allocationSize(value.`eyeColor`) +
             FfiConverterString.allocationSize(value.`hairColor`) +
-            FfiConverterUInt.allocationSize(value.`filmCount`)
+            FfiConverterUInt.allocationSize(value.`filmCount`) +
+            FfiConverterSequenceTypeCatalogRelation.allocationSize(value.`related`)
     )
 
     override fun write(value: Character, buf: ByteBuffer) {
@@ -4980,6 +5168,7 @@ public object FfiConverterTypeCharacter: FfiConverterRustBuffer<Character> {
             FfiConverterString.write(value.`eyeColor`, buf)
             FfiConverterString.write(value.`hairColor`, buf)
             FfiConverterUInt.write(value.`filmCount`, buf)
+            FfiConverterSequenceTypeCatalogRelation.write(value.`related`, buf)
     }
 }
 
@@ -5023,6 +5212,145 @@ public object FfiConverterTypeCharacterSnapshot: FfiConverterRustBuffer<Characte
             FfiConverterULong.write(value.`revision`, buf)
             FfiConverterTypeCharacterState.write(value.`state`, buf)
             FfiConverterTypeCacheStatus.write(value.`cache`, buf)
+    }
+}
+
+
+
+data class ComparisonMetric (
+    var `label`: kotlin.String
+    , 
+    var `values`: List<ComparisonValue>
+    , 
+    var `lowerIsBetter`: kotlin.Boolean
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeComparisonMetric: FfiConverterRustBuffer<ComparisonMetric> {
+    override fun read(buf: ByteBuffer): ComparisonMetric {
+        return ComparisonMetric(
+            FfiConverterString.read(buf),
+            FfiConverterSequenceTypeComparisonValue.read(buf),
+            FfiConverterBoolean.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ComparisonMetric) = (
+            FfiConverterString.allocationSize(value.`label`) +
+            FfiConverterSequenceTypeComparisonValue.allocationSize(value.`values`) +
+            FfiConverterBoolean.allocationSize(value.`lowerIsBetter`)
+    )
+
+    override fun write(value: ComparisonMetric, buf: ByteBuffer) {
+            FfiConverterString.write(value.`label`, buf)
+            FfiConverterSequenceTypeComparisonValue.write(value.`values`, buf)
+            FfiConverterBoolean.write(value.`lowerIsBetter`, buf)
+    }
+}
+
+
+
+data class ComparisonValue (
+    var `display`: kotlin.String
+    , 
+    var `fraction`: kotlin.Double?
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeComparisonValue: FfiConverterRustBuffer<ComparisonValue> {
+    override fun read(buf: ByteBuffer): ComparisonValue {
+        return ComparisonValue(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalDouble.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ComparisonValue) = (
+            FfiConverterString.allocationSize(value.`display`) +
+            FfiConverterOptionalDouble.allocationSize(value.`fraction`)
+    )
+
+    override fun write(value: ComparisonValue, buf: ByteBuffer) {
+            FfiConverterString.write(value.`display`, buf)
+            FfiConverterOptionalDouble.write(value.`fraction`, buf)
+    }
+}
+
+
+
+data class ExplorationSnapshot (
+    var `featured`: SavedEntry?
+    , 
+    var `recent`: List<SavedEntry>
+    , 
+    var `suggestions`: List<SavedEntry>
+    , 
+    var `ships`: List<CatalogEntry>
+    , 
+    var `metrics`: List<ComparisonMetric>
+    , 
+    var `widget`: List<SavedEntry>
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeExplorationSnapshot: FfiConverterRustBuffer<ExplorationSnapshot> {
+    override fun read(buf: ByteBuffer): ExplorationSnapshot {
+        return ExplorationSnapshot(
+            FfiConverterOptionalTypeSavedEntry.read(buf),
+            FfiConverterSequenceTypeSavedEntry.read(buf),
+            FfiConverterSequenceTypeSavedEntry.read(buf),
+            FfiConverterSequenceTypeCatalogEntry.read(buf),
+            FfiConverterSequenceTypeComparisonMetric.read(buf),
+            FfiConverterSequenceTypeSavedEntry.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ExplorationSnapshot) = (
+            FfiConverterOptionalTypeSavedEntry.allocationSize(value.`featured`) +
+            FfiConverterSequenceTypeSavedEntry.allocationSize(value.`recent`) +
+            FfiConverterSequenceTypeSavedEntry.allocationSize(value.`suggestions`) +
+            FfiConverterSequenceTypeCatalogEntry.allocationSize(value.`ships`) +
+            FfiConverterSequenceTypeComparisonMetric.allocationSize(value.`metrics`) +
+            FfiConverterSequenceTypeSavedEntry.allocationSize(value.`widget`)
+    )
+
+    override fun write(value: ExplorationSnapshot, buf: ByteBuffer) {
+            FfiConverterOptionalTypeSavedEntry.write(value.`featured`, buf)
+            FfiConverterSequenceTypeSavedEntry.write(value.`recent`, buf)
+            FfiConverterSequenceTypeSavedEntry.write(value.`suggestions`, buf)
+            FfiConverterSequenceTypeCatalogEntry.write(value.`ships`, buf)
+            FfiConverterSequenceTypeComparisonMetric.write(value.`metrics`, buf)
+            FfiConverterSequenceTypeSavedEntry.write(value.`widget`, buf)
     }
 }
 
@@ -6185,6 +6513,38 @@ public object FfiConverterOptionalULong: FfiConverterRustBuffer<kotlin.ULong?> {
 /**
  * @suppress
  */
+public object FfiConverterOptionalDouble: FfiConverterRustBuffer<kotlin.Double?> {
+    override fun read(buf: ByteBuffer): kotlin.Double? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterDouble.read(buf)
+    }
+
+    override fun allocationSize(value: kotlin.Double?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterDouble.allocationSize(value)
+        }
+    }
+
+    override fun write(value: kotlin.Double?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterDouble.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalString: FfiConverterRustBuffer<kotlin.String?> {
     override fun read(buf: ByteBuffer): kotlin.String? {
         if (buf.get().toInt() == 0) {
@@ -6217,6 +6577,70 @@ public object FfiConverterOptionalString: FfiConverterRustBuffer<kotlin.String?>
 /**
  * @suppress
  */
+public object FfiConverterOptionalTypeFavoriteIdentity: FfiConverterRustBuffer<FavoriteIdentity?> {
+    override fun read(buf: ByteBuffer): FavoriteIdentity? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeFavoriteIdentity.read(buf)
+    }
+
+    override fun allocationSize(value: FavoriteIdentity?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeFavoriteIdentity.allocationSize(value)
+        }
+    }
+
+    override fun write(value: FavoriteIdentity?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeFavoriteIdentity.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterOptionalTypeSavedEntry: FfiConverterRustBuffer<SavedEntry?> {
+    override fun read(buf: ByteBuffer): SavedEntry? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeSavedEntry.read(buf)
+    }
+
+    override fun allocationSize(value: SavedEntry?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeSavedEntry.allocationSize(value)
+        }
+    }
+
+    override fun write(value: SavedEntry?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeSavedEntry.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeFailureKind: FfiConverterRustBuffer<FailureKind?> {
     override fun read(buf: ByteBuffer): FailureKind? {
         if (buf.get().toInt() == 0) {
@@ -6239,6 +6663,34 @@ public object FfiConverterOptionalTypeFailureKind: FfiConverterRustBuffer<Failur
         } else {
             buf.put(1)
             FfiConverterTypeFailureKind.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceUInt: FfiConverterRustBuffer<List<kotlin.UInt>> {
+    override fun read(buf: ByteBuffer): List<kotlin.UInt> {
+        val len = buf.getInt()
+        return List<kotlin.UInt>(len) {
+            FfiConverterUInt.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<kotlin.UInt>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterUInt.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<kotlin.UInt>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterUInt.write(it, buf)
         }
     }
 }
@@ -6305,6 +6757,34 @@ public object FfiConverterSequenceTypeCatalogFact: FfiConverterRustBuffer<List<C
 /**
  * @suppress
  */
+public object FfiConverterSequenceTypeCatalogRelation: FfiConverterRustBuffer<List<CatalogRelation>> {
+    override fun read(buf: ByteBuffer): List<CatalogRelation> {
+        val len = buf.getInt()
+        return List<CatalogRelation>(len) {
+            FfiConverterTypeCatalogRelation.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<CatalogRelation>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeCatalogRelation.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<CatalogRelation>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeCatalogRelation.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeCharacter: FfiConverterRustBuffer<List<Character>> {
     override fun read(buf: ByteBuffer): List<Character> {
         val len = buf.getInt()
@@ -6323,6 +6803,62 @@ public object FfiConverterSequenceTypeCharacter: FfiConverterRustBuffer<List<Cha
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeCharacter.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeComparisonMetric: FfiConverterRustBuffer<List<ComparisonMetric>> {
+    override fun read(buf: ByteBuffer): List<ComparisonMetric> {
+        val len = buf.getInt()
+        return List<ComparisonMetric>(len) {
+            FfiConverterTypeComparisonMetric.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ComparisonMetric>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeComparisonMetric.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ComparisonMetric>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeComparisonMetric.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeComparisonValue: FfiConverterRustBuffer<List<ComparisonValue>> {
+    override fun read(buf: ByteBuffer): List<ComparisonValue> {
+        val len = buf.getInt()
+        return List<ComparisonValue>(len) {
+            FfiConverterTypeComparisonValue.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ComparisonValue>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeComparisonValue.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ComparisonValue>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeComparisonValue.write(it, buf)
         }
     }
 }
@@ -6409,5 +6945,28 @@ public object FfiConverterSequenceTypeSavedEntry: FfiConverterRustBuffer<List<Sa
             FfiConverterTypeSavedEntry.write(it, buf)
         }
     }
+} fun `parseRecordLink`(`value`: kotlin.String): FavoriteIdentity? {
+            return FfiConverterOptionalTypeFavoriteIdentity.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_swapi_ffi_fn_func_parse_record_link(
+    
+        
+        FfiConverterString.lower(`value`),_status)
 }
+    )
+    }
+    
+ fun `recordLink`(`category`: CatalogCategory, `id`: kotlin.UInt): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_swapi_ffi_fn_func_record_link(
+    
+        
+        FfiConverterTypeCatalogCategory.lower(`category`),
+        FfiConverterUInt.lower(`id`),_status)
+}
+    )
+    }
+    
+
 

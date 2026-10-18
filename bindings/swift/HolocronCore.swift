@@ -814,11 +814,19 @@ public protocol ArchiveSessionProtocol: AnyObject, Sendable {
     
     func clearCache() throws 
     
+    func discover() throws 
+    
     func download(category: CatalogCategory) throws 
     
     func peopleSession() throws  -> PeopleSession
     
+    func recordVisit(category: CatalogCategory, id: UInt32) throws 
+    
+    func relatedSession(category: CatalogCategory, ids: [UInt32]) throws  -> CatalogSession
+    
     func search(query: String) throws 
+    
+    func selectShip(id: UInt32, selected: Bool) throws 
     
     func setFavorite(category: CatalogCategory, id: UInt32, value: Bool) throws 
     
@@ -939,6 +947,14 @@ open func clearCache()throws   {try rustCallWithError(FfiConverterTypeBridgeErro
 }
 }
     
+open func discover()throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_archivesession_discover(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+}
+}
+    
 open func download(category: CatalogCategory)throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
         uniffiCallStatus in
     uniffi_swapi_ffi_fn_method_archivesession_download(
@@ -957,11 +973,42 @@ open func peopleSession()throws  -> PeopleSession  {
 })
 }
     
+open func recordVisit(category: CatalogCategory, id: UInt32)throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_archivesession_record_visit(
+            self.uniffiCloneHandle(),
+        FfiConverterTypeCatalogCategory_lower(category),
+        FfiConverterUInt32.lower(id),uniffiCallStatus
+    )
+}
+}
+    
+open func relatedSession(category: CatalogCategory, ids: [UInt32])throws  -> CatalogSession  {
+    return try  FfiConverterTypeCatalogSession_lift(try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_archivesession_related_session(
+            self.uniffiCloneHandle(),
+        FfiConverterTypeCatalogCategory_lower(category),
+        FfiConverterSequenceUInt32.lower(ids),uniffiCallStatus
+    )
+})
+}
+    
 open func search(query: String)throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
         uniffiCallStatus in
     uniffi_swapi_ffi_fn_method_archivesession_search(
             self.uniffiCloneHandle(),
         FfiConverterString.lower(query),uniffiCallStatus
+    )
+}
+}
+    
+open func selectShip(id: UInt32, selected: Bool)throws   {try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_method_archivesession_select_ship(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt32.lower(id),
+        FfiConverterBool.lower(selected),uniffiCallStatus
     )
 }
 }
@@ -1337,6 +1384,17 @@ public convenience init(category: CatalogCategory, recordId: UInt32?)throws  {
         try! rustCall { uniffi_swapi_ffi_fn_free_catalogsession(handle, $0) }
     }
 
+    
+public static func relatedRecords(category: CatalogCategory, ids: [UInt32], baseUrl: String?)throws  -> CatalogSession  {
+    return try  FfiConverterTypeCatalogSession_lift(try rustCallWithError(FfiConverterTypeBridgeError_lift) {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_constructor_catalogsession_related_records(
+        FfiConverterTypeCatalogCategory_lower(category),
+        FfiConverterSequenceUInt32.lower(ids),
+        FfiConverterOptionString.lower(baseUrl),uniffiCallStatus
+    )
+})
+}
     
 public static func withEndpoint(baseUrl: String, category: CatalogCategory, recordId: UInt32?)throws  -> CatalogSession  {
     return try  FfiConverterTypeCatalogSession_lift(try rustCallWithError(FfiConverterTypeBridgeError_lift) {
@@ -2348,10 +2406,11 @@ public struct ArchiveSnapshot: Equatable, Hashable {
     public var collections: [SavedCollection]
     public var download: DownloadPhase
     public var error: FailureKind?
+    public var exploration: ExplorationSnapshot
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(revision: UInt64, query: String, favoritesOnly: Bool, offline: Bool, entries: [SavedEntry], favorites: [FavoriteIdentity], collections: [SavedCollection], download: DownloadPhase, error: FailureKind?) {
+    public init(revision: UInt64, query: String, favoritesOnly: Bool, offline: Bool, entries: [SavedEntry], favorites: [FavoriteIdentity], collections: [SavedCollection], download: DownloadPhase, error: FailureKind?, exploration: ExplorationSnapshot) {
         self.revision = revision
         self.query = query
         self.favoritesOnly = favoritesOnly
@@ -2361,6 +2420,7 @@ public struct ArchiveSnapshot: Equatable, Hashable {
         self.collections = collections
         self.download = download
         self.error = error
+        self.exploration = exploration
     }
 
     
@@ -2387,7 +2447,8 @@ public struct FfiConverterTypeArchiveSnapshot: FfiConverterRustBuffer {
                 favorites: FfiConverterSequenceTypeFavoriteIdentity.read(from: &buf), 
                 collections: FfiConverterSequenceTypeSavedCollection.read(from: &buf), 
                 download: FfiConverterTypeDownloadPhase.read(from: &buf), 
-                error: FfiConverterOptionTypeFailureKind.read(from: &buf)
+                error: FfiConverterOptionTypeFailureKind.read(from: &buf), 
+                exploration: FfiConverterTypeExplorationSnapshot.read(from: &buf)
         )
     }
 
@@ -2401,6 +2462,7 @@ public struct FfiConverterTypeArchiveSnapshot: FfiConverterRustBuffer {
         FfiConverterSequenceTypeSavedCollection.write(value.collections, into: &buf)
         FfiConverterTypeDownloadPhase.write(value.download, into: &buf)
         FfiConverterOptionTypeFailureKind.write(value.error, into: &buf)
+        FfiConverterTypeExplorationSnapshot.write(value.exploration, into: &buf)
     }
 }
 
@@ -2491,14 +2553,16 @@ public struct CatalogEntry: Equatable, Hashable {
     public var name: String
     public var facts: [CatalogFact]
     public var description: String?
+    public var related: [CatalogRelation]
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: UInt32, name: String, facts: [CatalogFact], description: String?) {
+    public init(id: UInt32, name: String, facts: [CatalogFact], description: String?, related: [CatalogRelation]) {
         self.id = id
         self.name = name
         self.facts = facts
         self.description = description
+        self.related = related
     }
 
     
@@ -2520,7 +2584,8 @@ public struct FfiConverterTypeCatalogEntry: FfiConverterRustBuffer {
                 id: FfiConverterUInt32.read(from: &buf), 
                 name: FfiConverterString.read(from: &buf), 
                 facts: FfiConverterSequenceTypeCatalogFact.read(from: &buf), 
-                description: FfiConverterOptionString.read(from: &buf)
+                description: FfiConverterOptionString.read(from: &buf), 
+                related: FfiConverterSequenceTypeCatalogRelation.read(from: &buf)
         )
     }
 
@@ -2529,6 +2594,7 @@ public struct FfiConverterTypeCatalogEntry: FfiConverterRustBuffer {
         FfiConverterString.write(value.name, into: &buf)
         FfiConverterSequenceTypeCatalogFact.write(value.facts, into: &buf)
         FfiConverterOptionString.write(value.description, into: &buf)
+        FfiConverterSequenceTypeCatalogRelation.write(value.related, into: &buf)
     }
 }
 
@@ -2599,6 +2665,64 @@ public func FfiConverterTypeCatalogFact_lift(_ buf: RustBuffer) throws -> Catalo
 #endif
 public func FfiConverterTypeCatalogFact_lower(_ value: CatalogFact) -> RustBuffer {
     return FfiConverterTypeCatalogFact.lower(value)
+}
+
+
+public struct CatalogRelation: Equatable, Hashable {
+    public var label: String
+    public var category: CatalogCategory
+    public var ids: [UInt32]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(label: String, category: CatalogCategory, ids: [UInt32]) {
+        self.label = label
+        self.category = category
+        self.ids = ids
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension CatalogRelation: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCatalogRelation: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CatalogRelation {
+        return
+            try CatalogRelation(
+                label: FfiConverterString.read(from: &buf), 
+                category: FfiConverterTypeCatalogCategory.read(from: &buf), 
+                ids: FfiConverterSequenceUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CatalogRelation, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.label, into: &buf)
+        FfiConverterTypeCatalogCategory.write(value.category, into: &buf)
+        FfiConverterSequenceUInt32.write(value.ids, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogRelation_lift(_ buf: RustBuffer) throws -> CatalogRelation {
+    return try FfiConverterTypeCatalogRelation.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCatalogRelation_lower(_ value: CatalogRelation) -> RustBuffer {
+    return FfiConverterTypeCatalogRelation.lower(value)
 }
 
 
@@ -2685,10 +2809,11 @@ public struct Character: Equatable, Hashable {
     public var eyeColor: String
     public var hairColor: String
     public var filmCount: UInt32
+    public var related: [CatalogRelation]
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: UInt32, name: String, heightCm: Measurement, massKg: Measurement, birthYear: String, eyeColor: String, hairColor: String, filmCount: UInt32) {
+    public init(id: UInt32, name: String, heightCm: Measurement, massKg: Measurement, birthYear: String, eyeColor: String, hairColor: String, filmCount: UInt32, related: [CatalogRelation]) {
         self.id = id
         self.name = name
         self.heightCm = heightCm
@@ -2697,6 +2822,7 @@ public struct Character: Equatable, Hashable {
         self.eyeColor = eyeColor
         self.hairColor = hairColor
         self.filmCount = filmCount
+        self.related = related
     }
 
     
@@ -2722,7 +2848,8 @@ public struct FfiConverterTypeCharacter: FfiConverterRustBuffer {
                 birthYear: FfiConverterString.read(from: &buf), 
                 eyeColor: FfiConverterString.read(from: &buf), 
                 hairColor: FfiConverterString.read(from: &buf), 
-                filmCount: FfiConverterUInt32.read(from: &buf)
+                filmCount: FfiConverterUInt32.read(from: &buf), 
+                related: FfiConverterSequenceTypeCatalogRelation.read(from: &buf)
         )
     }
 
@@ -2735,6 +2862,7 @@ public struct FfiConverterTypeCharacter: FfiConverterRustBuffer {
         FfiConverterString.write(value.eyeColor, into: &buf)
         FfiConverterString.write(value.hairColor, into: &buf)
         FfiConverterUInt32.write(value.filmCount, into: &buf)
+        FfiConverterSequenceTypeCatalogRelation.write(value.related, into: &buf)
     }
 }
 
@@ -2809,6 +2937,188 @@ public func FfiConverterTypeCharacterSnapshot_lift(_ buf: RustBuffer) throws -> 
 #endif
 public func FfiConverterTypeCharacterSnapshot_lower(_ value: CharacterSnapshot) -> RustBuffer {
     return FfiConverterTypeCharacterSnapshot.lower(value)
+}
+
+
+public struct ComparisonMetric: Equatable, Hashable {
+    public var label: String
+    public var values: [ComparisonValue]
+    public var lowerIsBetter: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(label: String, values: [ComparisonValue], lowerIsBetter: Bool) {
+        self.label = label
+        self.values = values
+        self.lowerIsBetter = lowerIsBetter
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ComparisonMetric: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeComparisonMetric: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ComparisonMetric {
+        return
+            try ComparisonMetric(
+                label: FfiConverterString.read(from: &buf), 
+                values: FfiConverterSequenceTypeComparisonValue.read(from: &buf), 
+                lowerIsBetter: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ComparisonMetric, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.label, into: &buf)
+        FfiConverterSequenceTypeComparisonValue.write(value.values, into: &buf)
+        FfiConverterBool.write(value.lowerIsBetter, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComparisonMetric_lift(_ buf: RustBuffer) throws -> ComparisonMetric {
+    return try FfiConverterTypeComparisonMetric.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComparisonMetric_lower(_ value: ComparisonMetric) -> RustBuffer {
+    return FfiConverterTypeComparisonMetric.lower(value)
+}
+
+
+public struct ComparisonValue: Equatable, Hashable {
+    public var display: String
+    public var fraction: Double?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(display: String, fraction: Double?) {
+        self.display = display
+        self.fraction = fraction
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ComparisonValue: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeComparisonValue: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ComparisonValue {
+        return
+            try ComparisonValue(
+                display: FfiConverterString.read(from: &buf), 
+                fraction: FfiConverterOptionDouble.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ComparisonValue, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.display, into: &buf)
+        FfiConverterOptionDouble.write(value.fraction, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComparisonValue_lift(_ buf: RustBuffer) throws -> ComparisonValue {
+    return try FfiConverterTypeComparisonValue.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComparisonValue_lower(_ value: ComparisonValue) -> RustBuffer {
+    return FfiConverterTypeComparisonValue.lower(value)
+}
+
+
+public struct ExplorationSnapshot: Equatable, Hashable {
+    public var featured: SavedEntry?
+    public var recent: [SavedEntry]
+    public var suggestions: [SavedEntry]
+    public var ships: [CatalogEntry]
+    public var metrics: [ComparisonMetric]
+    public var widget: [SavedEntry]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(featured: SavedEntry?, recent: [SavedEntry], suggestions: [SavedEntry], ships: [CatalogEntry], metrics: [ComparisonMetric], widget: [SavedEntry]) {
+        self.featured = featured
+        self.recent = recent
+        self.suggestions = suggestions
+        self.ships = ships
+        self.metrics = metrics
+        self.widget = widget
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ExplorationSnapshot: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeExplorationSnapshot: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ExplorationSnapshot {
+        return
+            try ExplorationSnapshot(
+                featured: FfiConverterOptionTypeSavedEntry.read(from: &buf), 
+                recent: FfiConverterSequenceTypeSavedEntry.read(from: &buf), 
+                suggestions: FfiConverterSequenceTypeSavedEntry.read(from: &buf), 
+                ships: FfiConverterSequenceTypeCatalogEntry.read(from: &buf), 
+                metrics: FfiConverterSequenceTypeComparisonMetric.read(from: &buf), 
+                widget: FfiConverterSequenceTypeSavedEntry.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ExplorationSnapshot, into buf: inout [UInt8]) {
+        FfiConverterOptionTypeSavedEntry.write(value.featured, into: &buf)
+        FfiConverterSequenceTypeSavedEntry.write(value.recent, into: &buf)
+        FfiConverterSequenceTypeSavedEntry.write(value.suggestions, into: &buf)
+        FfiConverterSequenceTypeCatalogEntry.write(value.ships, into: &buf)
+        FfiConverterSequenceTypeComparisonMetric.write(value.metrics, into: &buf)
+        FfiConverterSequenceTypeSavedEntry.write(value.widget, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeExplorationSnapshot_lift(_ buf: RustBuffer) throws -> ExplorationSnapshot {
+    return try FfiConverterTypeExplorationSnapshot.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeExplorationSnapshot_lower(_ value: ExplorationSnapshot) -> RustBuffer {
+    return FfiConverterTypeExplorationSnapshot.lower(value)
 }
 
 
@@ -3854,6 +4164,30 @@ fileprivate struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionDouble: FfiConverterRustBuffer {
+    typealias SwiftType = Double?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterDouble.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterDouble.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionString: FfiConverterRustBuffer {
     typealias SwiftType = String?
 
@@ -3870,6 +4204,54 @@ fileprivate struct FfiConverterOptionString: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterString.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeFavoriteIdentity: FfiConverterRustBuffer {
+    typealias SwiftType = FavoriteIdentity?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeFavoriteIdentity.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeFavoriteIdentity.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeSavedEntry: FfiConverterRustBuffer {
+    typealias SwiftType = SavedEntry?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeSavedEntry.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeSavedEntry.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -3896,6 +4278,31 @@ fileprivate struct FfiConverterOptionTypeFailureKind: FfiConverterRustBuffer {
         case 1: return try FfiConverterTypeFailureKind.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceUInt32: FfiConverterRustBuffer {
+    typealias SwiftType = [UInt32]
+
+    public static func write(_ value: [UInt32], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterUInt32.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UInt32] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [UInt32]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterUInt32.read(from: &buf))
+        }
+        return seq
     }
 }
 
@@ -3952,6 +4359,31 @@ fileprivate struct FfiConverterSequenceTypeCatalogFact: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeCatalogRelation: FfiConverterRustBuffer {
+    typealias SwiftType = [CatalogRelation]
+
+    public static func write(_ value: [CatalogRelation], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeCatalogRelation.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [CatalogRelation] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [CatalogRelation]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeCatalogRelation.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeCharacter: FfiConverterRustBuffer {
     typealias SwiftType = [Character]
 
@@ -3969,6 +4401,56 @@ fileprivate struct FfiConverterSequenceTypeCharacter: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeCharacter.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeComparisonMetric: FfiConverterRustBuffer {
+    typealias SwiftType = [ComparisonMetric]
+
+    public static func write(_ value: [ComparisonMetric], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeComparisonMetric.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ComparisonMetric] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ComparisonMetric]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeComparisonMetric.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeComparisonValue: FfiConverterRustBuffer {
+    typealias SwiftType = [ComparisonValue]
+
+    public static func write(_ value: [ComparisonValue], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeComparisonValue.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ComparisonValue] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ComparisonValue]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeComparisonValue.read(from: &buf))
         }
         return seq
     }
@@ -4048,6 +4530,23 @@ fileprivate struct FfiConverterSequenceTypeSavedEntry: FfiConverterRustBuffer {
         return seq
     }
 }
+public func parseRecordLink(value: String) -> FavoriteIdentity?  {
+    return try!  FfiConverterOptionTypeFavoriteIdentity.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_func_parse_record_link(
+        FfiConverterString.lower(value),uniffiCallStatus
+    )
+})
+}
+public func recordLink(category: CatalogCategory, id: UInt32) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_swapi_ffi_fn_func_record_link(
+        FfiConverterTypeCatalogCategory_lower(category),
+        FfiConverterUInt32.lower(id),uniffiCallStatus
+    )
+})
+}
 
 private enum InitializationResult {
     case ok
@@ -4063,6 +4562,12 @@ private let initializationResult: InitializationResult = {
     let scaffolding_contract_version = ffi_swapi_ffi_uniffi_contract_version()
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_func_parse_record_link() != 6286) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_func_record_link() != 47088) {
+        return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_swapi_ffi_checksum_method_characterlistener_on_state() != 925) {
         return InitializationResult.apiChecksumMismatch
@@ -4100,13 +4605,25 @@ private let initializationResult: InitializationResult = {
     if (uniffi_swapi_ffi_checksum_method_archivesession_clear_cache() != 14296) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_swapi_ffi_checksum_method_archivesession_discover() != 20720) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_swapi_ffi_checksum_method_archivesession_download() != 13097) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_swapi_ffi_checksum_method_archivesession_people_session() != 59283) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_swapi_ffi_checksum_method_archivesession_record_visit() != 37847) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_method_archivesession_related_session() != 13495) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_swapi_ffi_checksum_method_archivesession_search() != 50163) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_method_archivesession_select_ship() != 30224) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_swapi_ffi_checksum_method_archivesession_set_favorite() != 35753) {
@@ -4179,6 +4696,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_swapi_ffi_checksum_constructor_catalogsession_new() != 22772) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_swapi_ffi_checksum_constructor_catalogsession_related_records() != 8230) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_swapi_ffi_checksum_constructor_catalogsession_with_endpoint() != 21401) {

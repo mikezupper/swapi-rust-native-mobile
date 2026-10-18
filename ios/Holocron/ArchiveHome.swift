@@ -48,6 +48,7 @@ extension CatalogCategory {
 struct ArchiveHome: View {
     @ObservedObject var people: PeopleModel
     @State private var selected: CatalogCategory = .people
+    @State private var linkedRecord: LinkedRecord?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         Group { if selected == .people {
@@ -55,8 +56,14 @@ struct ArchiveHome: View {
         } else {
             CatalogCollection(category: selected, onCategory: { selected = $0 }).id(selected)
         } }.animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: selected)
+            .safeAreaInset(edge: .bottom) { ComparisonTray() }
+            .onOpenURL { url in if let identity = parseRecordLink(value: url.absoluteString) { linkedRecord = LinkedRecord(category: identity.category, recordId: identity.id) } }
+            .sheet(item: $linkedRecord) { link in NavigationStack { RecordDestination(category: link.category, id: link.recordId).toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { linkedRecord = nil } } } }.safeAreaInset(edge: .bottom) { ComparisonTray() } }
+
     }
 }
+
+private struct LinkedRecord: Identifiable { let category: CatalogCategory; let recordId: UInt32; var id: String { "\(category.title)/\(recordId)" } }
 
 struct CatalogCollection: View {
     @StateObject private var model: CatalogModel
@@ -196,6 +203,8 @@ struct CatalogDetailScreen: View {
                     if let record {
                         CacheNotice(cache: model.snapshot.cache)
                         FavoriteButton(category: category, id: record.id)
+                        if category == .starships { CompareShipButton(id: record.id) }
+                        RelatedRecords(groups: record.related)
                         Text("The details").font(.title2).accessibilityAddTraits(.isHeader)
                         VStack(alignment: .leading, spacing: 20) {
                             ForEach(record.facts, id: \.label) { fact in
@@ -206,8 +215,7 @@ struct CatalogDetailScreen: View {
                             }
                         }.padding(20).background(surface, in: RoundedRectangle(cornerRadius: 24))
                         if let crawl = record.description {
-                            Text("Opening crawl").font(.title2).accessibilityAddTraits(.isHeader)
-                            Text(crawl).font(.body).lineSpacing(6).foregroundStyle(secondary).textSelection(.enabled)
+                            FilmExperience(title: record.name, crawl: crawl)
                         }
                         Text("Record from the Star Wars API.").font(.caption).foregroundStyle(secondary)
                     }
@@ -215,5 +223,6 @@ struct CatalogDetailScreen: View {
                 }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
             }
         }.background(background).foregroundStyle(foreground).tint(accent).navigationTitle(category.title).navigationBarTitleDisplayMode(.inline)
+            .onChange(of: record?.id, initial: true) { _, id in if let id { try? ArchiveModel.shared.session?.recordVisit(category: category, id: id) } }
     }
 }

@@ -41,9 +41,9 @@ class CatalogController(private val session: CatalogSession) : AutoCloseable {
     }
 }
 
-class CatalogViewModel(private val saved: SavedStateHandle, category: CatalogCategory, recordId: UInt? = null, endpoint: String? = null, archive: ArchiveSession? = null) : ViewModel() {
+class CatalogViewModel(private val saved: SavedStateHandle, category: CatalogCategory, recordId: UInt? = null, endpoint: String? = null, archive: ArchiveSession? = null, relatedIds: List<UInt>? = null) : ViewModel() {
     val query = saved.getStateFlow("query", "")
-    val controller = CatalogController(archive?.catalogSession(category, recordId) ?: endpoint?.let { CatalogSession.withEndpoint(it, category, recordId) } ?: CatalogSession(category, recordId)).also {
+    val controller = CatalogController(if (relatedIds != null) archive?.relatedSession(category, relatedIds) ?: CatalogSession.relatedRecords(category, relatedIds, endpoint) else archive?.catalogSession(category, recordId) ?: endpoint?.let { CatalogSession.withEndpoint(it, category, recordId) } ?: CatalogSession(category, recordId)).also {
         if (query.value.isEmpty()) it.refresh() else it.search(query.value)
     }
     fun search(value: String) { saved["query"] = value; controller.search(value) }

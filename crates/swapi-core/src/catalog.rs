@@ -12,12 +12,19 @@ pub struct ResourceFact {
     pub value: String,
 }
 #[derive(Clone, Debug, PartialEq)]
+pub struct RelatedGroup {
+    pub label: String,
+    pub kind: ResourceKind,
+    pub ids: Vec<u32>,
+}
+#[derive(Clone, Debug, PartialEq)]
 pub struct CatalogRecord {
     pub id: u32,
     pub kind: ResourceKind,
     pub name: String,
     pub facts: Vec<ResourceFact>,
     pub description: Option<String>,
+    pub related: Vec<RelatedGroup>,
 }
 impl Record for CatalogRecord {
     fn id(&self) -> u32 {
@@ -28,6 +35,76 @@ pub type CatalogSnapshot = PageSnapshot<CatalogRecord>;
 pub type CatalogStore = PagedStore<CatalogRecord>;
 
 impl CatalogStore {
+    pub fn related(
+        client: SwapiClient,
+        kind: ResourceKind,
+        ids: Vec<u32>,
+        runtime: &Handle,
+    ) -> Self {
+        let mut unique = Vec::new();
+        for id in ids {
+            if id > 0 && !unique.contains(&id) {
+                unique.push(id);
+            }
+        }
+        let ids = Arc::new(unique);
+        let cached_ids = ids.clone();
+        let cached = client.clone();
+        Self::start_cached(
+            Arc::new(move |_, page, force| {
+                let client = client.clone();
+                let ids = ids.clone();
+                Box::pin(async move {
+                    let start = (page.saturating_sub(1) as usize).saturating_mul(6);
+                    let slice = ids
+                        .get(start..ids.len().min(start.saturating_add(6)))
+                        .ok_or(ApiError::InvalidRequest)?;
+                    let mut items = Vec::new();
+                    let mut cache = crate::CacheInfo::default();
+                    for id in slice {
+                        let loaded = client.resource_loaded(kind, *id, force).await?;
+                        cache.offline |= loaded.cache.offline;
+                        cache.from_cache |= loaded.cache.from_cache;
+                        cache.refresh_failed |= loaded.cache.refresh_failed;
+                        cache.saving_failed |= loaded.cache.saving_failed;
+                        cache.saved_at = match (cache.saved_at, loaded.cache.saved_at) {
+                            (Some(a), Some(b)) => Some(a.min(b)),
+                            (a, b) => a.or(b),
+                        };
+                        items.push(loaded.value);
+                    }
+                    Ok(Loaded {
+                        value: Page {
+                            total: ids.len() as u32,
+                            next_page: (start + items.len() < ids.len()).then_some(page + 1),
+                            items,
+                        },
+                        cache,
+                    })
+                })
+            }),
+            Arc::new(move |_, page| {
+                let start = (page.saturating_sub(1) as usize).saturating_mul(6);
+                let slice = cached_ids.get(start..cached_ids.len().min(start.saturating_add(6)))?;
+                let mut items = Vec::new();
+                let mut cache = crate::CacheInfo::default();
+                for id in slice {
+                    let loaded = cached.cached_resource(kind, *id)?;
+                    cache = loaded.cache;
+                    items.push(loaded.value);
+                }
+                Some(Loaded {
+                    value: Page {
+                        total: cached_ids.len() as u32,
+                        next_page: (start + items.len() < cached_ids.len()).then_some(page + 1),
+                        items,
+                    },
+                    cache,
+                })
+            }),
+            runtime,
+        )
+    }
     /// A detail session uses the same cancellation/retry/lifetime machinery as
     /// a collection, with a single immutable resource identity.
     pub fn catalog(
@@ -306,10 +383,17 @@ impl CatalogRecord {
         } else {
             None
         };
+        let mut related = Vec::new();
         if matches!(kind, ResourceKind::Person | ResourceKind::Species) {
             let world: Option<String> = field(&value, "homeworld")?;
             if let Some(world) = world {
-                if ResourceRef::parse(&world)?.kind != ResourceKind::Planet {
+                let reference = ResourceRef::parse(&world)?;
+                related.push(RelatedGroup {
+                    label: "Homeworld".into(),
+                    kind: ResourceKind::Planet,
+                    ids: vec![reference.id],
+                });
+                if reference.kind != ResourceKind::Planet {
                     return Err(ApiError::InvalidData);
                 }
             } else if kind == ResourceKind::Person {
@@ -317,7 +401,12 @@ impl CatalogRecord {
             }
         }
         let relationships: &[(&str, ResourceKind, &str)] = match kind {
-            ResourceKind::Person => &[("films", ResourceKind::Film, "Film appearances")],
+            ResourceKind::Person => &[
+                ("films", ResourceKind::Film, "Film appearances"),
+                ("starships", ResourceKind::Starship, "Starships"),
+                ("vehicles", ResourceKind::Vehicle, "Vehicles"),
+                ("species", ResourceKind::Species, "Species"),
+            ],
             ResourceKind::Planet => &[
                 ("films", ResourceKind::Film, "Film appearances"),
                 ("residents", ResourceKind::Person, "Residents"),
@@ -339,11 +428,29 @@ impl CatalogRecord {
             ],
         };
         for (key, expected, label) in relationships {
-            let links: Vec<String> = field(&value, key)?;
+            // Older cached People fixtures may omit these optional collections.
+            let links: Vec<String> =
+                if kind == ResourceKind::Person && *key != "films" && value.get(key).is_none() {
+                    vec![]
+                } else {
+                    field(&value, key)?
+                };
+            let mut ids = Vec::new();
             for link in &links {
-                if ResourceRef::parse(link)?.kind != *expected {
+                let reference = ResourceRef::parse(link)?;
+                if !ids.contains(&reference.id) {
+                    ids.push(reference.id);
+                }
+                if reference.kind != *expected {
                     return Err(ApiError::InvalidData);
                 }
+            }
+            if !ids.is_empty() {
+                related.push(RelatedGroup {
+                    label: (*label).into(),
+                    kind: *expected,
+                    ids,
+                });
             }
             facts.push(ResourceFact {
                 label: (*label).into(),
@@ -356,6 +463,7 @@ impl CatalogRecord {
             name,
             facts,
             description,
+            related,
         })
     }
 }

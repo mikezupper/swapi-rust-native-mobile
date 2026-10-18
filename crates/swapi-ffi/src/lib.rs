@@ -47,6 +47,7 @@ pub struct Character {
     pub eye_color: String,
     pub hair_color: String,
     pub film_count: u32,
+    pub related: Vec<CatalogRelation>,
 }
 impl From<swapi_core::Person> for Character {
     fn from(person: swapi_core::Person) -> Self {
@@ -59,6 +60,7 @@ impl From<swapi_core::Person> for Character {
             eye_color: person.eye_color,
             hair_color: person.hair_color,
             film_count: person.films.len() as u32,
+            related: person.related.into_iter().map(Into::into).collect(),
         }
     }
 }

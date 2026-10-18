@@ -79,13 +79,13 @@ pub struct CollectionInfo {
 }
 
 pub struct ArchiveCache {
-    connection: Mutex<Connection>,
-    namespace: String,
+    pub(crate) connection: Mutex<Connection>,
+    pub(crate) namespace: String,
     offline: AtomicBool,
     changes: watch::Sender<u64>,
 }
 
-fn storage(_: rusqlite::Error) -> ApiError {
+pub(crate) fn storage(_: rusqlite::Error) -> ApiError {
     ApiError::Storage
 }
 
@@ -98,7 +98,7 @@ impl ArchiveCache {
         let version: u32 = connection
             .pragma_query_value(None, "user_version", |r| r.get(0))
             .map_err(storage)?;
-        if version > 1 {
+        if version > 2 {
             return Err(ApiError::Storage);
         }
         connection.execute_batch("PRAGMA journal_mode=WAL;
@@ -116,7 +116,13 @@ impl ArchiveCache {
                 PRIMARY KEY(namespace, category));
             CREATE TABLE IF NOT EXISTS preferences (
                 namespace TEXT PRIMARY KEY, offline INTEGER NOT NULL DEFAULT 0);
-            PRAGMA user_version=1;
+            CREATE TABLE IF NOT EXISTS visits (
+                namespace TEXT NOT NULL, category TEXT NOT NULL, id INTEGER NOT NULL, sequence INTEGER NOT NULL,
+                PRIMARY KEY(namespace,category,id));
+            CREATE TABLE IF NOT EXISTS comparison (
+                namespace TEXT NOT NULL, id INTEGER NOT NULL, sequence INTEGER NOT NULL,
+                PRIMARY KEY(namespace,id));
+            PRAGMA user_version=2;
             COMMIT;").map_err(storage)?;
         let offline = connection
             .query_row(
@@ -139,7 +145,7 @@ impl ArchiveCache {
     pub fn observe(&self) -> watch::Receiver<u64> {
         self.changes.subscribe()
     }
-    fn changed(&self) {
+    pub(crate) fn changed(&self) {
         self.changes.send_modify(|revision| *revision += 1);
     }
     pub fn is_offline(&self) -> bool {
@@ -345,6 +351,8 @@ impl ArchiveCache {
             [&self.namespace],
         )
         .map_err(storage)?;
+        tx.execute("DELETE FROM visits WHERE namespace=?1 AND NOT EXISTS(SELECT 1 FROM records WHERE records.namespace=visits.namespace AND records.category=visits.category AND records.id=visits.id)", [&self.namespace]).map_err(storage)?;
+        tx.execute("DELETE FROM comparison WHERE namespace=?1 AND NOT EXISTS(SELECT 1 FROM records WHERE records.namespace=comparison.namespace AND records.category='starships' AND records.id=comparison.id)", [&self.namespace]).map_err(storage)?;
         tx.commit().map_err(storage)?;
         drop(connection);
         self.changed();

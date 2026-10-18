@@ -2,6 +2,52 @@ import XCTest
 
 final class CharacterTests: XCTestCase {
     @MainActor
+    func testConnectedDiscoveryComparisonAndCrawl() async throws {
+        _ = try await URLSession.shared.data(from: URL(string: "http://127.0.0.1:18765/reset?scenario=exploration")!)
+        let app = XCUIApplication()
+        app.launchArguments = ["--endpoint", "http://127.0.0.1:18765/api/", "--archive", "--archive-reset"]
+        app.launch()
+        func tap(_ button: XCUIElement) {
+            XCTAssertTrue(button.waitForExistence(timeout: 15))
+            for _ in 0..<7 { if button.isHittable { break }; app.swipeUp() }
+            button.tap()
+        }
+        tap(app.buttons["person-1"])
+        tap(app.buttons["Homeworld · 1"])
+        XCTAssertTrue(app.staticTexts["Climate"].waitForExistence(timeout: 15))
+        capture(app, "Connected homeworld")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        for _ in 0..<6 { if app.buttons["category-starships"].isHittable { break }; app.swipeDown() }
+        tap(app.buttons["category-starships"])
+        tap(app.buttons["compare-9"])
+        tap(app.buttons["compare-10"])
+        capture(app, "Comparison tray")
+        tap(app.buttons["Compare starships"])
+        XCTAssertTrue(app.staticTexts["Choose your ride."].waitForExistence(timeout: 5))
+        capture(app, "Ship comparison")
+        for _ in 0..<7 { if app.staticTexts["Test courier: Unknown"].isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(app.staticTexts["Test courier: Unknown"].exists)
+        tap(app.buttons["Done"])
+        tap(app.buttons["Remove Death Star"])
+        tap(app.buttons["Remove Test courier"])
+        for _ in 0..<7 { if app.buttons["category-films"].isHittable { break }; app.swipeDown() }
+        tap(app.buttons["category-films"])
+        tap(app.buttons["record-1"])
+        tap(app.buttons["Cinematic opening crawl"])
+        tap(app.buttons["Play crawl"])
+        tap(app.buttons["Pause crawl"])
+        capture(app, "Cinematic film")
+        tap(app.buttons["Read opening crawl"])
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        for _ in 0..<7 { if app.buttons["Discover your galaxy"].isHittable { break }; app.swipeDown() }
+        tap(app.buttons["Discover your galaxy"])
+        XCTAssertTrue(app.staticTexts["FEATURED WORLD"].waitForExistence(timeout: 10))
+        capture(app, "Discovery")
+        try app.performAccessibilityAudit()
+    }
+
+    @MainActor
     func testOfflineArchiveSurvivesRelaunch() async throws {
         _ = try await URLSession.shared.data(from: URL(string: "http://127.0.0.1:18765/reset?scenario=people")!)
         let app = XCUIApplication()

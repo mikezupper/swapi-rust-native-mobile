@@ -14,5 +14,8 @@ pub use people::{PeopleOperation, PeoplePhase, PeopleSnapshot, PeopleStore};
 pub use state::{CharacterSnapshot, CharacterState, CharacterStore};
 
 mod catalog;
-pub use catalog::{CatalogRecord, CatalogSnapshot, CatalogStore, ResourceFact};
+pub use catalog::{CatalogRecord, CatalogSnapshot, CatalogStore, RelatedGroup, ResourceFact};
 pub use people::Page;
+
+mod exploration;
+pub use exploration::*;

@@ -88,6 +88,8 @@ fun CatalogScreen(category: CatalogCategory, snapshot: CatalogSnapshot, query: S
 @Composable
 fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, onRefresh: () -> Unit, onRetry: () -> Unit, onBack: () -> Unit) {
     val record = snapshot.items.firstOrNull()
+    val archive = LocalArchive.current
+    androidx.compose.runtime.LaunchedEffect(record?.id) { record?.let { archive?.session?.recordVisit(category, it.id) } }
     val busy = snapshot.phase == CatalogPhase.Loading || snapshot.phase == CatalogPhase.Refreshing
     Surface(Modifier.fillMaxSize()) {
         Column(Modifier.navigationBarsPadding()) {
@@ -97,7 +99,7 @@ fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, on
                 Text(category.title, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
             }
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                Box(Modifier.fillMaxWidth()) {
+                Box(Modifier.fillMaxWidth().then(if (record != null) Modifier.recordBounds(category, record.id) else Modifier)) {
                     Image(painterResource(category.artwork), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(DesignTokens.Hero.background.copy(alpha = .5f), DesignTokens.Hero.background))))
                     Column(Modifier.padding(24.dp)) {
@@ -118,6 +120,8 @@ fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, on
                     if (record != null) {
                         CacheNotice(snapshot.cache)
                         FavoriteButton(category, record.id)
+                        if (category == CatalogCategory.STARSHIPS) CompareShipButton(record.id)
+                        RelatedRecords(record.related)
                         Text("The details", fontSize = 24.sp, modifier = Modifier.semantics { heading() })
                         Surface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(24.dp)) {
                             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -130,8 +134,7 @@ fun CatalogDetailScreen(category: CatalogCategory, snapshot: CatalogSnapshot, on
                             }
                         }
                         record.description?.let { crawl ->
-                            Text("Opening crawl", fontSize = 24.sp, modifier = Modifier.semantics { heading() })
-                            Text(crawl, fontSize = 17.sp, lineHeight = 28.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            FilmExperience(record.name, crawl)
                         }
                         Text("Record from the Star Wars API.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                     }

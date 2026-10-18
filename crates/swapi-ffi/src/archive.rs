@@ -68,6 +68,7 @@ pub struct ArchiveSnapshot {
     pub collections: Vec<SavedCollection>,
     pub download: DownloadPhase,
     pub error: Option<FailureKind>,
+    pub exploration: ExplorationSnapshot,
 }
 impl From<swapi_core::ArchiveSnapshot> for ArchiveSnapshot {
     fn from(value: swapi_core::ArchiveSnapshot) -> Self {
@@ -124,6 +125,7 @@ impl From<swapi_core::ArchiveSnapshot> for ArchiveSnapshot {
                 },
             },
             error: value.error.map(Into::into),
+            exploration: value.exploration.into(),
         }
     }
 }
@@ -196,6 +198,29 @@ impl ArchiveSession {
         self.ensure_open()?;
         Ok(CharacterSession::with_client(self.client.clone()))
     }
+    pub fn related_session(
+        &self,
+        category: CatalogCategory,
+        ids: Vec<u32>,
+    ) -> Result<Arc<CatalogSession>, BridgeError> {
+        self.ensure_open()?;
+        Ok(CatalogSession::related(self.client.clone(), category, ids))
+    }
+    pub fn discover(&self) -> Result<(), BridgeError> {
+        self.ensure_open()?;
+        self.store.discover();
+        Ok(())
+    }
+    pub fn record_visit(&self, category: CatalogCategory, id: u32) -> Result<(), BridgeError> {
+        self.ensure_open()?;
+        self.store.visit(category.into(), id);
+        Ok(())
+    }
+    pub fn select_ship(&self, id: u32, selected: bool) -> Result<(), BridgeError> {
+        self.ensure_open()?;
+        self.store.select_ship(id, selected);
+        Ok(())
+    }
     pub fn search(&self, query: String) -> Result<(), BridgeError> {
         self.ensure_open()?;
         self.store.search(query);
@@ -263,4 +288,79 @@ impl ArchiveSession {
             .abort_handle();
         Ok(Arc::new(Subscription { cancelled, task }))
     }
+}
+
+#[derive(Clone, Debug, PartialEq, uniffi::Record)]
+pub struct ComparisonValue {
+    pub display: String,
+    pub fraction: Option<f64>,
+}
+#[derive(Clone, Debug, PartialEq, uniffi::Record)]
+pub struct ComparisonMetric {
+    pub label: String,
+    pub values: Vec<ComparisonValue>,
+    pub lower_is_better: bool,
+}
+#[derive(Clone, Debug, PartialEq, uniffi::Record)]
+pub struct ExplorationSnapshot {
+    pub featured: Option<SavedEntry>,
+    pub recent: Vec<SavedEntry>,
+    pub suggestions: Vec<SavedEntry>,
+    pub ships: Vec<CatalogEntry>,
+    pub metrics: Vec<ComparisonMetric>,
+    pub widget: Vec<SavedEntry>,
+}
+impl From<swapi_core::SavedRecord> for SavedEntry {
+    fn from(s: swapi_core::SavedRecord) -> Self {
+        Self {
+            category: s.record.kind.into(),
+            entry: s.record.into(),
+            saved_at: s.saved_at,
+            favorite: s.favorite,
+        }
+    }
+}
+impl From<swapi_core::Exploration> for ExplorationSnapshot {
+    fn from(s: swapi_core::Exploration) -> Self {
+        Self {
+            featured: s.featured.map(Into::into),
+            recent: s.recent.into_iter().map(Into::into).collect(),
+            suggestions: s.suggestions.into_iter().map(Into::into).collect(),
+            ships: s.ships.into_iter().map(Into::into).collect(),
+            metrics: s
+                .metrics
+                .into_iter()
+                .map(|m| ComparisonMetric {
+                    label: m.label,
+                    lower_is_better: m.lower_is_better,
+                    values: m
+                        .values
+                        .into_iter()
+                        .map(|v| ComparisonValue {
+                            display: v.display,
+                            fraction: v.fraction,
+                        })
+                        .collect(),
+                })
+                .collect(),
+            widget: s.widget.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+#[uniffi::export]
+pub fn parse_record_link(value: String) -> Option<FavoriteIdentity> {
+    swapi_core::parse_record_link(&value)
+        .ok()
+        .map(|r| FavoriteIdentity {
+            category: r.kind.into(),
+            id: r.id,
+        })
+}
+#[uniffi::export]
+pub fn record_link(category: CatalogCategory, id: u32) -> String {
+    format!(
+        "holocron://record/{}/{}",
+        swapi_core::ResourceKind::from(category).path(),
+        id
+    )
 }

@@ -54,6 +54,7 @@ struct CharacterScreen: View {
                     case .ready(let person):
                         CacheNotice(cache: model.snapshot.cache)
                         FavoriteButton(category: .people, id: person.id)
+                        RelatedRecords(groups: person.related)
                         details(person)
                     case .failed(_, let kind, let retryable):
                         Text(message(kind)).font(.title3)
@@ -75,6 +76,7 @@ struct CharacterScreen: View {
         .foregroundStyle(foreground)
         .tint(accent)
         .ignoresSafeArea(edges: .top)
+        .onChange(of: character?.id, initial: true) { _, id in if let id { try? ArchiveModel.shared.session?.recordVisit(category: .people, id: id) } }
     }
 
     private var hero: some View {

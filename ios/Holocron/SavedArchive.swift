@@ -20,7 +20,7 @@ extension CatalogSnapshot {
 
 @MainActor final class ArchiveModel: ObservableObject {
     static let shared = ArchiveModel()
-    @Published private(set) var snapshot = ArchiveSnapshot(revision: 0, query: "", favoritesOnly: false, offline: false, entries: [], favorites: [], collections: [], download: .idle, error: nil)
+    @Published private(set) var snapshot = ArchiveSnapshot(revision: 0, query: "", favoritesOnly: false, offline: false, entries: [], favorites: [], collections: [], download: .idle, error: nil, exploration: .empty)
     @Published private(set) var unavailable = false
     private(set) var session: ArchiveSession?
     private var subscription: Subscription?
@@ -56,7 +56,7 @@ extension CatalogSnapshot {
             subscription = try session?.subscribe(listener: ArchiveStateListener(owner: self))
         } catch { unavailable = true }
     }
-    func receive(_ value: ArchiveSnapshot) { guard !stopped, value.revision > snapshot.revision else { return }; snapshot = value }
+    func receive(_ value: ArchiveSnapshot) { guard !stopped, value.revision > snapshot.revision else { return }; snapshot = value; WidgetSnapshotWriter.publish(value.exploration.widget) }
     func isFavorite(_ category: CatalogCategory, _ id: UInt32) -> Bool { snapshot.favorites.contains { $0.category == category && $0.id == id } }
     func favorite(_ category: CatalogCategory, _ id: UInt32) { try? session?.setFavorite(category: category, id: id, value: !isFavorite(category, id)) }
     func search(_ value: String) { try? session?.search(query: value) }
@@ -77,8 +77,11 @@ extension CatalogSnapshot {
 struct ArchiveShortcut: View {
     @ObservedObject private var archive = ArchiveModel.shared
     @State private var showArchive = false
+    @State private var showDiscovery = false
     var body: some View {
         if archive.session != nil {
+            Button { showDiscovery = true } label: { Label("Discover your galaxy", systemImage: "sparkles").frame(maxWidth: .infinity, minHeight: 36) }
+                .buttonStyle(.bordered).padding(.horizontal, 24).sheet(isPresented: $showDiscovery) { DiscoveryScreen() }
             Button { showArchive = true } label: {
                 Label(archive.snapshot.offline ? "Offline mode · Open saved archive" : "Saved archive · \(archive.snapshot.favorites.count) \(archive.snapshot.favorites.count == 1 ? "favorite" : "favorites")", systemImage: "square.stack.3d.up")
                     .font(.subheadline).frame(maxWidth: .infinity, minHeight: 36)

@@ -47,48 +47,86 @@ import dev.holocron.core.FailureKind
 import dev.holocron.core.PeoplePhase
 import dev.holocron.core.PeopleSnapshot
 
+private fun androidx.navigation.NavGraphBuilder.scene(
+    route: String,
+    arguments: List<androidx.navigation.NamedNavArgument> = emptyList(),
+    content: @Composable (androidx.navigation.NavBackStackEntry) -> Unit
+) { composable(route, arguments) { entry -> CompositionLocalProvider(LocalNavigationAnimation provides this) { content(entry) } } }
+
 @Composable
-fun HolocronNavigation(endpoint: String? = null, archive: ArchiveController? = null, storageUnavailable: Boolean = false) {
+fun HolocronNavigation(endpoint: String? = null, archive: ArchiveController? = null, storageUnavailable: Boolean = false, initialLink: String? = null) {
     val navigation = rememberNavController()
+    fun open(category: CatalogCategory, id: UInt) {
+        navigation.navigate(if (category == CatalogCategory.PEOPLE) "person/$id" else "record/${category.name}/$id") { launchSingleTop = true }
+    }
     fun select(category: CatalogCategory) {
         val route = if (category == CatalogCategory.PEOPLE) "people" else "catalog/${category.name}"
         navigation.navigate(route) { popUpTo("people"); launchSingleTop = true }
     }
-    CompositionLocalProvider(LocalArchive provides archive, LocalOpenArchive provides { navigation.navigate("saved") { launchSingleTop = true } }) {
+    LaunchedEffect(initialLink) { initialLink?.let { dev.holocron.core.parseRecordLink(it) }?.let { open(it.category, it.id) } }
+    CompositionLocalProvider(LocalArchive provides archive,
+        LocalOpenArchive provides { navigation.navigate("saved") { launchSingleTop = true } },
+        LocalOpenDiscover provides { navigation.navigate("discover") { launchSingleTop = true } },
+        LocalOpenRecord provides ::open,
+        LocalOpenRelated provides { group ->
+            if (group.ids.size == 1) open(group.category, group.ids.first())
+            else navigation.navigate("related/${group.category.name}/${group.ids.joinToString(",")}")
+        }) {
+    SharedTransitionLayout {
+    CompositionLocalProvider(LocalSharedScope provides this) {
+    val current by navigation.currentBackStackEntryAsState()
+    Column {
+    Box(Modifier.weight(1f)) {
     NavHost(navigation, startDestination = "people",
         enterTransition = { fadeIn(tween(240)) + scaleIn(initialScale = .96f, animationSpec = tween(300)) },
         exitTransition = { fadeOut(tween(180)) },
         popEnterTransition = { fadeIn(tween(220)) },
         popExitTransition = { fadeOut(tween(180)) + scaleOut(targetScale = .96f, animationSpec = tween(240)) }) {
-        composable("saved") { archive?.let { SavedArchiveScreen(it, { navigation.popBackStack() }) { category, id ->
-            navigation.navigate(if (category == CatalogCategory.PEOPLE) "person/$id" else "record/${category.name}/$id")
-        } } }
-        composable("people") {
+        scene("discover") { archive?.let { DiscoveryScreen(it) { navigation.popBackStack() } } }
+        scene("comparison") { archive?.let { ComparisonScreen(it) { navigation.popBackStack() } } }
+        scene("related/{category}/{ids}") { entry ->
+            val category = CatalogCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
+            val ids = requireNotNull(entry.arguments?.getString("ids")).split(',').map { it.toUInt() }
+            val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, null, endpoint, archive?.session, ids) } })
+            val snapshot by model.controller.state.collectAsStateWithLifecycle()
+            ExplorationScaffold("Connected ${category.title.lowercase()}", { navigation.popBackStack() }) {
+                snapshot.items.forEach { record ->
+                    Card(onClick = { open(category, record.id) }, modifier = Modifier.fillMaxWidth().recordBounds(category, record.id)) {
+                        Column(Modifier.padding(20.dp)) { Text(record.name, fontSize = 22.sp); Text(record.facts.take(2).joinToString(" · ") { it.value }) }
+                    }
+                    if (category == CatalogCategory.STARSHIPS) CompareShipButton(record.id)
+                }
+                if (snapshot.phase == dev.holocron.core.CatalogPhase.Loading || snapshot.phase == dev.holocron.core.CatalogPhase.LoadingMore) LinearProgressIndicator(Modifier.fillMaxWidth())
+                if (snapshot.phase is dev.holocron.core.CatalogPhase.Failed) {
+                    Text("Some connections are unavailable. Connect to the network or download this collection for offline use.")
+                    Button(onClick = model.controller::retry) { Text("Try again") }
+                }
+                if (snapshot.hasMore && snapshot.phase == dev.holocron.core.CatalogPhase.Ready) Button(onClick = model.controller::loadMore) { Text("More connections") }
+            }
+        }
+        scene("saved") { archive?.let { SavedArchiveScreen(it, { navigation.popBackStack() }, ::open) } }
+        scene("people") {
             val model: PeopleViewModel = viewModel(factory = viewModelFactory { initializer { PeopleViewModel(createSavedStateHandle(), endpoint, archive?.session) } })
             val snapshot by model.controller.state.collectAsStateWithLifecycle()
             val query by model.query.collectAsStateWithLifecycle()
-            PeopleScreen(snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry, onCategory = ::select) {
-                navigation.navigate("person/$it") { launchSingleTop = true }
-            }
+            PeopleScreen(snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry, onCategory = ::select) { open(CatalogCategory.PEOPLE, it) }
         }
-        composable("catalog/{category}") { entry ->
+        scene("catalog/{category}") { entry ->
             val category = CatalogCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
             val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, null, endpoint, archive?.session) } })
             val snapshot by model.controller.state.collectAsStateWithLifecycle()
             val query by model.query.collectAsStateWithLifecycle()
-            CatalogScreen(category, snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry, ::select) {
-                navigation.navigate("record/${category.name}/$it") { launchSingleTop = true }
-            }
+            CatalogScreen(category, snapshot, query, model::search, model.controller::refresh, model.controller::loadMore, model.controller::retry, ::select) { open(category, it) }
         }
-        composable("record/{category}/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) { entry ->
+        scene("record/{category}/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
             val category = CatalogCategory.valueOf(requireNotNull(entry.arguments?.getString("category")))
-            val id = requireNotNull(entry.arguments).getInt("id").toUInt()
+            val id = requireNotNull(entry.arguments).getLong("id").toUInt()
             val model: CatalogViewModel = viewModel(factory = viewModelFactory { initializer { CatalogViewModel(createSavedStateHandle(), category, id, endpoint, archive?.session) } })
             val snapshot by model.controller.state.collectAsStateWithLifecycle()
             CatalogDetailScreen(category, snapshot, model.controller::refresh, model.controller::retry) { navigation.popBackStack() }
         }
-        composable("person/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) { entry ->
-            val id = requireNotNull(entry.arguments).getInt("id").toUInt()
+        scene("person/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
+            val id = requireNotNull(entry.arguments).getLong("id").toUInt()
             val model: CharacterViewModel = viewModel(factory = viewModelFactory { initializer { CharacterViewModel(id, endpoint, archive?.session) } })
             Box {
                 CharacterRoute(model.controller)
@@ -100,6 +138,11 @@ fun HolocronNavigation(endpoint: String? = null, archive: ArchiveController? = n
         }
     }
     if (storageUnavailable) Text("Offline storage unavailable. Browsing uses live data.", modifier = Modifier.statusBarsPadding().padding(24.dp), color = MaterialTheme.colorScheme.error)
+    }
+    if (archive != null && current?.destination?.route != "comparison") ComparisonTray(archive) { navigation.navigate("comparison") { launchSingleTop = true } }
+    }
+    }
+    }
     }
 }
 
@@ -169,7 +212,7 @@ fun ArchiveScreen(category: CatalogCategory, records: List<ArchiveItem>, total: 
             if (busy) item(key = "progress") { LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) }
             items(records, key = { it.id.toString() }) { person ->
                 Surface(onClick = { keyboard?.hide(); onPerson(person.id) }, color = MaterialTheme.colorScheme.surfaceContainer,
-                    shape = RoundedCornerShape(DesignTokens.Shape.card.dp), modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+                    shape = RoundedCornerShape(DesignTokens.Shape.card.dp), modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).recordBounds(category, person.id)) {
                     Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         if (!largeText) Box(Modifier.size(48.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = .1f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
                             Text(person.name.split(' ').take(2).mapNotNull { it.firstOrNull() }.joinToString(""), color = MaterialTheme.colorScheme.primary, fontSize = 17.sp)
@@ -181,6 +224,7 @@ fun ArchiveScreen(category: CatalogCategory, records: List<ArchiveItem>, total: 
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
+                if (category == CatalogCategory.STARSHIPS) Box(Modifier.padding(horizontal = 24.dp)) { CompareShipButton(person.id) }
             }
             if (ready && records.isEmpty()) item(key = "empty") {
                 Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

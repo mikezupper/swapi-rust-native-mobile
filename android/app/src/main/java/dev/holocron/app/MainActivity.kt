@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -48,8 +49,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         setContent {
             val endpoint = if (BuildConfig.DEBUG) intent.getStringExtra("endpoint") else null
-            val archive: ArchiveViewModel = viewModel(factory = viewModelFactory { initializer { ArchiveViewModel(java.io.File(filesDir, "archive.sqlite").path, endpoint) } })
-            HolocronTheme { HolocronNavigation(endpoint = endpoint, archive = archive.controller, storageUnavailable = archive.controller == null) }
+            val archive: ArchiveViewModel = viewModel(factory = viewModelFactory { initializer { ArchiveViewModel(java.io.File(filesDir, "archive.sqlite").path, endpoint, applicationContext) } })
+            HolocronTheme { HolocronNavigation(endpoint = endpoint, archive = archive.controller, storageUnavailable = archive.controller == null, initialLink = intent.dataString) }
         }
     }
 }
@@ -87,10 +88,12 @@ fun CharacterRoute(controller: CharacterController) {
 @Composable
 fun CharacterScreen(state: CharacterState, onRetry: () -> Unit, onLoad: () -> Unit, cache: dev.holocron.core.CacheStatus = emptyCache()) {
     val character = (state as? CharacterState.Ready)?.character
+    val archive = LocalArchive.current
+    LaunchedEffect(character?.id) { character?.let { archive?.session?.recordVisit(CatalogCategory.PEOPLE, it.id) } }
     Surface(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()) {
-                Box(Modifier.fillMaxWidth().heightIn(min = 390.dp).clip(RoundedCornerShape(bottomStart = DesignTokens.Shape.hero.dp, bottomEnd = DesignTokens.Shape.hero.dp))) {
+                Box(Modifier.fillMaxWidth().then(if (character != null) Modifier.recordBounds(CatalogCategory.PEOPLE, character.id) else Modifier).heightIn(min = 390.dp).clip(RoundedCornerShape(bottomStart = DesignTokens.Shape.hero.dp, bottomEnd = DesignTokens.Shape.hero.dp))) {
                     Image(painterResource(CatalogCategory.PEOPLE.artwork), null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(DesignTokens.Hero.background.copy(alpha = 0.4f), Color.Transparent, DesignTokens.Hero.background))))
                     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(DesignTokens.Space.lg.dp)) {
@@ -108,6 +111,7 @@ fun CharacterScreen(state: CharacterState, onRetry: () -> Unit, onLoad: () -> Un
                         is CharacterState.Ready -> {
                             CacheNotice(cache)
                             FavoriteButton(CatalogCategory.PEOPLE, state.character.id)
+                            RelatedRecords(state.character.related)
                             CharacterDetails(state.character, onLoad)
                         }
                         is CharacterState.Failed -> {

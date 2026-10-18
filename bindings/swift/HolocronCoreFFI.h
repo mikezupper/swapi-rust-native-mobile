@@ -448,6 +448,11 @@ uint64_t uniffi_swapi_ffi_fn_method_archivesession_character_session(uint64_t pt
 void uniffi_swapi_ffi_fn_method_archivesession_clear_cache(uint64_t ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_DISCOVER
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_DISCOVER
+void uniffi_swapi_ffi_fn_method_archivesession_discover(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_DOWNLOAD
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_DOWNLOAD
 void uniffi_swapi_ffi_fn_method_archivesession_download(uint64_t ptr, RustBuffer category, RustCallStatus *_Nonnull out_status
@@ -458,9 +463,24 @@ void uniffi_swapi_ffi_fn_method_archivesession_download(uint64_t ptr, RustBuffer
 uint64_t uniffi_swapi_ffi_fn_method_archivesession_people_session(uint64_t ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_RECORD_VISIT
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_RECORD_VISIT
+void uniffi_swapi_ffi_fn_method_archivesession_record_visit(uint64_t ptr, RustBuffer category, uint32_t id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_RELATED_SESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_RELATED_SESSION
+uint64_t uniffi_swapi_ffi_fn_method_archivesession_related_session(uint64_t ptr, RustBuffer category, RustBuffer ids, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SEARCH
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SEARCH
 void uniffi_swapi_ffi_fn_method_archivesession_search(uint64_t ptr, RustBuffer query, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SELECT_SHIP
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SELECT_SHIP
+void uniffi_swapi_ffi_fn_method_archivesession_select_ship(uint64_t ptr, uint32_t id, int8_t selected, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_ARCHIVESESSION_SET_FAVORITE
@@ -521,6 +541,11 @@ void uniffi_swapi_ffi_fn_free_catalogsession(uint64_t handle, RustCallStatus *_N
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_NEW
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_NEW
 uint64_t uniffi_swapi_ffi_fn_constructor_catalogsession_new(RustBuffer category, RustBuffer record_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_RELATED_RECORDS
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_RELATED_RECORDS
+uint64_t uniffi_swapi_ffi_fn_constructor_catalogsession_related_records(RustBuffer category, RustBuffer ids, RustBuffer base_url, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_CONSTRUCTOR_CATALOGSESSION_WITH_ENDPOINT
@@ -627,6 +652,16 @@ void uniffi_swapi_ffi_fn_method_peoplesession_shutdown(uint64_t ptr, RustCallSta
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_PEOPLESESSION_SUBSCRIBE
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_METHOD_PEOPLESESSION_SUBSCRIBE
 uint64_t uniffi_swapi_ffi_fn_method_peoplesession_subscribe(uint64_t ptr, uint64_t listener, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FUNC_PARSE_RECORD_LINK
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FUNC_PARSE_RECORD_LINK
+RustBuffer uniffi_swapi_ffi_fn_func_parse_record_link(RustBuffer value, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FUNC_RECORD_LINK
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_FN_FUNC_RECORD_LINK
+RustBuffer uniffi_swapi_ffi_fn_func_record_link(RustBuffer category, uint32_t id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_SWAPI_FFI_RUSTBUFFER_ALLOC
@@ -889,6 +924,18 @@ void ffi_swapi_ffi_rust_future_free_void(uint64_t handle
 void ffi_swapi_ffi_rust_future_complete_void(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_FUNC_PARSE_RECORD_LINK
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_FUNC_PARSE_RECORD_LINK
+uint16_t uniffi_swapi_ffi_checksum_func_parse_record_link(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_FUNC_RECORD_LINK
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_FUNC_RECORD_LINK
+uint16_t uniffi_swapi_ffi_checksum_func_record_link(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CHARACTERLISTENER_ON_STATE
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_CHARACTERLISTENER_ON_STATE
 uint16_t uniffi_swapi_ffi_checksum_method_characterlistener_on_state(void
@@ -961,6 +1008,12 @@ uint16_t uniffi_swapi_ffi_checksum_method_archivesession_clear_cache(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_DISCOVER
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_DISCOVER
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_discover(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_DOWNLOAD
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_DOWNLOAD
 uint16_t uniffi_swapi_ffi_checksum_method_archivesession_download(void
@@ -973,9 +1026,27 @@ uint16_t uniffi_swapi_ffi_checksum_method_archivesession_people_session(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_RECORD_VISIT
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_RECORD_VISIT
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_record_visit(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_RELATED_SESSION
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_RELATED_SESSION
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_related_session(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SEARCH
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SEARCH
 uint16_t uniffi_swapi_ffi_checksum_method_archivesession_search(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SELECT_SHIP
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_METHOD_ARCHIVESESSION_SELECT_SHIP
+uint16_t uniffi_swapi_ffi_checksum_method_archivesession_select_ship(void
     
 );
 #endif
@@ -1120,6 +1191,12 @@ uint16_t uniffi_swapi_ffi_checksum_constructor_archivesession_with_endpoint(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CATALOGSESSION_NEW
 #define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CATALOGSESSION_NEW
 uint16_t uniffi_swapi_ffi_checksum_constructor_catalogsession_new(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CATALOGSESSION_RELATED_RECORDS
+#define UNIFFI_FFIDEF_UNIFFI_SWAPI_FFI_CHECKSUM_CONSTRUCTOR_CATALOGSESSION_RELATED_RECORDS
+uint16_t uniffi_swapi_ffi_checksum_constructor_catalogsession_related_records(void
     
 );
 #endif

@@ -54,6 +54,7 @@ struct CatalogScreen: View {
                         ForEach(model.snapshot.items, id: \.id) { person in
                             NavigationLink(value: person.id) { personRow(person) }
                                 .buttonStyle(.plain).accessibilityIdentifier("record-\(person.id)")
+                            if category == .starships { CompareShipButton(id: person.id) }
                         }
                         if model.snapshot.phase == .ready && model.snapshot.items.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {

@@ -42,6 +42,13 @@ class Handler(BaseHTTPRequestHandler):
         if url.path == '/release':
             RELEASE.set()
             return self.respond(200)
+        if Handler.scenario == 'exploration' and url.path.startswith('/api/starships/'):
+            ship = CATALOG['starships']
+            courier = dict(ship, name='Test courier', url='https://swapi.dev/api/starships/10/', length='30', crew='2-4', cargo_capacity='unknown', hyperdrive_rating='0.5')
+            if url.path == '/api/starships/':
+                return self.respond(200, dict(count=2, next=None, results=[ship, courier]))
+            if url.path == '/api/starships/10/':
+                return self.respond(200, courier)
         for category, record in CATALOG.items():
             if category == 'people':
                 continue

@@ -38,6 +38,7 @@ val LocalOpenArchive = staticCompositionLocalOf<() -> Unit> { {} }
 @Composable fun ArchiveShortcut() {
     val archive = LocalArchive.current ?: return
     val snapshot by archive.state.collectAsStateWithLifecycle()
+    OutlinedButton(onClick = LocalOpenDiscover.current, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) { Text("✦ Discover your galaxy") }
     FilledTonalButton(onClick = LocalOpenArchive.current, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
         Text(if (snapshot.offline) "Offline mode · Open saved archive" else "Saved archive · ${snapshot.favorites.size} ${if (snapshot.favorites.size == 1) "favorite" else "favorites"}")
     }
