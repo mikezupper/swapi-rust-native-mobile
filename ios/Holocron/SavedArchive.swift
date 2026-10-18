@@ -146,6 +146,7 @@ struct SavedArchiveScreen: View {
     @State private var query = ""
     @State private var showDownloads = false
     @State private var confirmClear = false
+    @ScaledMetric(relativeTo: .largeTitle) private var heroSize = DesignTokens.Typography.hero
     private var background: Color { appearance == .dark ? DesignTokens.Dark.background : DesignTokens.Light.background }
     private var surface: Color { appearance == .dark ? DesignTokens.Dark.surface : DesignTokens.Light.surface }
     private var secondary: Color { appearance == .dark ? DesignTokens.Dark.secondary : DesignTokens.Light.secondary }
@@ -158,8 +159,9 @@ struct SavedArchiveScreen: View {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("YOUR PERSONAL HOLOCRON").font(.caption).tracking(2).foregroundStyle(DesignTokens.Hero.accent)
-                        Text("The galaxy.\nTo go.").font(.largeTitle.weight(.medium))
-                            .fixedSize(horizontal: false, vertical: true).accessibilityAddTraits(.isHeader)
+                        Text("The galaxy. To go.").font(.system(size: heroSize, weight: .medium))
+                            .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading).accessibilityAddTraits(.isHeader)
                         Text("Saved stories, wherever you travel.").font(.subheadline).foregroundStyle(DesignTokens.Hero.secondary)
                     }.padding(24).padding(.top, 24).frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(DesignTokens.Hero.text)
                         .background { GeometryReader { geometry in
