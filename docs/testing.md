@@ -3,6 +3,28 @@
 Validate the behavior users see through the real Rust/native boundary.
 Keep ordinary checks deterministic and report the limits of each result.
 
+## Current suite inventory
+
+The current implementation has the following tests. Counts come from the Rust
+test runner and native test declarations; the seven Python tooling tests were
+added during the documentation sweep. Older counts in milestone sections below
+describe the suite at that revision, not today's inventory.
+
+| Suite | Count | Scope |
+| --- | --- | --- |
+| Rust workspace | 40 | HTTP/data, catalog, serialized state, archive, exploration and FFI |
+| Android instrumentation | 12 | Native journeys, lifecycle/accessibility, saved archive, exploration and widgets |
+| iOS model/App Group | 6 | Main-actor delivery, stale updates, lifetimes and atomic shared storage |
+| iOS UI | 7 | People/catalog, accessibility/lifecycle, scrolling, offline relaunch and exploration |
+| Python tooling | 7 | Documentation references and default Android SDK discovery |
+
+[Run 39139755397](https://github.com/mikezupper/swapi-rust-native-mobile/actions/runs/39139755397)
+passed all three jobs for icon source `1126902`, retaining the 40 Rust,
+12 Android and 13 iOS tests. This is the latest completed native baseline;
+the seven Python tooling tests were verified locally during this sweep.
+Use [Actions](https://github.com/mikezupper/swapi-rust-native-mobile/actions) for
+later results; a running workflow is not evidence of a passed native check.
+
 ## Rust
 
 Use fixtures and a local mock HTTP server for response parsing, unknown values,
@@ -13,10 +35,11 @@ results. Test cancellation, subscriber disposal, and refresh behavior.
 Keep live SWAPI smoke tests separate from required offline checks. A mock
 transport is a core dependency choice, not duplicate behavior in native views.
 
-Current commands: `cargo test --workspace`, `cargo fmt --all --check`, and
-`cargo clippy --workspace --all-targets -- -D warnings`. The 24 tests cover ten
-People/character HTTP/data scenarios, four catalog scenarios, eight serialized-state
-scenarios, and two FFI listener/error/lifetime scenarios. State tests control request completion explicitly;
+Current commands: `cargo test --locked --workspace`, `cargo fmt --all --check`, and
+`cargo clippy --locked --workspace --all-targets -- -D warnings`. The 40 tests cover ten
+HTTP/data scenarios, four catalog scenarios, eight serialized-state scenarios,
+nine archive scenarios, seven exploration scenarios and two FFI listener/error/lifetime
+scenarios. State tests control request completion explicitly;
 they do not depend on race-prone sleeps or SWAPI availability.
 
 ## Native boundary
@@ -28,17 +51,19 @@ subscription cleanup, and view lifecycle changes in each platform.
 Test device and simulator/ABI packaging in the relevant build environment.
 Linux Rust tests alone do not validate the Apple target or native adapters.
 
-Android's `connectedDebugAndroidTest` runs eight tests against the packaged Rust
+Android's `connectedDebugAndroidTest` runs 12 tests against the packaged Rust
 library through generated Kotlin bindings: loading/failure/retry/content, and
 disposal during pending character and People responses, and a browse/detail/
 back/page-retry/search/empty/refresh journey. Additional tests exercise activity
 recreation/backgrounding with accessibility checks and collect warm-scroll frame
 statistics. Two catalog tests cover category navigation, details, paging, retries
-and searches. Its fixture server is loopback-only.
-Swift has five model tests for main-actor delivery, stale/queued snapshot rejection,
-and reference cleanup, plus five UI tests for character loading/failure/retry,
+and searches. Additional journeys cover saved/offline records, connected exploration
+and widget routes/rendering. Its fixture server is loopback-only.
+Swift has six model/App Group tests for main-actor delivery, stale/queued snapshot rejection,
+reference cleanup and atomic shared storage, plus seven UI tests for character loading/failure/retry,
 the People journey, the catalog tour, accessibility/background restoration, and scrolling
-measurement through the actual Rust transport. The iOS fixture response waits for the test to
+measurement, offline relaunch and connected exploration through the actual Rust transport.
+The iOS fixture response waits for the test to
 release it, making the loading assertion independent of network timing.
 
 The People state tests use Tokio's paused clock and explicit completion channels
@@ -106,7 +131,11 @@ animation or per-frame work crosses the Rust boundary.
 
 ## Harness
 
-`python3 scripts/check_docs.py` checks local documentation links.
+`python3 scripts/check_docs.py` checks local Markdown links, section anchors,
+HTML anchors and embedded HTML image/video sources, excluding fenced examples.
+External URLs and vendored skill documentation are not checked.
+`python3 -m unittest discover -s scripts/tests -v` runs the seven deterministic
+tooling tests; `verify.py core` includes them.
 `python3 scripts/doctor.py` reports environment capabilities without installing
 anything. Native build/test and binding-generation commands live in `scripts/`
 and the Gradle wrapper; the same commands are intended for CI.
@@ -162,7 +191,7 @@ The shared search field now uses native TextFieldState with observed draft
 updates. The original request and restoration assertions remain intact; fixture
 failures now include the unexpected request for diagnosis.
 
-Android has eight instrumentation tests, including browsing all five added
+At this milestone Android had eight instrumentation tests, including browsing all five added
 categories through Rust and a planet paging/failure/retry/search/back flow.
 Artifact collection requires a list and detail screenshot for each new category,
 as well as the existing navigation, failure, accessibility and performance
@@ -176,7 +205,8 @@ People count/monograms; the count now uses larger primary text and monograms
 use primary text on the background color (13.57:1 in light mode, 16.25:1 in dark
 mode). A later audit exposed category buttons losing Dynamic Type support when
 the lazy grid moved them offscreen. An eager layout preserves their identities
-and resolved those failures. Search fields can grow from one to three lines.
+and resolved those failures. SwiftUI search fields can grow from one to three lines;
+Android uses a native single-line editor with horizontal scrolling.
 The badge text uses intrinsic bounds inside a separate decorated tile: framing
 the Text itself caused the audit to treat the entire tile as the text element.
 Separating those views resolved the remaining contrast failures. No accessibility
@@ -263,7 +293,7 @@ These checks do not establish physical-device frame timing or haptic feel.
 `crates/swapi-core/tests/exploration.rs` adds deterministic coverage for validated
 relationships, paged related records, offline resolution, persisted recency and
 comparison selection, numeric/range/sentinel comparison values, schema-1 migration,
-and the strict widget link grammar. The core suite now contains 40 tests.
+and the strict widget link grammar. This milestone brought the core suite to 40 tests.
 
 Android's exploration journey follows Luke to his homeworld, selects two ships,
 opens the comparison, checks an unknown value, operates the film crawl and opens
@@ -333,8 +363,12 @@ Rust ABIs. Lint retains existing warnings about dependencies, widget metadata,
 text and API usage; the icon's monochrome configuration is provided in the
 base adaptive resource, with no launcher-icon warnings.
 `python3 scripts/check_docs.py` and `git diff --check`
-also passed. No application behavior changed, and the full fixture suites were
-not rerun for this asset change.
+also passed. The initial local asset check did not rerun the full fixture suites.
+
+Subsequently, [PR run 39139755397](https://github.com/mikezupper/swapi-rust-native-mobile/actions/runs/39139755397)
+passed the full Rust, Android and iOS gates on source `1126902`, including native
+fixture suites, both Android ABIs, both arm64 XCFramework slices and the unsigned
+iOS device build with its widget extension. Hosted iOS used Xcode 26.6.
 
 The rebuilt APK was installed with `adb -s emulator-5554 install -r` on the
 Pixel 7 API 36 x86_64 AVD. The actual Pixel launcher was inspected with themed
@@ -349,6 +383,7 @@ The emulator's themed-icons preference was restored to off afterward.
 
 These captures establish API 36 emulator rendering and launch interaction,
 not physical-device or all-OEM launcher coverage. The iOS asset preview is not
-simulator evidence: Xcode compilation, the SpringBoard icon, and iOS appearance
-behavior remain unverified on this Linux host. That native follow-up is tracked
-as `swapi-hrp`; the user's cleaned Mac was not repopulated.
+simulator evidence. The user confirmed the iOS icon follow-up complete on
+October 18, 2026 (`swapi-hrp`); that is user-reported visual verification.
+No additional iOS launcher capture or environment details were supplied to this
+Linux session, and the user's cleaned Mac was not repopulated.

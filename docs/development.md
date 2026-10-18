@@ -2,7 +2,9 @@
 
 Use Linux for the Rust core and Android. iOS builds and simulator checks run
 on a macOS host. Keep setup reproducible through scripts as the platform
-experiments establish working commands.
+experiments establish working commands. The Mac observations below are historical:
+the user's dedicated checkout and project caches were later removed at their
+request. Hosted macOS CI verifies iOS without restoring that checkout.
 
 ## Inspect the current host
 
@@ -74,11 +76,11 @@ fixtures and local HTTP servers:
 
 ```sh
 cargo fmt --all --check
-cargo test --workspace
-cargo clippy --workspace --all-targets -- -D warnings
+cargo test --locked --workspace
+cargo clippy --locked --workspace --all-targets -- -D warnings
 ```
 
-The optional `cargo run -p swapi-core --example luke` requests live SWAPI over
+The optional `cargo run --locked -p swapi-core --example luke` requests live SWAPI over
 HTTPS. It is separate from deterministic verification.
 
 `bash scripts/generate-bindings.sh` regenerates Kotlin and Swift from the host
@@ -104,8 +106,8 @@ The 2026-10-17 trial reached macOS Sequoia Recovery using upstream commit
 Apple recovery chunks. This proves recovery boot only. Full macOS, Xcode,
 graphics acceleration, and iOS simulator execution have not been verified.
 The Apple M4 Mac was verified over SSH on macOS 27.0.1 (26A434), with Xcode 27.1
-(27A9275). It builds and tests the native app, so the bounded VM experiment
-was stopped after recovery boot. Experiment files remain in
+(27A9275). It built and tested the native app, so the bounded VM experiment
+was stopped after recovery boot. Experiment files were kept outside the repository in
 `~/.local/share/holocron/osx-kvm-spike`.
 
 ## Mac fallback
@@ -124,8 +126,8 @@ without copying build caches or the live Beads database. Return test results,
 screenshots, and logs to the initiating machine. Remote desktop is optional
 for interactive simulator use; command execution can use SSH.
 
-The current Mac setup has Rust 1.97.1 and `aarch64-apple-ios` /
-`aarch64-apple-ios-sim` installed. The app targets iOS 18+ and Swift 6, with
+The original Mac verification used Rust 1.97.1 and `aarch64-apple-ios` /
+`aarch64-apple-ios-sim`. The app targets iOS 18+ and Swift 6, with
 arm64 device and simulator slices. Intel simulator builds are not included.
 `bash scripts/setup-mac.sh` installs the Rust tools without changing shell
 profiles; full Xcode and its initial setup must already be available.
@@ -179,9 +181,10 @@ scripts/mac.sh run xcodebuild -project ios/Holocron.xcodeproj -scheme Holocron -
 ```
 
 This verifies device compilation/linking, not physical-device installation.
-Signing and real-device performance are still separate work. The current Mac
-tool installation supports `simctl` screenshots and tests; a Simulator GUI
-application has not been found in the standard Xcode location.
+Signing and real-device performance are still separate work. The original Mac
+tool installation supported `simctl` screenshots and tests; a Simulator GUI
+application was not found in its standard Xcode location during that experiment.
+Recheck the selected Xcode installation when setting up an interactive Mac host.
 
 ## Beads and source control
 

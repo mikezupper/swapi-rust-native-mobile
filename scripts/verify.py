@@ -35,6 +35,7 @@ def main():
     run('tokens', ['python3', 'scripts/generate-design.py', '--check'])
     run('bindings', ['bash', 'scripts/generate-bindings.sh', '--check'])
     if args.platform == 'core':
+        run('tooling-tests', ['python3', '-m', 'unittest', 'discover', '-s', 'scripts/tests', '-v'])
         run('docs', ['python3', 'scripts/check_docs.py'])
         run('format', ['cargo', 'fmt', '--all', '--check'])
         run('tests', ['cargo', 'test', '--locked', '--workspace'])

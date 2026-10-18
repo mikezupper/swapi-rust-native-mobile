@@ -15,7 +15,8 @@ packages the library for each target.
 | SwiftUI / Compose | Rendering, navigation stacks, focus, accessibility, localization, gestures, animations and haptics |
 | `design/` | Shared visual tokens and component/motion specifications |
 
-All four layers support People, Planets, Starships, Vehicles, Species, and Films.
+The Rust core, FFI and both native apps support People, Planets, Starships,
+Vehicles, Species, and Films.
 The native apps retain the original character detail presentation and use
 a common catalog presentation for the other resources.
 
@@ -59,12 +60,12 @@ with UniFFI's generated Kotlin `AutoCloseable.close`.
 
 `PagedStore<T>` owns the shared paging state machine. `PeopleStore` specializes
 it for `Person`; `CatalogStore` specializes it for validated `CatalogRecord`.
-The store owns the query, a 300 ms cancellable debounce, loaded people,
+The store owns the query, a 300 ms cancellable debounce, loaded records,
 total count, next page and a typed loading/failure phase. Query replacement
 drops the old future and clears results belonging to the old query. Refresh
 and page loading retain current records; failed operations retain their exact
 page for retry. Duplicate in-flight commands are ignored and page results are
-deduplicated by person ID. Explicit refresh replaces the accumulated pages.
+deduplicated by ID within the session's fixed collection. Explicit refresh replaces the accumulated pages.
 Both state actors use command-first selection to prevent a queued new query
 from losing a race with an older response.
 
@@ -153,7 +154,10 @@ x86_64 shared libraries with 16 KiB segment alignment. Apple builds package
 arm64 device and simulator static libraries in an XCFramework. Rust 1.97.1
 and UniFFI 0.32.2 are pinned; [the README](README.md) lists native toolchain
 versions and [build commands](docs/development.md). Local artwork ships in
-native asset bundles. Generated libraries and build output are not committed.
+native asset bundles. The shared app icon is exported into an opaque iOS
+asset and Android adaptive layers; its source and packaging command are recorded
+in the [icon documentation](design/app-icon/README.md). Generated libraries and
+build output are not committed.
 
 ## References
 

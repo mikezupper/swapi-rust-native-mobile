@@ -103,7 +103,7 @@ navigation and selection haptics; Compose provides shared card bounds, fade/scal
 favorite feedback. System reduced-motion settings are respected.
 
 This is a development application. Accounts and release/distribution setup remain outside the implemented scope.
-The [product brief](docs/product.md#recommended-directions-for-future-milestones)
+The [product brief](docs/product.md#experience-directions)
 describes the current experience and remaining directions.
 
 ### Offline browsing and favorites
@@ -316,8 +316,9 @@ python3 scripts/verify.py core
 ```
 
 `doctor.py` reports local capabilities without installing anything. Verification
-checks generated tokens and bindings, documentation links, Rust formatting,
-offline tests and Clippy. Logs and a machine-readable summary go under
+checks generated tokens and bindings, documentation files/section links,
+seven Python tooling tests, Rust formatting, 40 offline Rust tests and Clippy.
+Logs and a machine-readable summary go under
 `.artifacts/verification/core/`.
 
 For an explicit live API smoke test:
@@ -474,14 +475,24 @@ Do not edit generated files. Token checks also verify semantic text colors
 against solid surfaces at 4.5:1; text over artwork requires native visual review.
 Motion intent is shared, while animation execution stays native.
 
+The [app-icon export instructions](design/app-icon/README.md#reproduce-the-exports)
+cover the separate Pillow-based packaging script and its `--check` mode.
+Category artwork is bundled identically in both platforms; its
+[manifest](design/artwork/README.md) records asset mappings and generation prompts.
+
 ## Testing, fixtures and artifacts
 
 The Rust suite covers HTTP parsing, validation, timeout/error policy, state
 ordering, debounce, cancellation, pagination, refresh and listener lifetimes.
-The verified suite has 20 Rust tests, six Android instrumentation tests and
-eight iOS tests. Native tests call the **packaged Rust library through generated bindings**.
+The current suite has **40 Rust tests, 12 Android instrumentation tests, and
+13 iOS tests** (six model/App Group tests and seven UI tests), plus seven Python
+tooling tests. The last fully verified native baseline and current suite inventory
+are recorded in [testing](docs/testing.md#current-suite-inventory).
+Native tests call the **packaged Rust library through generated bindings**.
 They exercise navigation, failed-page retry, empty search, selected-character
 refresh, cleanup, backgrounding, recreation and accessibility checks.
+They also cover the saved archive, offline relaunch, related records, discovery,
+ship comparison, crawl controls, widget rendering and record links.
 
 Ordinary tests use loopback HTTP servers. The iOS fixture server is
 `scripts/ios-fixture-server.py`, bound to `127.0.0.1:18765`; `test-ios.sh` starts

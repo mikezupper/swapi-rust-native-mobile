@@ -62,4 +62,6 @@ Re-generation of the AI artwork itself is not deterministic.
 - [Android: adaptive layers, safe zone, and monochrome icons](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive)
 
 The image above is an asset preview. Actual launcher evidence and remaining
-platform limits are recorded in [testing](../../docs/testing.md).
+platform limits are recorded in [testing](../../docs/testing.md#app-icon-verification-2026-10-18).
+Android captures were reviewed by the agent; completion of the iOS icon visual
+check was confirmed by the user on October 18, 2026.

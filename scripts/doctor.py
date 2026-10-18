@@ -34,6 +34,7 @@ def android_sdk():
     candidates = [
         os.environ.get("ANDROID_HOME"),
         os.environ.get("ANDROID_SDK_ROOT"),
+        str(Path.home() / ".local/share/holocron/android-sdk"),
         str(Path.home() / "Android/Sdk"),
         str(Path.home() / "Library/Android/sdk"),
         "/opt/android-sdk",
