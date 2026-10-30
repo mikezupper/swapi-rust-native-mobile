@@ -3,6 +3,12 @@
 name: iOS (self-hosted Mac)
 on:
   workflow_dispatch:
+    inputs:
+      ios_version:
+        description: iOS simulator version
+        type: choice
+        default: '26.0'
+        options: ['26.0', '27.0', '27.1']
 permissions:
   contents: read
 jobs:
@@ -14,9 +20,19 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: bash scripts/setup-mac.sh
       - name: Build and test arm64 iOS
+        env:
+          IOS_VERSION: ${{ inputs.ios_version }}
         run: |
           export PATH="$HOME/.cargo/bin:$PATH"
-          HOLOCRON_SIMULATOR="$(python3 scripts/select-ios-simulator.py)"
+          HOLOCRON_SIMULATOR="$(xcrun simctl list devices available --json | python3 -c '
+          import json, os, sys
+          runtime = "iOS-" + os.environ["IOS_VERSION"].replace(".", "-")
+          devices = json.load(sys.stdin)["devices"]
+          iphones = [d["udid"] for r, ds in devices.items() if r.endswith(runtime) for d in ds if d["name"].startswith("iPhone")]
+          if not iphones:
+              raise SystemExit("No iPhone simulator on " + runtime)
+          print(iphones[0])
+          ')"
           export HOLOCRON_SIMULATOR
           HOLOCRON_RECORD=1 python3 scripts/verify.py ios
       - name: Export native screenshots
