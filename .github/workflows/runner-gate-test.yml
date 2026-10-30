@@ -1,4 +1,4 @@
-name: Runner gate test
+  name: Runner gate test
   on: push
   jobs:
     gate:
