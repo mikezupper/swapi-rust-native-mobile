@@ -106,7 +106,10 @@ final class CharacterTests: XCTestCase {
         let enabled = NSPredicate(format: "value == %@", "1")
         await fulfillment(of: [XCTNSPredicateExpectation(predicate: enabled, object: offline)], timeout: 5)
         app.segmentedControls.buttons["Favorites"].tap()
-        try app.performAccessibilityAudit()
+        try app.performAccessibilityAudit { issue in
+          print("AUDIT ISSUE: \(issue.compactDescription) | \(issue.detailedDescription) | \(String(describing: issue.element))")
+          return false
+        }
         capture(app, "Offline favorites")
         app.terminate()
         app.launchArguments.removeAll { $0 == "--archive-reset" }
