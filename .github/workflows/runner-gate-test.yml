@@ -1,8 +1,0 @@
-  name: Runner gate test
-  on: push
-  jobs:
-    gate:
-      runs-on: [self-hosted, macOS, ARM64, ios]
-      steps:
-        - if: always()
-          run: echo "THE GATE FAILED"
